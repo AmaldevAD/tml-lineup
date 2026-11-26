@@ -28,5 +28,5 @@ npm run dev      # http://localhost:8787
 
 ## Deploy
 
-`npm run deploy`, or push to `main`. The GitHub Action deploys when the repo has two secrets:
-`CLOUDFLARE_API_TOKEN` (template "Edit Cloudflare Workers") and `CLOUDFLARE_ACCOUNT_ID`.
+Connected to Cloudflare Workers Builds: every push to `main` deploys automatically.
+Manual deploy: `npx wrangler deploy`.
