@@ -114,6 +114,37 @@ export default {
         if (r.error) return err(400, r.error);
         return json(r);
       }
+      if (p === "/api/profile" && req.method === "POST") {
+        const b = await body();
+        const r = token ? await hub.setProfile(token, b) : null;
+        if (!r) return err(401, "Sign in first");
+        if (r.error) return err(400, r.error);
+        return json(r);
+      }
+      if (p === "/api/profile/photo" && req.method === "POST") {
+        if (+(req.headers.get("content-length") || 0) > 200_000) return err(413, "That photo is too big.");
+        const b = await body();
+        const r = token ? await hub.setPhoto(token, String(b.data || "")) : null;
+        if (!r) return err(401, "Sign in first");
+        if (r.error) return err(400, r.error);
+        return json(r);
+      }
+      const av = p.match(/^\/api\/avatar\/(\d{1,10})$/);
+      if (av && req.method === "GET") {
+        const ph = await hub.photo(+av[1]);
+        if (!ph) return err(404, "No photo");
+        const bytes = Uint8Array.from(atob(ph.data), c => c.charCodeAt(0));
+        return new Response(bytes, { headers: { "content-type": ph.type, "cache-control": "public, max-age=86400", "x-content-type-options": "nosniff" } });
+      }
+      if (p === "/api/rooms/summary" && req.method === "POST") {
+        const me = token ? await hub.me(token) : null;
+        if (!me?.user) return err(401, "Sign in to chat");
+        const b = await body();
+        const list = (Array.isArray(b.rooms) ? b.rooms : []).slice(0, 40).filter(r => r && ROOM_RE.test(String(r.room)));
+        const out = {};
+        await Promise.all(list.map(async r => { try { out[r.room] = await env.ROOMS.get(env.ROOMS.idFromName(r.room)).summary(Math.max(0, +r.since || 0)); } catch (e) { console.error(e); } }));
+        return json({ rooms: out });
+      }
       if (p === "/api/social" && req.method === "GET") {
         return json(await hub.social(), { headers: { "cache-control": "public, max-age=10" } });
       }
@@ -129,7 +160,7 @@ export default {
         const me = token ? await hub.me(token) : null;
         if (!me?.user) return err(401, "Sign in to chat");
         const fwd = new Request(req, { headers: new Headers(req.headers) });
-        fwd.headers.set("x-tml-user", JSON.stringify({ id: me.user.id, name: me.user.display, color: me.user.color }));
+        fwd.headers.set("x-tml-user", JSON.stringify({ id: me.user.id, name: me.user.display, color: me.user.color, av: me.user.avatar || "" }));
         return env.ROOMS.get(env.ROOMS.idFromName(m[1])).fetch(fwd);
       }
       return err(404, "Not found");
@@ -164,12 +195,47 @@ export class Hub extends DurableObject {
       CREATE TABLE IF NOT EXISTS fails (username TEXT NOT NULL, ts INTEGER NOT NULL);
       CREATE TABLE IF NOT EXISTS pending (token TEXT PRIMARY KEY, sub TEXT NOT NULL, name TEXT NOT NULL, expires INTEGER NOT NULL);
     `);
-    if (!this.sql.exec("PRAGMA table_info(users)").toArray().some(c => c.name === "google_sub")) this.sql.exec("ALTER TABLE users ADD COLUMN google_sub TEXT");
+    const cols = this.sql.exec("PRAGMA table_info(users)").toArray().map(c => c.name);
+    if (!cols.includes("google_sub")) this.sql.exec("ALTER TABLE users ADD COLUMN google_sub TEXT");
+    if (!cols.includes("avatar")) this.sql.exec("ALTER TABLE users ADD COLUMN avatar TEXT NOT NULL DEFAULT ''");
+    this.sql.exec("CREATE TABLE IF NOT EXISTS photos (user_id INTEGER PRIMARY KEY, type TEXT NOT NULL, data TEXT NOT NULL)");
     this.sql.exec("CREATE UNIQUE INDEX IF NOT EXISTS users_by_google ON users (google_sub) WHERE google_sub IS NOT NULL");
     this.socialCache = null;
   }
 
-  publicUser(u) { return { id: u.id, username: u.username, display: u.display, color: u.color }; }
+  publicUser(u) { return { id: u.id, username: u.username, display: u.display, color: u.color, avatar: u.avatar || "" }; }
+
+  // Profile: display name, colour, and avatar ("" = initials, "e:<emoji>", "p:<version>" = uploaded photo).
+  async setProfile(token, b) {
+    const u = await this.userFor(token);
+    if (!u) return null;
+    let display = u.display, color = u.color, avatar = u.avatar || "";
+    if (b.display !== undefined) { display = String(b.display).replace(/\s+/g, " ").trim().slice(0, 24); if (!display) return { error: "Your name can't be empty." }; }
+    if (b.color !== undefined) { if (!COLORS.includes(b.color)) return { error: "Pick one of the colours." }; color = b.color; }
+    if (b.avatar !== undefined) {
+      const a = String(b.avatar);
+      if (a === "" ) avatar = "";
+      else if (a.startsWith("e:") && [...a.slice(2)].length <= 8 && a.length <= 20 && !/[<>"'&\s]/.test(a)) avatar = a;
+      else if (a === "photo" && this.sql.exec("SELECT 1 FROM photos WHERE user_id = ?", u.id).toArray().length) avatar = "p:" + Date.now().toString(36);
+      else return { error: "That avatar isn't available." };
+    }
+    this.sql.exec("UPDATE users SET display = ?, color = ?, avatar = ? WHERE id = ?", display, color, avatar, u.id);
+    this.socialCache = null;
+    return { user: this.publicUser({ ...u, display, color, avatar }) };
+  }
+  async setPhoto(token, dataUrl) {
+    const u = await this.userFor(token);
+    if (!u) return null;
+    const m = dataUrl.match(/^data:(image\/(?:jpeg|webp|png));base64,([A-Za-z0-9+/]+=*)$/);
+    if (!m) return { error: "Upload a JPG, PNG or WebP image." };
+    if (m[2].length > 160_000) return { error: "That photo is too big." };
+    this.sql.exec("INSERT OR REPLACE INTO photos (user_id, type, data) VALUES (?, ?, ?)", u.id, m[1], m[2]);
+    const avatar = "p:" + Date.now().toString(36);
+    this.sql.exec("UPDATE users SET avatar = ? WHERE id = ?", avatar, u.id);
+    this.socialCache = null;
+    return { user: this.publicUser({ ...u, avatar }) };
+  }
+  photo(id) { return this.sql.exec("SELECT type, data FROM photos WHERE user_id = ?", id).toArray()[0] || null; }
   favsOf(id) { return this.sql.exec("SELECT set_key FROM favs WHERE user_id = ?", id).toArray().map(r => r.set_key); }
   addFavs(id, keys) {
     const now = Date.now();
@@ -280,10 +346,10 @@ export class Hub extends DurableObject {
     if (this.socialCache && Date.now() - this.socialCache.at < 5000) return this.socialCache.data;
     const sets = {};
     for (const r of this.sql.exec("SELECT set_key, COUNT(*) AS n FROM favs GROUP BY set_key").toArray()) sets[r.set_key] = { n: r.n, top: [] };
-    for (const r of this.sql.exec(`SELECT set_key, display, color FROM (
-        SELECT f.set_key, u.display, u.color, ROW_NUMBER() OVER (PARTITION BY f.set_key ORDER BY f.created) AS rn
+    for (const r of this.sql.exec(`SELECT set_key, id, display, color, avatar FROM (
+        SELECT f.set_key, u.id, u.display, u.color, u.avatar, ROW_NUMBER() OVER (PARTITION BY f.set_key ORDER BY f.created) AS rn
         FROM favs f JOIN users u ON u.id = f.user_id) WHERE rn <= 4`).toArray()) {
-      if (sets[r.set_key] && sets[r.set_key].top.length < 4) sets[r.set_key].top.push({ name: r.display, color: r.color });
+      if (sets[r.set_key] && sets[r.set_key].top.length < 4) sets[r.set_key].top.push({ id: r.id, name: r.display, color: r.color, av: r.avatar });
     }
     const data = { sets, users: this.sql.exec("SELECT COUNT(*) AS n FROM users").one().n };
     this.socialCache = { at: Date.now(), data };
@@ -291,7 +357,7 @@ export class Hub extends DurableObject {
   }
 
   going(key) {
-    const people = this.sql.exec("SELECT u.display AS name, u.color FROM favs f JOIN users u ON u.id = f.user_id WHERE f.set_key = ? ORDER BY f.created LIMIT 200", key).toArray();
+    const people = this.sql.exec("SELECT u.id, u.display AS name, u.color, u.avatar AS av FROM favs f JOIN users u ON u.id = f.user_id WHERE f.set_key = ? ORDER BY f.created LIMIT 200", key).toArray();
     const n = this.sql.exec("SELECT COUNT(*) AS n FROM favs WHERE set_key = ?", key).one().n;
     return { n, people };
   }
@@ -306,7 +372,15 @@ export class ChatRoom extends DurableObject {
     this.sql = ctx.storage.sql;
     this.sql.exec(`CREATE TABLE IF NOT EXISTS msgs (id INTEGER PRIMARY KEY AUTOINCREMENT, ts INTEGER NOT NULL, uid TEXT NOT NULL, name TEXT NOT NULL, color TEXT NOT NULL DEFAULT '', text TEXT NOT NULL)`);
     // Rooms created by the first version have no color column yet.
-    if (!this.sql.exec("PRAGMA table_info(msgs)").toArray().some(c => c.name === "color")) this.sql.exec("ALTER TABLE msgs ADD COLUMN color TEXT NOT NULL DEFAULT ''");
+    const cols = this.sql.exec("PRAGMA table_info(msgs)").toArray().map(c => c.name);
+    if (!cols.includes("color")) this.sql.exec("ALTER TABLE msgs ADD COLUMN color TEXT NOT NULL DEFAULT ''");
+    if (!cols.includes("av")) this.sql.exec("ALTER TABLE msgs ADD COLUMN av TEXT NOT NULL DEFAULT ''");
+  }
+  // For the chat list: last message, unread count after `since`, and who's online.
+  summary(since) {
+    const last = this.sql.exec("SELECT id, ts, uid, name, text FROM msgs ORDER BY id DESC LIMIT 1").toArray()[0] || null;
+    const unread = last ? this.sql.exec("SELECT COUNT(*) AS n FROM msgs WHERE id > ?", since).one().n : 0;
+    return { last, unread, online: this.open().length };
   }
   open() { return this.ctx.getWebSockets().filter(ws => ws.readyState === WebSocket.OPEN); }
   broadcast(obj, except) { const d = JSON.stringify(obj); for (const ws of this.open()) if (ws !== except) { try { ws.send(d); } catch {} } }
@@ -317,7 +391,7 @@ export class ChatRoom extends DurableObject {
     const [client, server] = Object.values(new WebSocketPair());
     this.ctx.acceptWebSocket(server);
     server.serializeAttachment({ user, sent: [] });
-    const messages = this.sql.exec(`SELECT id, ts, uid, name, color, text FROM msgs ORDER BY id DESC LIMIT ${HISTORY}`).toArray().reverse();
+    const messages = this.sql.exec(`SELECT id, ts, uid, name, color, av, text FROM msgs ORDER BY id DESC LIMIT ${HISTORY}`).toArray().reverse();
     server.send(JSON.stringify({ type: "history", messages, online: this.open().length }));
     this.broadcast({ type: "presence", online: this.open().length }, server);
     return new Response(null, { status: 101, webSocket: client });
@@ -336,9 +410,9 @@ export class ChatRoom extends DurableObject {
     if (att.sent.length >= RATE.count) return ws.send(JSON.stringify({ type: "error", error: "You're sending messages too fast. Wait a few seconds." }));
     att.sent.push(now); ws.serializeAttachment(att);
     const { user } = att;
-    const row = this.sql.exec("INSERT INTO msgs (ts, uid, name, color, text) VALUES (?, ?, ?, ?, ?) RETURNING id", now, String(user.id), user.name, user.color || "", text).one();
+    const row = this.sql.exec("INSERT INTO msgs (ts, uid, name, color, av, text) VALUES (?, ?, ?, ?, ?, ?) RETURNING id", now, String(user.id), user.name, user.color || "", user.av || "", text).one();
     this.sql.exec("DELETE FROM msgs WHERE id <= ?", row.id - KEEP);
-    this.broadcast({ type: "msg", message: { id: row.id, ts: now, uid: String(user.id), name: user.name, color: user.color, text } });
+    this.broadcast({ type: "msg", message: { id: row.id, ts: now, uid: String(user.id), name: user.name, color: user.color, av: user.av || "", text } });
   }
 
   async webSocketClose(ws, code) {

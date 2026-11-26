@@ -333,6 +333,90 @@ nav.tabs { position: fixed; z-index: 25; left: 50%; transform: translateX(-50%);
 .composer button { width: 48px; height: 48px; border-radius: 50%; border: 0; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; align-self: end; }
 .composer button:disabled { opacity: .4; }
 .composer button svg { width: 20px; height: 20px; }
+/* Chat inbox + conversation (WhatsApp-style) */
+.chat-split { display: grid; gap: 16px; }
+.inbox { display: flex; flex-direction: column; }
+.inbox-search { margin: 0 0 6px; }
+.room-sec { font-size: 11.5px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); padding: 16px 8px 6px; }
+.room-row { display: flex; align-items: center; gap: 12px; padding: 10px 8px; border-radius: 18px; text-decoration: none; color: inherit; transition: background .15s; -webkit-tap-highlight-color: transparent; }
+.room-row:active { background: var(--surface-2); }
+@media (hover: hover) { .room-row:hover { background: var(--surface); } }
+.room-row.on { background: var(--accent-soft); }
+.room-ico { width: 52px; height: 52px; border-radius: 50%; flex: none; display: grid; place-items: center; font-size: 25px; background: color-mix(in srgb, var(--c, var(--accent)) 22%, var(--surface-2)); overflow: hidden; }
+.room-ico.sm { width: 40px; height: 40px; font-size: 20px; }
+.room-ico .art { width: 100%; height: 100%; border-radius: 0; }
+.room-ico .art .ini { font-size: 17px; }
+.room-ico.sm .art .ini { font-size: 13px; }
+.rr-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.rr-top, .rr-bot { display: flex; align-items: center; gap: 8px; }
+.rr-top b { flex: 1; min-width: 0; font-size: 15.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rr-time { font-size: 12px; color: var(--muted); flex: none; }
+.rr-time.new { color: var(--accent); font-weight: 700; }
+.rr-prev { flex: 1; min-width: 0; color: var(--muted); font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rr-badge { flex: none; min-width: 21px; height: 21px; padding: 0 6px; border-radius: 99px; background: var(--accent); color: var(--accent-ink); font-size: 11px; font-weight: 800; display: grid; place-items: center; }
+.rr-live { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--st-core); }
+.crew-box { margin-top: 14px; }
+.convo { display: none; flex-direction: column; background: var(--surface); border: 1px solid var(--line); border-radius: 24px; overflow: hidden; min-height: 0; }
+.chat-split.has-room .inbox { display: none; }
+.chat-split.has-room .convo { display: flex; }
+.convo-head { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-bottom: 1px solid var(--line); background: color-mix(in srgb, var(--surface) 92%, transparent); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+.convo-head .back { border: 0; background: transparent; width: 40px; margin-left: -4px; }
+.convo-head .back svg { width: 24px; height: 24px; }
+.ch-title { all: unset; flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; cursor: pointer; }
+.ch-title b { font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ch-title .online { font-size: 12px; }
+.convo .msgs { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 14px 12px 8px; background: radial-gradient(circle at 1px 1px, color-mix(in srgb, var(--fg) 6%, transparent) 1px, transparent 0) 0 0 / 18px 18px, var(--bg); }
+.convo .composer { position: static; margin: 0; border: 0; border-top: 1px solid var(--line); border-radius: 0; box-shadow: none; padding: 8px 10px; }
+.convo .composer textarea { background: var(--surface-2); border-radius: 22px; padding: 11px 16px; }
+.convo-empty { flex: 1; display: grid; place-items: center; color: var(--muted); padding: 40px; text-align: center; }
+body.in-convo { --tab-h: 0px; }
+body.in-convo #hdr, body.in-convo nav.tabs { display: none; }
+body.in-convo .convo { position: fixed; z-index: 20; left: 0; right: 0; top: 0; bottom: var(--player-h); border: 0; border-radius: 0; padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); background: var(--surface); }
+@media (min-width: 900px) {
+  .chat-split { grid-template-columns: 340px minmax(0, 1fr); align-items: start; }
+  .chat-split .inbox { display: flex !important; position: sticky; top: calc(var(--hdr) + 12px); max-height: calc(100dvh - var(--hdr) - var(--tab-h) - var(--player-h) - 40px); overflow-y: auto; padding-right: 4px; }
+  .chat-split .convo { display: flex; position: sticky; top: calc(var(--hdr) + 12px); height: calc(100dvh - var(--hdr) - var(--tab-h) - var(--player-h) - 40px); }
+  .convo-head .back { display: none; }
+}
+.msg { flex-direction: row; align-items: flex-end; gap: 8px; }
+.msg .who { width: 28px; flex: none; }
+.msg .who .av { width: 28px; height: 28px; font-size: 11px; box-shadow: none; }
+.msg.same .who .av { visibility: hidden; }
+.msg .who .av.em { font-size: 16px; }
+.convo .msgs > :first-child { margin-top: auto; }
+.msg.me .who { display: none; }
+.msg .col { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.msg.me .col { align-items: flex-end; }
+/* Avatars: initials, emoji or photo */
+.av.em { font-size: 13px; }
+.av.ph { overflow: hidden; background: var(--surface-2); }
+.av.ph img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.av.xl { width: 96px; height: 96px; font-size: 34px; box-shadow: 0 0 0 4px var(--surface), 0 8px 24px rgb(0 0 0 / .25); }
+.av.xl.em { font-size: 48px; }
+.av.md { width: 44px; height: 44px; font-size: 16px; }
+.av.md.em { font-size: 22px; }
+/* Profile */
+.profile { display: flex; flex-direction: column; gap: 14px; max-width: 640px; }
+.prof-hero { flex-direction: row; align-items: center; gap: 18px; background: radial-gradient(120% 140% at 0% 0%, color-mix(in srgb, var(--c) 28%, transparent), transparent 60%), var(--surface); }
+.prof-hero h2 { margin: 0; font-family: var(--font-display); font-size: 24px; }
+.prof-hero p { margin: 2px 0 0; }
+.prof-av { position: relative; flex: none; }
+.prof-cam { position: absolute; right: -4px; bottom: -4px; width: 36px; height: 36px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; cursor: pointer; box-shadow: 0 0 0 3px var(--surface); }
+.prof-cam svg { width: 18px; height: 18px; }
+.av-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(52px, 1fr)); gap: 10px; }
+.av-opt { all: unset; box-sizing: border-box; aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center; cursor: pointer; font-size: 24px; background: color-mix(in srgb, var(--c) 24%, var(--surface-2)); border: 2px solid transparent; transition: transform .15s; overflow: hidden; }
+.av-opt:active { transform: scale(.9); }
+.av-opt[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.av-opt .av { width: 100%; height: 100%; box-shadow: none; font-size: 17px; }
+.av-opt.up { font-size: 13px; font-weight: 700; color: var(--accent); background: var(--accent-soft); flex-direction: column; gap: 0; }
+.av-opt.up svg { width: 20px; height: 20px; }
+.sw-row { display: flex; flex-wrap: wrap; gap: 10px; }
+.swatch { all: unset; width: 34px; height: 34px; border-radius: 50%; background: var(--c); cursor: pointer; border: 3px solid var(--surface); box-shadow: 0 0 0 1px var(--line); }
+.swatch[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--fg); }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.stats a { text-decoration: none; color: inherit; background: var(--surface-2); border-radius: 16px; padding: 12px; display: flex; flex-direction: column; gap: 2px; }
+.stats b { font-family: var(--font-display); font-size: 22px; }
+.stats span { font-size: 12.5px; color: var(--muted); font-weight: 600; }
 .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 18px; display: flex; flex-direction: column; gap: 10px; box-shadow: var(--shadow); }
 .card h3 { margin: 0; font-family: var(--font-display); font-size: 17px; }
 .card p { margin: 0; color: var(--muted); }
@@ -389,6 +473,7 @@ footer.foot { margin-top: 32px; font-size: 12.5px; color: var(--muted); text-ali
       </div>
       <div class="hdr-actions">
         <span id="acctSlot"></span>
+        <a class="icon-btn" href="#explore" aria-label="Search artists" title="Search artists"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></a>
         <button class="icon-btn" id="themeBtn" aria-label="Switch light or dark theme" title="Theme">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
         </button>
@@ -411,6 +496,7 @@ footer.foot { margin-top: 32px; font-size: 12.5px; color: var(--muted); text-ali
   <section class="view" id="v-now" aria-label="Now and next" hidden></section>
   <section class="view" id="v-timeline" aria-label="My timeline" hidden></section>
   <section class="view" id="v-chat" aria-label="Chat" hidden></section>
+  <section class="view" id="v-profile" aria-label="Profile" hidden></section>
   <section class="view" id="v-explore" aria-label="Explore artists" hidden>
     <div class="search">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
@@ -433,9 +519,9 @@ footer.foot { margin-top: 32px; font-size: 12.5px; color: var(--muted); text-ali
   <div class="tabs-inner">
     <a href="#lineup" data-view="lineup"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M3 9h18M8 2v4M16 2v4"/></svg></span>Line-up</a>
     <a href="#now" data-view="now"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>Now</a>
-    <a href="#chat" data-view="chat"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.9A8 8 0 1 1 21 12z"/></svg></span>Chat</a>
+    <a href="#chat" data-view="chat"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.9A8 8 0 1 1 21 12z"/></svg></span>Chats<span class="badge" id="chatBadge" hidden></span></a>
     <a href="#timeline" data-view="timeline"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 20.5s-8-4.7-8-10.6A4.4 4.4 0 0 1 12 7a4.4 4.4 0 0 1 8 2.9c0 5.9-8 10.6-8 10.6z"/></svg></span>Saved<span class="badge" id="favBadge" hidden></span></a>
-    <a href="#explore" data-view="explore"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></span>Explore</a>
+    <a href="#profile" data-view="profile"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></span>Profile</a>
   </div>
 </nav>
 
@@ -738,11 +824,19 @@ async function api(path, opts = {}) {
   if (!r.ok) throw Object.assign(new Error(d.error || "Something went wrong. Try again."), { status: r.status });
   return d;
 }
-const avatar = (name, color, cls = "") => `<span class="av ${cls}" style="--c:${esc(color || "#F5A524")}" title="${esc(name)}">${esc(initials(name || "?"))}</span>`;
+// Avatar: uploaded photo ("p:<version>"), emoji ("e:<emoji>") or initials, on the person's colour.
+const COLORS = ["#F5A524", "#FF6370", "#4CC9DE", "#9D83FF", "#5BC26E", "#FF5F9E", "#C49A86", "#3B82F6", "#14B8A6", "#EAB308"];
+function avatar(name, color, cls = "", av = "", uid = "") {
+  const base = `style="--c:${esc(color || "#F5A524")}" title="${esc(name || "")}"`;
+  if (av && av.startsWith("p:") && uid && state.api) return `<span class="av ph ${cls}" ${base}><img src="/api/avatar/${encodeURIComponent(uid)}?v=${encodeURIComponent(av.slice(2))}" alt="" loading="lazy" decoding="async"></span>`;
+  if (av && av.startsWith("e:")) return `<span class="av em ${cls}" ${base}>${esc(av.slice(2))}</span>`;
+  return `<span class="av ${cls}" ${base}>${esc(initials(name || "?"))}</span>`;
+}
+const meAvatar = (cls = "") => avatar(state.user.display, state.user.color, cls, state.user.avatar, state.user.id);
 function crowdHTML(key) {
   const c = state.social.sets?.[key]; if (!c || !c.n) return "";
   const shown = c.top.slice(0, 3), more = c.n - shown.length;
-  return `<span class="crowd" title="${c.n} going">${shown.map(u => avatar(u.name, u.color)).join("")}${more > 0 ? `+${more}` : c.n === 1 ? "1 going" : ""}</span>`;
+  return `<span class="crowd" title="${c.n} going">${shown.map(u => avatar(u.name, u.color, "", u.av, u.id)).join("")}${more > 0 ? `+${more}` : c.n === 1 ? "1 going" : ""}</span>`;
 }
 async function loadSocial() {
   if (!state.api) return;
@@ -766,14 +860,14 @@ async function boot() {
     if (me.pending) { pendingFav = after?.fav || null; openPickUsername(me.pending); }
     else if (h === "welcome" && state.user) { toast(`Welcome back, ${state.user.display}`); if (after?.fav && !state.favs.has(after.fav)) toggleFav(after.fav); }
     else if (h === "signin-error") toast("Google sign-in didn't go through. Try again.");
-    loadSocial(); setInterval(loadSocial, 30000);
+    loadSocial(); setInterval(loadSocial, 30000); loadSummary();
   } catch { /* no server here: favourites stay on this device */ }
 }
 function renderAcct() {
   const slot = $("#acctSlot"); if (!slot) return;
   if (!state.api) { slot.innerHTML = ""; return; }
   slot.innerHTML = state.user
-    ? `<button class="acct" data-auth="account" aria-label="Your account">${avatar(state.user.display, state.user.color)}<span class="nm">${esc(state.user.display.split(" ")[0])}</span></button>`
+    ? `<button class="acct" data-auth="account" aria-label="Your account">${meAvatar()}<span class="nm">${esc(state.user.display.split(" ")[0])}</span></button>`
     : `<button class="acct signin" data-auth="signup">Sign up</button>`;
 }
 function openSheetHTML(html, focusSel) {
@@ -839,14 +933,14 @@ async function submitAuth(form) {
   try {
     const r = await api({ signup: "/api/signup", login: "/api/login", google: "/api/auth/google/finish" }[mode], { method: "POST", body });
     state.user = r.user; state.favs = new Set(r.favs); store.set("favs", []);
-    closeSheet(); renderAcct(); updateBadge(); render(); loadSocial();
+    closeSheet(); renderAcct(); updateBadge(); render(); loadSocial(); loadSummary();
     toast(mode === "login" ? `Welcome back, ${r.user.display}` : `Welcome, ${r.user.display}!`);
     if (pendingFav) { const k = pendingFav; pendingFav = null; toggleFav(k); }
   } catch (e) { errEl.textContent = e.message; btn.disabled = false; }
 }
 async function logout() {
   try { await api("/api/logout", { method: "POST" }); } catch {}
-  state.user = null; state.favs = new Set(); closeSheet(); chatDisconnect(); renderAcct(); updateBadge(); render(); toast("Logged out");
+  state.user = null; state.favs = new Set(); chat.sum = {}; updateChatBadge(); closeSheet(); chatDisconnect(); renderAcct(); updateBadge(); render(); toast("Logged out");
 }
 
 // ---------- Saving sets: one pick per time slot ----------
@@ -1069,7 +1163,7 @@ async function loadGoing(slug) {
   try {
     const all = await Promise.all(A.sets.map(s => api("/api/going?set=" + encodeURIComponent(s.key)).then(r => ({ s, r }))));
     const box = $("#goingBox"); if (!box || state.sheet !== slug) return;
-    box.innerHTML = all.map(({ s, r }) => `<div style="margin-bottom:10px"><div style="font-weight:700;color:var(--fg);margin-bottom:6px">${dayOf(s.day).short} ${range(s.start, s.end)} · ${r.n} going</div>${r.n ? `<div class="going">${r.people.slice(0, 40).map(u => `<span>${avatar(u.name, u.color)}${esc(u.name)}</span>`).join("")}${r.n > 40 ? `<span>+${r.n - 40} more</span>` : ""}</div>` : `<span>Nobody yet. Be the first!</span>`}</div>`).join("");
+    box.innerHTML = all.map(({ s, r }) => `<div style="margin-bottom:10px"><div style="font-weight:700;color:var(--fg);margin-bottom:6px">${dayOf(s.day).short} ${range(s.start, s.end)} · ${r.n} going</div>${r.n ? `<div class="going">${r.people.slice(0, 40).map(u => `<span>${avatar(u.name, u.color, "", u.av, u.id)}${esc(u.name)}</span>`).join("")}${r.n > 40 ? `<span>+${r.n - 40} more</span>` : ""}</div>` : `<span>Nobody yet. Be the first!</span>`}</div>`).join("");
   } catch {}
 }
 function openArtist(slug) {
@@ -1176,7 +1270,7 @@ function rerenderKeepScroll() {
 }
 
 // ---------- Routing ----------
-const TITLES = { lineup: "Line-up", now: "Now & next", chat: "Chat", timeline: "My timeline", explore: "Explore artists" };
+const TITLES = { lineup: "Line-up", now: "Now & next", chat: "Chats", timeline: "My timeline", explore: "Explore artists", profile: "Profile" };
 function render() {
   for (const v of Object.keys(TITLES)) $("#v-" + v).hidden = v !== state.view;
   document.querySelectorAll(".tabs a").forEach((a, i) => { if (a.dataset.view === state.view) { a.setAttribute("aria-current", "page"); a.parentNode.style.setProperty("--i", i); } else a.removeAttribute("aria-current"); });
@@ -1187,11 +1281,17 @@ function render() {
   $("#modeGrid").setAttribute("aria-pressed", state.mode === "grid");
   $("#favOnly").setAttribute("aria-pressed", state.favOnly);
   renderDays(); renderStageChips();
-  ({ lineup: renderLineup, now: renderNow, chat: renderChat, timeline: renderTimeline, explore: renderExplore })[state.view]();
+  document.body.classList.toggle("in-convo", state.view === "chat" && !!chat.room && !wide() && !!state.user);
+  ({ lineup: renderLineup, now: renderNow, chat: renderChat, timeline: renderTimeline, explore: renderExplore, profile: renderProfile })[state.view]();
   if (state.view !== "chat") chatDisconnect();
   document.documentElement.style.setProperty("--hdr", $("#hdr").offsetHeight + "px");
 }
-function route() { const h = location.hash.slice(1); state.view = TITLES[h] ? h : "lineup"; render(); window.scrollTo(0, 0); }
+function route() {
+  const h = location.hash.slice(1);
+  if (h.startsWith("chat/") && ROOM_RE.test(h.slice(5))) { state.view = "chat"; openRoom(h.slice(5)); }
+  else { state.view = TITLES[h] ? h : "lineup"; if (h === "chat") chat.room = null; }
+  render(); window.scrollTo(0, 0);
+}
 
 // ---------- Events ----------
 document.addEventListener("click", e => {
@@ -1202,7 +1302,7 @@ document.addEventListener("click", e => {
     const a = t.dataset.auth;
     if (a === "signup" || a === "login") return openAuth(a);
     if (a === "google") return googleStart();
-    if (a === "account") return openAccount();
+    if (a === "account") { location.hash = "#profile"; return; }
     if (a === "logout") return logout();
     if (a === "close") { closeSheet(); return; }
   }
@@ -1217,7 +1317,9 @@ document.addEventListener("click", e => {
     return;
   }
   if (t.dataset.play) { e.stopPropagation(); return play(t.dataset.play); }
-  if (t.dataset.room) { if (!$("#sheet").hidden) closeSheet(); chat.room = t.dataset.room; store.set("room", chat.room); if (state.view === "chat") { e.preventDefault(); renderChat(); } return; }
+  if (t.dataset.room) { e.preventDefault(); if (!$("#sheet").hidden) closeSheet(); location.hash = "#chat/" + t.dataset.room; return; }
+  if (t.dataset.av !== undefined) return pickAvatar(t.dataset.av);
+  if (t.dataset.color) return saveProfile({ color: t.dataset.color });
   if (t.dataset.chat) return chatAction(t.dataset.chat, t);
   if (t.dataset.open) return openArtist(t.dataset.open);
   if (t.dataset.day) { state.day = t.dataset.day; store.set("day", state.day); render(); return; }
@@ -1242,7 +1344,11 @@ document.addEventListener("change", e => {
 });
 $("#q").addEventListener("input", e => { state.q = e.target.value; renderExplore(); });
 window.addEventListener("hashchange", route);
-window.addEventListener("resize", () => document.documentElement.style.setProperty("--hdr", $("#hdr").offsetHeight + "px"));
+window.addEventListener("resize", () => {
+  document.documentElement.style.setProperty("--hdr", $("#hdr").offsetHeight + "px");
+  const conv = state.view === "chat" && !!chat.room && !wide() && !!state.user;
+  if (conv !== document.body.classList.contains("in-convo")) render();
+});
 { let y0 = null; const sh = $("#sheet");
   sh.addEventListener("touchstart", e => { if (sh.scrollTop <= 0) y0 = e.touches[0].clientY; }, { passive: true });
   sh.addEventListener("touchmove", e => { if (y0 != null && e.touches[0].clientY - y0 > 90) { y0 = null; closeSheet(); } }, { passive: true });
@@ -1251,23 +1357,88 @@ window.addEventListener("resize", () => document.documentElement.style.setProper
 
 const savedTheme = store.get("theme", null); if (savedTheme) document.documentElement.dataset.theme = savedTheme;
 // ---------- Chat ----------
-// Live rooms run on the site's own server (/api/rooms/<room>/ws). One room per stage, a general room, and private crew rooms.
+// Live rooms run on the site's own server (/api/rooms/<room>/ws): Everyone, one fan room per artist, and private crew rooms.
+// Phones: an inbox you tap into (#chat/<room>), like WhatsApp. Wide screens: inbox on the left, conversation on the right.
+const ROOM_RE = /^(general|artist-[a-z0-9-]{1,60}|crew-[A-Z0-9]{6})$/;
 const chat = {
-  room: /^(general|artist-|crew-)/.test(store.get("room", "")) ? store.get("room", "general") : "general",
-  name: store.get("nick", ""),
-  uid: store.get("uid", null) || (() => { const u = Math.random().toString(36).slice(2, 12) + Date.now().toString(36); store.set("uid", u); return u; })(),
+  room: null,
   crew: store.get("crew", ""),
   muted: new Set(store.get("muted", [])),
+  seen: store.get("seen", {}),          // room -> id of the last message read
+  recent: store.get("recentRooms", []),  // artist rooms opened without booking that artist
+  sum: {}, q: "", crewOpen: false,
   ws: null, wsRoom: null, online: 0, status: "idle", msgs: [], retry: 0, timer: null, draft: ""
 };
+const wide = () => matchMedia("(min-width: 900px)").matches;
 const roomName = r => r === "general" ? "Everyone" : r.startsWith("crew-") ? "My crew" : r.startsWith("artist-") ? (ARTISTS.get(r.slice(7))?.name || "Artist") : r;
-const nameHue = uid => `hsl(${hash(uid) % 360} 70% ${document.documentElement.dataset.theme === "light" || (!document.documentElement.dataset.theme && !matchMedia("(prefers-color-scheme: dark)").matches) ? 38 : 70}%)`;
+const stageName = id => STAGES.find(x => x[0] === id)?.[1] || "";
+function roomIcon(r, cls = "") {
+  if (r === "general") return `<span class="room-ico ${cls}" style="--c:var(--accent)" aria-hidden="true">🌍</span>`;
+  if (r.startsWith("crew-")) return `<span class="room-ico ${cls}" style="--c:var(--heart)" aria-hidden="true">👯</span>`;
+  const sl = r.slice(7);
+  return `<span class="room-ico ${cls}" aria-hidden="true">${art(sl, ARTISTS.get(sl)?.name || "?", { play: false })}</span>`;
+}
+function roomSub(r) {
+  if (r === "general") return "Everyone at the festival";
+  if (r.startsWith("crew-")) return "Private room · code " + r.slice(5);
+  const A = ARTISTS.get(r.slice(7)), st = A && [...A.sets].sort((a, b) => a.day.localeCompare(b.day) || a.start - b.start)[0];
+  return st ? `Fan room · ${dayOf(st.day).short} ${range(st.start, st.end)} · ${stageName(st.stage)}` : "Fan room";
+}
 const SEND = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>`;
+const BACK = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>`;
 const chatSupported = () => state.api && "WebSocket" in window;
 const clock = ts => new Date(ts).toLocaleTimeString([], { hour: "numeric", minute: "2-digit", hour12: true });
+function ago(ts) {
+  const d = new Date(ts), now = new Date();
+  if (d.toDateString() === now.toDateString()) return clock(ts);
+  if (now - d < 6 * 864e5) return d.toLocaleDateString([], { weekday: "short" });
+  return d.toLocaleDateString([], { day: "numeric", month: "short" });
+}
+function myRooms() {
+  const booked = [...new Set([...state.favs].map(k => SETMAP.get(k)).filter(Boolean).sort((a, b) => a.day.localeCompare(b.day) || a.start - b.start).flatMap(s => s.artists.map(x => x.slug)))];
+  const extra = chat.recent.filter(sl => ARTISTS.has(sl) && !booked.includes(sl));
+  return { fest: ["general", ...(chat.crew ? ["crew-" + chat.crew] : [])], artists: [...booked, ...extra].map(sl => "artist-" + sl) };
+}
+function openRoom(r) {
+  if (r.startsWith("artist-") && !chat.recent.includes(r.slice(7))) { chat.recent = [r.slice(7), ...chat.recent].slice(0, 12); store.set("recentRooms", chat.recent); }
+  if (r.startsWith("crew-") && r !== "crew-" + chat.crew) { chat.crew = r.slice(5); store.set("crew", chat.crew); }
+  chat.room = r;
+}
+function markSeen(id) {
+  if (!chat.room || !id || (chat.seen[chat.room] || 0) >= id) return;
+  chat.seen[chat.room] = id; store.set("seen", chat.seen);
+  if (chat.sum[chat.room]) chat.sum[chat.room].unread = 0;
+  updateChatBadge();
+}
+function updateChatBadge() {
+  const b = $("#chatBadge"); if (!b) return;
+  const n = Object.entries(chat.sum).reduce((t, [r, x]) => t + (r === chat.room && state.view === "chat" ? 0 : x.unread || 0), 0);
+  b.hidden = !n; b.textContent = n > 99 ? "99+" : n;
+}
+let sumBusy = false;
+async function loadSummary() {
+  if (!state.user || !chatSupported() || sumBusy || document.visibilityState === "hidden") return;
+  const { fest, artists } = myRooms(), rooms = [...fest, ...artists];
+  sumBusy = true;
+  try {
+    const r = await api("/api/rooms/summary", { method: "POST", body: { rooms: rooms.map(room => ({ room, since: chat.seen[room] || 0 })) } });
+    let changed = false;
+    for (const [room, x] of Object.entries(r.rooms || {})) {
+      // First time we see a room, start counting from now instead of flagging its whole history as unread.
+      if (chat.seen[room] == null) { chat.seen[room] = x.last ? x.last.id : 0; x.unread = 0; changed = true; }
+      if (x.last && chat.muted.has(x.last.uid)) x.unread = 0;
+      if (room === chat.room && state.view === "chat") x.unread = 0;
+      chat.sum[room] = x;
+    }
+    if (changed) store.set("seen", chat.seen);
+    updateChatBadge();
+    if (state.view === "chat") renderRoomRows();
+  } catch {} finally { sumBusy = false; }
+}
+setInterval(() => { if (state.view === "chat" || Date.now() % 120000 < 20000) loadSummary(); }, 20000);
 
 function chatConnect() {
-  if (!chatSupported() || !state.user) return;
+  if (!chatSupported() || !state.user || !chat.room) return;
   if (chat.ws && chat.wsRoom === chat.room && chat.ws.readyState <= 1) return;
   chatDisconnect();
   chat.status = "connecting"; chat.msgs = []; chat.wsRoom = chat.room;
@@ -1278,8 +1449,11 @@ function chatConnect() {
   ws.onopen = () => { chat.status = "live"; chat.retry = 0; renderChatStatus(); };
   ws.onmessage = ev => {
     let d; try { d = JSON.parse(ev.data); } catch { return; }
-    if (d.type === "history") { chat.msgs = d.messages; chat.online = d.online; renderChatBody(true); }
-    else if (d.type === "msg") { chat.msgs.push(d.message); if (chat.msgs.length > 300) chat.msgs.shift(); appendMsg(d.message); }
+    if (d.type === "history") { chat.msgs = d.messages; chat.online = d.online; renderChatBody(true); markSeen(d.messages.at(-1)?.id); }
+    else if (d.type === "msg") {
+      chat.msgs.push(d.message); if (chat.msgs.length > 300) chat.msgs.shift(); appendMsg(d.message); markSeen(d.message.id);
+      const x = chat.sum[chat.wsRoom] || (chat.sum[chat.wsRoom] = { unread: 0, online: chat.online }); x.last = d.message; renderRoomRows();
+    }
     else if (d.type === "presence") { chat.online = d.online; renderChatStatus(); }
     else if (d.type === "error") toast(d.error);
   };
@@ -1298,12 +1472,13 @@ function chatDisconnect() {
 }
 function msgHTML(m, prev) {
   if (chat.muted.has(m.uid)) return "";
-  const me = state.user && m.uid === String(state.user.id), same = prev && prev.uid === m.uid && m.ts - prev.ts < 120000;
-  return `<div class="msg${me ? " me" : ""}${same ? " same" : ""}" data-id="${m.id}"><span class="by">${me ? "You" : `<button data-chat="mute" data-uid="${esc(m.uid)}" data-name="${esc(m.name)}" title="Hide messages from ${esc(m.name)}">${avatar(m.name, m.color)}${esc(m.name)}</button>`}<span class="tnum">${clock(m.ts)}</span></span><span class="bubble">${esc(m.text)}</span></div>`;
+  const me = state.user && m.uid === String(state.user.id), same = prev && prev.uid === m.uid && m.ts - prev.ts < 120000 && !chat.muted.has(prev.uid);
+  const who = `<button data-chat="mute" data-uid="${esc(m.uid)}" data-name="${esc(m.name)}" title="Hide messages from ${esc(m.name)}">${esc(m.name)}</button>`;
+  return `<div class="msg${me ? " me" : ""}${same ? " same" : ""}" data-id="${m.id}"><span class="who">${me ? "" : avatar(m.name, m.color, "", m.av, m.uid)}</span><span class="col"><span class="by">${me ? "" : who}<span class="tnum">${clock(m.ts)}</span></span><span class="bubble">${esc(m.text)}</span></span></div>`;
 }
 function renderChatStatus() {
   const el = $("#chatOnline"); if (!el) return;
-  const map = { live: `${chat.online} online`, connecting: "Connecting…", reconnecting: "Reconnecting…", idle: "Offline", unavailable: "Offline" };
+  const map = { live: chat.online > 1 ? `${chat.online} online` : "Only you here right now", connecting: "Connecting…", reconnecting: "Reconnecting…", idle: "Offline", unavailable: "Offline" };
   el.textContent = map[chat.status] || "";
   el.classList.toggle("off", chat.status !== "live");
   const b = $("#chatSend"); if (b) b.disabled = chat.status !== "live";
@@ -1311,81 +1486,171 @@ function renderChatStatus() {
 function renderChatBody(scroll) {
   const box = $("#chatMsgs"); if (!box) return;
   if (chat.status === "unavailable") { box.innerHTML = `<div class="card"><h3>Chat is offline here</h3><p>Live chat works on the tmlunofficial website. This copy of the page can't reach the chat server.</p></div>`; renderChatStatus(); return; }
-  box.innerHTML = chat.msgs.length ? chat.msgs.map((m, i) => msgHTML(m, chat.msgs[i - 1])).join("") : `<p class="note" style="text-align:center;padding:30px 0">No messages yet in ${esc(roomName(chat.room))}. Say hi 👋</p>`;
+  box.innerHTML = chat.msgs.length ? chat.msgs.map((m, i) => msgHTML(m, chat.msgs[i - 1])).join("") : `<p class="note" style="text-align:center;padding:40px 0">${chat.status === "live" ? `No messages yet in ${esc(roomName(chat.room))}. Say hi 👋` : "Loading…"}</p>`;
   renderChatStatus();
-  if (scroll) requestAnimationFrame(() => window.scrollTo(0, document.body.scrollHeight));
+  if (scroll) requestAnimationFrame(() => { box.scrollTop = box.scrollHeight; });
 }
 function appendMsg(m) {
-  const box = $("#chatMsgs"); if (!box) return;
-  const nearBottom = innerHeight + scrollY > document.body.scrollHeight - 220;
+  const box = $("#chatMsgs"); if (!box || chat.wsRoom !== chat.room) return;
+  const nearBottom = box.scrollTop + box.clientHeight > box.scrollHeight - 160;
   if (chat.msgs.length === 1) box.innerHTML = "";
   box.insertAdjacentHTML("beforeend", msgHTML(m, chat.msgs[chat.msgs.length - 2]));
-  if (nearBottom || (state.user && m.uid === String(state.user.id))) window.scrollTo(0, document.body.scrollHeight);
+  if (nearBottom || (state.user && m.uid === String(state.user.id))) box.scrollTop = box.scrollHeight;
 }
-function renderChat() {
-  const el = $("#v-chat");
-  if (!chatSupported()) {
-    el.innerHTML = `<div class="card"><h3>Chat lives on the website</h3><p>Open the tmlunofficial site to chat with everyone and with fans of each artist.</p></div>`;
-    return;
-  }
-  if (!state.user) {
-    el.innerHTML = `<div class="card"><h3>Sign up to chat</h3><p>Talk with everyone at the festival, or join the room for each artist you're seeing. Browsing the line-up stays free without an account.</p><button class="btn primary" data-auth="signup">Create an account</button><button class="btn" data-auth="login">Log in</button></div>`;
-    return;
-  }
-  if (chat.room.startsWith("crew-") && chat.room !== "crew-" + chat.crew) chat.room = "general";
-  // Rooms: Everyone, your crew, and one room per artist you've booked (plus the one you opened).
-  const mine = [...new Set([...state.favs].map(k => SETMAP.get(k)).filter(Boolean).sort((a, b) => a.day.localeCompare(b.day) || a.start - b.start).flatMap(s => s.artists.map(x => x.slug)))];
-  const cur = chat.room.startsWith("artist-") ? chat.room.slice(7) : null;
-  if (cur && !mine.includes(cur)) mine.unshift(cur);
-  const chip = (room, label, color) => `<button class="chip" data-room="${room}" aria-pressed="${chat.room === room}" ${color ? `style="--c:${color}"` : ""}>${color ? `<span class="dot"></span>` : ""}${esc(label)}</button>`;
-  el.innerHTML = `<div class="chat">
-    <div class="chips" role="group" aria-label="Chat rooms">${chip("general", "Everyone", "var(--accent)")}${chat.crew ? chip("crew-" + chat.crew, "My crew", "var(--heart)") : ""}${mine.map(sl => chip("artist-" + sl, ARTISTS.get(sl)?.name || sl)).join("")}<button class="chip" data-chat="crew-panel">${chat.crew ? "Crew code" : "+ Crew room"}</button></div>
-    ${mine.length ? "" : `<p class="note">Book artists in the line-up and their fan rooms show up here.</p>`}
-    <div id="crewPanel" hidden></div>
-    <div class="chat-head"><h2>${chat.room === "general" ? "Everyone" : chat.room.startsWith("crew-") ? "My crew" : esc(roomName(chat.room)) + " fans"}</h2><span class="online off" id="chatOnline"></span></div>
-    <div class="msgs" id="chatMsgs" aria-live="polite"></div>
-    <form class="composer" id="composer"><label for="chatText" class="sr">Message</label><textarea id="chatText" rows="1" maxlength="500" placeholder="Message as ${esc(state.user.display)}">${esc(chat.draft)}</textarea><button id="chatSend" type="submit" aria-label="Send" disabled>${SEND}</button></form>
-    <p class="note">Be kind. Tap a name to hide that person's messages.</p>
-  </div>`;
-  if (chat.wsRoom === chat.room && chat.ws) renderChatBody(true); else renderChatBody();
-  chatConnect();
+function rowHTML(r) {
+  const x = chat.sum[r], last = x?.last, unread = x?.unread || 0;
+  const mine = last && state.user && last.uid === String(state.user.id);
+  const prev = last && !chat.muted.has(last.uid) ? `${mine ? "You" : esc(last.name.split(" ")[0])}: ${esc(last.text)}` : esc(roomSub(r));
+  return `<a class="room-row${chat.room === r && wide() ? " on" : ""}" href="#chat/${r}">${roomIcon(r)}<span class="rr-main"><span class="rr-top"><b>${esc(roomName(r))}</b><span class="rr-time${unread ? " new" : ""}">${last ? ago(last.ts) : ""}</span></span><span class="rr-bot"><span class="rr-prev">${prev}</span>${unread ? `<span class="rr-badge" aria-label="${unread} unread">${unread > 99 ? "99+" : unread}</span>` : x?.online ? `<span class="rr-live" title="${x.online} online now"></span>` : ""}</span></span></a>`;
 }
-function crewPanel() {
-  const p = $("#crewPanel"); if (!p) return;
-  p.hidden = !p.hidden; if (p.hidden) return;
-  p.innerHTML = `<div class="card">
-    ${chat.crew ? `<h3>Your crew code</h3><p>Share this code with your friends so they can join your private room.</p><div class="row"><span class="crew-code">${chat.crew}</span><button class="btn" data-chat="copy">Copy code</button><button class="btn" data-chat="leave">Leave crew</button></div>`
+function renderRoomRows() {
+  const el = $("#roomRows"); if (!el) return;
+  const { fest, artists } = myRooms(), q = chat.q.trim().toLowerCase();
+  const match = r => !q || roomName(r).toLowerCase().includes(q);
+  const byLast = (a, b) => (chat.sum[b]?.last?.ts || 0) - (chat.sum[a]?.last?.ts || 0);
+  const fs = fest.filter(match), as = artists.filter(match).sort(byLast);
+  el.innerHTML = (fs.length ? `<div class="room-sec">Festival</div>${fs.map(rowHTML).join("")}` : "") +
+    `<div class="room-sec">Artist rooms</div>` + (as.length ? as.map(rowHTML).join("") : `<p class="note" style="padding:4px 8px">${q ? "No chats match." : "Book artists in the line-up and their fan rooms show up here."}</p>`);
+}
+function crewBoxHTML() {
+  return `<div class="card crew-box">
+    ${chat.crew ? `<h3>Your crew</h3><p>Share code <span class="crew-code">${chat.crew}</span> so friends can join your private room.</p><div class="row"><button class="btn" data-chat="copy">Copy code</button><button class="btn" data-chat="leave">Leave crew</button></div>`
       : `<h3>Crew room</h3><p>A private room for your friends. Create one and share the code, or enter a friend's code.</p><button class="btn primary" data-chat="create">Create a crew room</button>`}
     <form class="row" id="joinForm"><label for="crewCode" class="sr">Crew code</label><input class="field" id="crewCode" maxlength="6" placeholder="Friend's code" autocapitalize="characters" autocomplete="off"><button class="btn" type="submit">Join</button></form>
   </div>`;
 }
+function convoHTML() {
+  const r = chat.room, artist = r.startsWith("artist-") ? r.slice(7) : "";
+  return `<div class="convo-head">
+      <a class="icon-btn back" href="#chat" aria-label="Back to chats">${BACK}</a>
+      ${roomIcon(r, "sm")}
+      <button class="ch-title" ${artist ? `data-open="${esc(artist)}" title="About ${esc(roomName(r))}"` : r.startsWith("crew-") ? `data-chat="copy" title="Copy crew code"` : ""}><b>${esc(roomName(r))}${artist ? " fans" : ""}</b><span class="online off" id="chatOnline"></span></button>
+    </div>
+    <div class="msgs" id="chatMsgs" aria-live="polite"></div>
+    <form class="composer" id="composer"><label for="chatText" class="sr">Message</label><textarea id="chatText" rows="1" maxlength="500" placeholder="Message">${esc(chat.draft)}</textarea><button id="chatSend" type="submit" aria-label="Send" disabled>${SEND}</button></form>`;
+}
+function renderChat() {
+  const el = $("#v-chat");
+  if (!chatSupported()) { el.innerHTML = `<div class="card"><h3>Chat lives on the website</h3><p>Open the tmlunofficial site to chat with everyone and with fans of each artist.</p></div>`; return; }
+  if (!state.user) { el.innerHTML = `<div class="card"><h3>Sign up to chat</h3><p>Talk with everyone at the festival, or join the room for each artist you're seeing. Browsing the line-up stays free without an account.</p><button class="btn primary" data-auth="signup">Create an account</button><button class="btn" data-auth="login">Log in</button></div>`; return; }
+  if (!chat.room && wide()) chat.room = "general";
+  el.innerHTML = `<div class="chat-split${chat.room ? " has-room" : ""}">
+    <div class="inbox">
+      <div class="search inbox-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="roomQ" type="search" placeholder="Search chats" autocomplete="off" aria-label="Search chats" value="${esc(chat.q)}"></div>
+      <div id="roomRows"></div>
+      ${crewBoxHTML()}
+      <p class="note" style="padding:10px 8px">Be kind. Tap a name in a chat to hide that person's messages.</p>
+    </div>
+    <div class="convo">${chat.room ? convoHTML() : ""}</div>
+  </div>`;
+  renderRoomRows();
+  if (chat.room) { if (chat.wsRoom === chat.room && chat.ws) renderChatBody(true); else renderChatBody(); chatConnect(); markSeen(chat.msgs.at(-1)?.id); }
+  else chatDisconnect();
+  updateChatBadge();
+  loadSummary();
+}
 function setCrew(code) {
   chat.crew = code; store.set("crew", code);
-  chat.room = code ? "crew-" + code : "general"; store.set("room", chat.room);
-  renderChat();
+  location.hash = code ? "#chat/crew-" + code : "#chat";
+  if (!code) renderChat();
 }
 function chatAction(a, t) {
-  if (a === "crew-panel") return crewPanel();
-  if (a === "create") { const abc = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; let c = ""; const r = crypto.getRandomValues(new Uint8Array(6)); r.forEach(x => c += abc[x % abc.length]); setCrew(c); toast("Crew room created. Share the code!"); return; }
+  if (a === "create") { const abc = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; let c = ""; crypto.getRandomValues(new Uint8Array(6)).forEach(x => c += abc[x % abc.length]); setCrew(c); toast("Crew room created. Share the code!"); return; }
   if (a === "leave") { setCrew(""); toast("Left the crew room"); return; }
-  if (a === "copy") { navigator.clipboard?.writeText(chat.crew).then(() => toast("Code copied"), () => toast(`Your code is ${chat.crew}`)); return; }
+  if (a === "copy") { navigator.clipboard?.writeText(chat.crew).then(() => toast("Crew code copied"), () => toast(`Your code is ${chat.crew}`)); return; }
   if (a === "mute") { chat.muted.add(t.dataset.uid); store.set("muted", [...chat.muted]); toast(`Hidden messages from ${t.dataset.name}`); renderChatBody(); return; }
 }
+
+// ---------- Profile ----------
+const AV_EMOJI = ["🎧", "🪩", "🔊", "🔥", "⚡", "🌈", "🦄", "🌙", "🌴", "👽", "🐯", "🦋", "🍄", "🌀", "🎉", "😎"];
+const CAM = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>`;
+function renderProfile() {
+  const el = $("#v-profile");
+  if (!state.api) { el.innerHTML = `<div class="card"><h3>Profiles live on the website</h3><p>Open the tmlunofficial site to set up your profile.</p></div>`; return; }
+  if (!state.user) {
+    el.innerHTML = `<div class="profile"><div class="card"><h3>Make it yours</h3><p>Create a profile to save your sets, pick an avatar or photo, see who else is going and chat with other ravers.</p><button class="btn primary" data-auth="signup">Create an account</button><button class="btn" data-auth="login">Log in</button></div></div>`;
+    return;
+  }
+  const u = state.user, av = u.avatar || "", rooms = myRooms();
+  const opt = (val, inner, label) => `<button class="av-opt" data-av="${esc(val)}" aria-pressed="${av === val || (val === "photo" && av.startsWith("p:"))}" aria-label="${esc(label)}" style="--c:${esc(u.color)}">${inner}</button>`;
+  el.innerHTML = `<div class="profile">
+    <div class="card prof-hero" style="--c:${esc(u.color)}">
+      <div class="prof-av">${meAvatar("xl")}<label class="prof-cam" for="photoIn" title="Upload a photo" aria-label="Upload a photo">${CAM}</label></div>
+      <div style="min-width:0"><h2>${esc(u.display)}</h2><p class="note">@${esc(u.username)}</p></div>
+    </div>
+    <div class="card">
+      <h3>Avatar</h3>
+      <div class="av-grid">
+        <label class="av-opt up" for="photoIn" title="Upload a photo">${CAM}<span>Photo</span></label>
+        ${av.startsWith("p:") ? opt("photo", meAvatar(), "Your photo") : ""}
+        ${opt("", avatar(u.display, u.color), "Initials")}
+        ${AV_EMOJI.map(e => opt("e:" + e, e, e)).join("")}
+      </div>
+      <input type="file" id="photoIn" accept="image/*" hidden>
+      <h3 style="margin-top:6px">Colour</h3>
+      <div class="sw-row">${COLORS.map(c => `<button class="swatch" data-color="${c}" style="--c:${c}" aria-pressed="${u.color === c}" aria-label="Colour ${c}"></button>`).join("")}</div>
+    </div>
+    <div class="card">
+      <h3>Your name</h3>
+      <form class="row" id="nameForm"><label for="pName" class="sr">Your name</label><input class="field" id="pName" maxlength="24" autocomplete="nickname" value="${esc(u.display)}"><button class="btn primary" type="submit">Save</button></form>
+      <p class="note">Shown in chats and on who's-going lists.</p>
+    </div>
+    <div class="card">
+      <h3>Your festival</h3>
+      <div class="stats">
+        <a href="#timeline"><b>${state.favs.size}</b><span>Saved sets</span></a>
+        <a href="#chat"><b>${rooms.fest.length + rooms.artists.length}</b><span>Chats</span></a>
+        <a href="#explore"><b>${ARTISTS.size}</b><span>Artists</span></a>
+      </div>
+    </div>
+    <button class="btn" data-auth="logout">Log out</button>
+  </div>`;
+}
+async function saveProfile(body, msg) {
+  if (!state.user) return;
+  try {
+    const r = await api("/api/profile", { method: "POST", body });
+    state.user = r.user; renderAcct(); if (state.view === "profile") renderProfile(); loadSocial();
+    if (msg) toast(msg);
+  } catch (e) { toast(e.message); }
+}
+const pickAvatar = v => saveProfile({ avatar: v }, "Avatar updated");
+// Photos are cropped to a square and shrunk on the phone before upload, so they stay tiny (about 15 KB).
+async function uploadPhoto(file) {
+  if (!file || !file.type.startsWith("image/")) return toast("Pick an image file");
+  try {
+    const url = URL.createObjectURL(file), img = new Image();
+    await new Promise((ok, bad) => { img.onload = ok; img.onerror = bad; img.src = url; });
+    const side = Math.min(img.naturalWidth, img.naturalHeight), c = document.createElement("canvas");
+    c.width = c.height = 256;
+    c.getContext("2d").drawImage(img, (img.naturalWidth - side) / 2, (img.naturalHeight - side) / 2, side, side, 0, 0, 256, 256);
+    URL.revokeObjectURL(url);
+    toast("Uploading…");
+    const r = await api("/api/profile/photo", { method: "POST", body: { data: c.toDataURL("image/jpeg", 0.85) } });
+    state.user = r.user; renderAcct(); renderProfile(); loadSocial(); toast("Photo updated");
+  } catch (e) { toast(e?.message || "Couldn't read that image"); }
+}
+document.addEventListener("change", e => { if (e.target.id === "photoIn") { uploadPhoto(e.target.files[0]); e.target.value = ""; } });
+
 document.addEventListener("submit", e => {
   if (e.target.id === "authForm") { e.preventDefault(); submitAuth(e.target); return; }
-  if (e.target.id === "joinForm") { e.preventDefault(); const c = $("#crewCode").value.toUpperCase().replace(/[^A-Z0-9]/g, ""); if (c.length !== 6) return toast("Crew codes have 6 letters or numbers"); setCrew(c); toast("Joined crew " + c); }
+  if (e.target.id === "nameForm") { e.preventDefault(); const v = $("#pName").value.trim(); if (!v) return toast("Your name can't be empty"); saveProfile({ display: v }, "Name saved"); return; }
+  if (e.target.id === "joinForm") { e.preventDefault(); const c = $("#crewCode").value.toUpperCase().replace(/[^A-Z0-9]/g, ""); if (c.length !== 6) return toast("Crew codes have 6 letters or numbers"); setCrew(c); toast("Joined crew " + c); return; }
   if (e.target.id === "composer") {
     e.preventDefault();
     const ta = $("#chatText"), text = ta.value.trim();
     if (!text || !chat.ws || chat.ws.readyState !== 1) return;
     chat.ws.send(JSON.stringify({ type: "msg", text }));
-    ta.value = ""; chat.draft = ""; ta.style.height = "";
+    ta.value = ""; chat.draft = ""; ta.style.height = ""; ta.focus();
   }
 });
-document.addEventListener("input", e => { if (e.target.id === "chatText") { chat.draft = e.target.value; e.target.style.height = "auto"; e.target.style.height = Math.min(120, e.target.scrollHeight) + "px"; } });
-document.addEventListener("keydown", e => { if (e.target.id === "chatText" && e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); $("#composer").requestSubmit(); } });
+document.addEventListener("input", e => {
+  if (e.target.id === "chatText") { chat.draft = e.target.value; e.target.style.height = "auto"; e.target.style.height = Math.min(120, e.target.scrollHeight) + "px"; }
+  if (e.target.id === "roomQ") { chat.q = e.target.value; renderRoomRows(); }
+});
+document.addEventListener("keydown", e => { if (e.target.id === "chatText" && e.key === "Enter" && !e.shiftKey && !e.isComposing && !matchMedia("(pointer: coarse)").matches) { e.preventDefault(); $("#composer").requestSubmit(); } });
 setInterval(() => { if (chat.ws?.readyState === 1) chat.ws.send('{"type":"ping"}'); }, 30000);
-document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && state.view === "chat") chatConnect(); });
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") { if (state.view === "chat") chatConnect(); loadSummary(); } });
 
 renderGenreChips(); updateBadge(); route(); boot();
 
