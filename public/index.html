@@ -317,6 +317,16 @@ nav.tabs { position: fixed; z-index: 25; left: 50%; transform: translateX(-50%);
 .going > span { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; padding: 3px 10px 3px 3px; border-radius: 99px; background: var(--surface-2); }
 .going .av { box-shadow: none; }
 .swap { display: flex; flex-direction: column; gap: 10px; }
+/* Personal blocks: dining sessions and breaks */
+.busy.plan { border-style: dashed; }
+.busy.plan span { position: absolute; left: 6px; top: 4px; font-size: 11px; font-weight: 800; color: var(--heart); background: var(--surface); padding: 1px 7px; border-radius: 99px; white-space: nowrap; }
+.plan-ico { width: 76px; height: 76px; border-radius: 14px; display: grid; place-items: center; font-size: 30px; background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--heart) 18%, var(--surface-2)) 0 6px, var(--surface-2) 6px 13px); }
+.set.plan-row .set-main { cursor: default; }
+.plan-tools { display: flex; justify-content: flex-end; margin: 4px 0 12px; }
+.seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.seg button { min-height: 44px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface-2); font-weight: 700; font-size: 13px; padding: 4px 6px; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.times { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 
 /* Chat */
 .chat { display: flex; flex-direction: column; gap: 12px; }
@@ -956,6 +966,7 @@ const state = {
   mode: store.get("mode", window.matchMedia("(min-width: 900px)").matches ? "grid" : "list"),
   favOnly: false,
   favs: new Set(store.get("favs", [])),
+  plans: store.get("plans", []), // your own blocks: dining sessions and breaks ({ id, day, start, end, kind, label })
   user: null, api: false, offline: false, social: { sets: {} },
   q: "", genre: "all",
   preview: null,
@@ -1027,7 +1038,7 @@ async function loadSocial() {
 // Last known account + bookings, so the home-screen app still shows your sets with no network.
 function saveMe() {
   if (!state.api || state.offline) return;
-  store.set("me", { user: state.user, favs: state.user ? [...state.favs] : [], google: !!state.google, at: Date.now() });
+  store.set("me", { user: state.user, favs: state.user ? [...state.favs] : [], plans: state.user ? state.plans : [], google: !!state.google, at: Date.now() });
 }
 function setOffline(on) {
   state.offline = on;
@@ -1047,8 +1058,8 @@ async function boot() {
     setOffline(false);
     state.api = true;
     state.google = !!me.google;
-    if (me.user) { state.user = me.user; state.favs = new Set(me.favs); }
-    else { state.user = null; state.favs = new Set(); }
+    if (me.user) { state.user = me.user; state.favs = new Set(me.favs); state.plans = me.plans || []; }
+    else { state.user = null; state.favs = new Set(); state.plans = []; }
     saveMe(); store.set("syncedAt", Date.now());
     // Back from Google: restore where the person was, then finish whatever they were doing.
     const h = location.hash.slice(1), after = takeAfter();
@@ -1067,7 +1078,7 @@ async function boot() {
     // No network: use the copy saved on the last online visit.
     const me = store.get("me", null);
     setOffline(true);
-    if (me) { state.api = true; state.google = me.google; state.user = me.user; state.favs = new Set(me.user ? me.favs : []); }
+    if (me) { state.api = true; state.google = me.google; state.user = me.user; state.favs = new Set(me.user ? me.favs : []); state.plans = me.user ? me.plans || [] : []; }
     updateBadge(); renderAcct(); const y = scrollY; render(); scrollTo(0, y);
   }
 }
@@ -1143,7 +1154,7 @@ async function submitAuth(form) {
   const btn = form.querySelector("button[type=submit]"); btn.disabled = true;
   try {
     const r = await api({ signup: "/api/signup", login: "/api/login", google: "/api/auth/google/finish" }[mode], { method: "POST", body });
-    state.user = r.user; state.favs = new Set(r.favs); store.set("favs", []);
+    state.user = r.user; state.favs = new Set(r.favs); state.plans = r.plans || []; store.set("favs", []);
     closeSheet(); renderAcct(); updateBadge(); render(); loadSocial(); loadSummary();
     toast(mode === "login" ? `Welcome back, ${r.user.display}` : `Welcome, ${r.user.display}!`);
     if (pendingFav) { const k = pendingFav; pendingFav = null; toggleFav(k); }
@@ -1151,14 +1162,17 @@ async function submitAuth(form) {
 }
 async function logout() {
   try { await api("/api/logout", { method: "POST" }); } catch {}
-  state.user = null; state.favs = new Set(); chat.sum = {}; updateChatBadge(); closeSheet(); chatDisconnect(); renderAcct(); updateBadge(); render(); toast("Logged out");
+  state.user = null; state.favs = new Set(); state.plans = []; chat.sum = {}; updateChatBadge(); closeSheet(); chatDisconnect(); renderAcct(); updateBadge(); render(); toast("Logged out");
 }
 
 // ---------- Saving sets: one pick per time slot ----------
 let pendingFav = null;
 const overlaps = (a, b) => a.day === b.day && a.start < b.end && b.start < a.end;
 const conflictsOf = set => [...state.favs].map(k => SETMAP.get(k)).filter(o => o && o.key !== set.key && overlaps(o, set));
-const blockerOf = set => state.favs.has(set.key) ? null : conflictsOf(set)[0] || null;
+const planClashes = set => state.plans.filter(p => overlaps(p, set));
+const blockerOf = set => state.favs.has(set.key) ? null : conflictsOf(set)[0] || planClashes(set)[0] || null;
+// A busy slot is either a booked set or one of your own blocks (dining, break).
+const blockName = b => b.artists ? nameText(b) : b.label;
 async function persistFavs(add, remove) {
   add.forEach(k => state.favs.add(k)); remove.forEach(k => state.favs.delete(k));
   if (!state.api) store.set("favs", [...state.favs]);
@@ -1173,14 +1187,17 @@ function toggleFav(key) {
   if (state.api && offlineBlock()) return;
   if (state.api && !state.user) { pendingFav = key; return openAuth("signup", `Sign up to save ${nameText(s)} and see who else is going.`); }
   if (state.favs.has(key)) { persistFavs([], [key]); toast("Removed from your timeline"); return; }
-  const clash = conflictsOf(s);
-  if (!clash.length) { persistFavs([key], []); toast(`Booked ${nameText(s)} · ${dayOf(s.day).short} ${fmt(s.start)}`); return; }
+  const clash = conflictsOf(s), mine = planClashes(s);
+  if (!clash.length && !mine.length) { persistFavs([key], []); toast(`Booked ${nameText(s)} · ${dayOf(s.day).short} ${fmt(s.start)}`); return; }
+  const parts = clash.map(c => `<b>${esc(nameText(c))}</b> (${range(c.start, c.end)}, ${esc(STAGE[c.stage].name)})`)
+    .concat(mine.map(p => `<b>${esc(p.label)}</b> (${range(p.start, p.end)})`));
   openSheetHTML(`<div class="auth" style="position:relative">${closeBtnHTML}
     <h2>That slot is taken</h2>
-    <p>You're already booked for ${clash.map(c => `<b>${esc(nameText(c))}</b> (${range(c.start, c.end)}, ${esc(STAGE[c.stage].name)})`).join(" and ")}. You can only be at one stage at a time.</p>
+    <p>You've already got ${parts.join(" and ")} then.${clash.length ? " You can only be at one stage at a time." : ""}</p>
     <div class="swap">
-      <button class="btn primary" data-swap="${esc(key)}">Swap to ${esc(nameText(s))}</button>
-      <button class="btn" data-auth="close">Keep ${esc(nameText(clash[0]))}</button>
+      <button class="btn primary" data-swap="${esc(key)}">${clash.length ? `Swap to ${esc(nameText(s))}` : `Book ${esc(nameText(s))} anyway`}</button>
+      ${clash.length && mine.length ? `<p class="hint">Your ${esc(mine.map(p => p.label).join(", "))} stays in your timeline.</p>` : ""}
+      <button class="btn" data-auth="close">Keep ${esc(blockName(clash[0] || mine[0]))}</button>
     </div></div>`);
 }
 function afterFavChange() {
@@ -1209,7 +1226,7 @@ function setRow(set, opts = {}) {
       <span class="time tnum">${range(set.start, set.end)}${opts.dayLabel ? ` · ${dayOf(set.day).short} ${dayOf(set.day).label}` : ""}</span>
       ${opts.hideStage ? "" : pill(st)}
       ${opts.extra || ""}
-      ${blk ? `<span class="busy-chip">Busy · ${esc(nameText(blk))}</span>` : ""}
+      ${blk ? `<span class="busy-chip">Busy · ${esc(blockName(blk))}</span>` : ""}
       ${crowdHTML(set.key)}
       ${set.genres.length && !blk ? `<span class="genre">${esc(set.genres.join(" · "))}</span>` : ""}
     </button>
@@ -1243,7 +1260,7 @@ function renderGrid(el, sets) {
   const h = (LAST - FIRST) * ppm + 16;
   let times = "";
   for (let m = FIRST; m <= LAST; m += 60) times += `<span class="tnum" style="top:${(m-FIRST)*ppm + 8}px">${fmtHour(m)}</span>`;
-  const cols = stages.map(id => {
+  const cols = stages.map((id, ci) => {
     const items = sets.filter(s => s.stage === id).map(s => {
       const top = (s.start - FIRST) * ppm + 10, height = Math.max(30, (s.end - s.start) * ppm - 4), lead = s.artists[0];
       return `<div class="g-set${state.favs.has(s.key) ? " is-fav" : ""}${blockerOf(s) ? " blocked" : ""}${height < 90 ? " short" : ""}" style="top:${top}px;height:${height}px">
@@ -1252,7 +1269,9 @@ function renderGrid(el, sets) {
         ${favBtn(s)}${playBtn(lead.slug, nameText(s))}</div>`;
     }).join("");
     // Booked sets block the whole row: a hatched band across every stage, like a busy slot in a calendar.
-    const bands = SETS.filter(f => f.day === state.day && state.favs.has(f.key)).map(f => `<div class="busy" style="top:${(f.start - FIRST) * ppm + 10}px;height:${(f.end - f.start) * ppm - 4}px" aria-hidden="true"></div>`).join("");
+    const bands = SETS.filter(f => f.day === state.day && state.favs.has(f.key)).map(f => `<div class="busy" style="top:${(f.start - FIRST) * ppm + 10}px;height:${(f.end - f.start) * ppm - 4}px" aria-hidden="true"></div>`).join("")
+      + state.plans.filter(p => p.day === state.day).map(p => { const a = Math.max(p.start, FIRST), b = Math.min(p.end, LAST); return b <= a ? "" :
+        `<div class="busy plan" style="top:${(a - FIRST) * ppm + 10}px;height:${Math.max(18, (b - a) * ppm - 4)}px" ${ci ? 'aria-hidden="true"' : `role="note" aria-label="${esc(p.label)}, ${range(p.start, p.end)}"`}>${ci ? "" : `<span>${PLAN_ICON[p.kind] || ""} ${esc(p.label)}</span>`}</div>`; }).join("");
     return `<div class="g-col" style="height:${h}px;--ppm:${ppm}">${bands}${items}</div>`;
   }).join("");
   const heads = `<div class="g-head corner"></div>` + stages.map(id => `<div class="g-head"><span class="dot" style="--c:var(${STAGE[id].c})"></span>${esc(STAGE[id].name)}</div>`).join("");
@@ -1306,21 +1325,108 @@ function renderNow() {
 }
 
 // ---------- My timeline ----------
+function planRow(p, extra = "") {
+  return `<div class="set plan-row is-fav"><span class="plan-ico" aria-hidden="true">${PLAN_ICON[p.kind] || ""}</span>
+    <div class="set-main"><span class="set-name">${esc(p.label)}</span><span class="time tnum">${range(p.start, p.end)}</span>
+      <span class="tag" style="width:fit-content">${p.kind === "break" ? "Break" : "Dining"} · blocks this time</span>${extra}</div>
+    <button class="fav" data-plan-del="${esc(p.id)}" aria-label="Remove ${esc(p.label)}">${ICON.close}</button></div>`;
+}
 function renderTimeline() {
   const el = $("#v-timeline");
-  const favs = SETS.filter(s => s.day === state.day && state.favs.has(s.key)).sort((a,b) => a.start - b.start || a.end - b.end);
-  if (!favs.length) { el.innerHTML = emptyHTML(`No favourites on ${dayOf(state.day).short}`, "Tap the heart on a set to book it. You can be at one stage per time slot.", true); return; }
+  const favs = SETS.filter(s => s.day === state.day && state.favs.has(s.key));
+  const plans = state.plans.filter(p => p.day === state.day);
+  const items = [...favs, ...plans].sort((a,b) => a.start - b.start || a.end - b.end);
+  const tools = `<div class="plan-tools"><button class="btn" data-plan-add="">+ Dining or break</button></div>`;
+  if (!items.length) { el.innerHTML = tools + emptyHTML(`Nothing booked on ${dayOf(state.day).short}`, "Tap the heart on a set to book it. You can be at one stage per time slot. Add dining sessions or breaks to block time too.", true); return; }
   let clashes = 0, html = "", maxEnd = null;
-  favs.forEach((s, i) => {
+  items.forEach((s, i) => {
     const clash = maxEnd != null && s.start < maxEnd;
     if (clash) clashes++;
     if (maxEnd != null && !clash && s.start - maxEnd >= 15) html += `<div class="gap tnum">${dur(s.start - maxEnd)} free</div>`;
-    const clashWith = clash ? favs.slice(0, i).filter(o => o.end > s.start).map(nameText).join(", ") : "";
-    html += `<div class="tl-item"><div class="tl-time tnum">${fmt(s.start)}<small>${fmt(s.end)}</small></div><div class="rows" style="grid-template-columns:1fr">${setRow(s, { extra: clash ? `<span class="clash">Clashes with ${esc(clashWith)}</span>` : "" })}</div></div>`;
+    const clashWith = clash ? items.slice(0, i).filter(o => o.end > s.start).map(blockName).join(", ") : "";
+    const extra = clash ? `<span class="clash">Clashes with ${esc(clashWith)}</span>` : "";
+    html += `<div class="tl-item"><div class="tl-time tnum">${fmt(s.start)}<small>${fmt(s.end)}</small></div><div class="rows" style="grid-template-columns:1fr">${s.artists ? setRow(s, { extra }) : planRow(s, extra)}</div></div>`;
     maxEnd = Math.max(maxEnd ?? 0, s.end);
   });
   const total = favs.reduce((a, s) => a + s.end - s.start, 0);
-  el.innerHTML = `<div class="day-summary"><span class="tag">${favs.length} set${favs.length > 1 ? "s" : ""}</span><span class="tag tnum">${dur(total)} of music</span>${clashes ? `<span class="clash">${clashes} clash${clashes > 1 ? "es" : ""}</span>` : `<span class="tag">No clashes</span>`}</div><div class="tl">${html}</div>`;
+  el.innerHTML = tools + `<div class="day-summary"><span class="tag">${favs.length} set${favs.length === 1 ? "" : "s"}</span><span class="tag tnum">${dur(total)} of music</span>${plans.length ? `<span class="tag">${plans.length} blocked slot${plans.length > 1 ? "s" : ""}</span>` : ""}${clashes ? `<span class="clash">${clashes} clash${clashes > 1 ? "es" : ""}</span>` : `<span class="tag">No clashes</span>`}</div><div class="tl">${html}</div>`;
+}
+
+// ---------- Your own blocks: dining sessions and breaks ----------
+// Bookable dining experiences announced for Tomorrowland Thailand 2026 (Nation Thailand, 9 Oct 2026; Brand Inside, 11 Oct 2026).
+// Tomorrowland hasn't published seating times, so people enter the time from their own booking confirmation.
+const DINING = {
+  "b-eat": { label: "B-EAT with Gaggan Anand", about: "4 tastings, a shooter and 2 cocktails with a live DJ · 2,900 THB · reservation only" },
+  "papillon": { label: "Papillon Restaurant by Baan Tepa", about: "Seated lakeside menu by Chef Tam (Baan Tepa) · 3,800 THB · reservation only" }
+};
+const PLAN_ICON = { "b-eat": "🍸", papillon: "🍽️", break: "☕" };
+// "HH:MM" from a time field -> minutes on the festival day; times before 10 AM count as after midnight.
+const fromField = v => { const m = /^(\d{2}):(\d{2})$/.exec(v || ""); if (!m) return null; let h = +m[1]; if (h < 10) h += 24; return h * 60 + +m[2]; };
+const toField = min => min == null ? "" : String(Math.floor(min / 60) % 24).padStart(2, "0") + ":" + String(min % 60).padStart(2, "0");
+function openPlanForm(kind = "b-eat", keep = {}) {
+  if (state.api && offlineBlock()) return;
+  if (state.api && !state.user) return openAuth("signup", "Sign up to block time for dining or a break.");
+  const d = DINING[kind], day = keep.day || state.day;
+  openSheetHTML(`<div class="auth" style="position:relative">${closeBtnHTML}
+    <h2>Block time</h2>
+    <p>Booked a dining session or need a break? Add it and that time is blocked across every stage, like a booked set.</p>
+    <div class="seg" role="group" aria-label="What is it?">
+      ${[["b-eat", "B-EAT"], ["papillon", "Papillon"], ["break", "Own break"]].map(([k, t]) => `<button type="button" data-plan-kind="${k}" aria-pressed="${k === kind}">${t}</button>`).join("")}
+    </div>
+    <form id="planForm" data-kind="${kind}" class="swap" novalidate>
+      ${d ? `<p><b>${esc(d.label)}</b><br><span class="hint">${esc(d.about)}</span></p>
+        <p class="hint">Tomorrowland hasn't published seating times for this. Enter the time on your booking confirmation.</p>`
+        : `<label>Name<input class="field" id="plLabel" maxlength="40" placeholder="e.g. Dinner, rest, meet friends" value="${esc(keep.label || "")}"></label>`}
+      <label>Day<select class="field" id="plDay">${DAYS.map(x => `<option value="${x.id}"${x.id === day ? " selected" : ""}>${esc(x.long)}</option>`).join("")}</select></label>
+      <div class="times">
+        <label>Starts<input class="field" id="plStart" type="time" step="300" value="${esc(keep.start || "")}"></label>
+        <label>Ends<input class="field" id="plEnd" type="time" step="300" value="${esc(keep.end || "")}"></label>
+      </div>
+      <span class="err" id="plErr" role="alert"></span>
+      <button class="btn primary" type="submit">Block this time</button>
+    </form>
+  </div>`, d ? "#plStart" : "#plLabel");
+}
+function planFormValues() {
+  return { day: $("#plDay")?.value, start: $("#plStart")?.value, end: $("#plEnd")?.value, label: $("#plLabel")?.value };
+}
+async function submitPlan(form) {
+  const kind = form.dataset.kind, v = planFormValues(), errEl = $("#plErr");
+  const label = DINING[kind] ? DINING[kind].label : (v.label || "").trim();
+  const start = fromField(v.start), end = fromField(v.end);
+  errEl.textContent = "";
+  if (!label) { errEl.textContent = "Give your break a name."; return; }
+  if (start == null || end == null) { errEl.textContent = "Add a start and end time."; return; }
+  if (end <= start) { errEl.textContent = "The end time has to be after the start."; return; }
+  if (end - start > 480) { errEl.textContent = "Keep it to 8 hours or less."; return; }
+  const plan = { day: v.day, start, end, kind, label };
+  // Warn once if this overlaps sets already booked; a second tap keeps both.
+  const hit = SETS.filter(s => state.favs.has(s.key) && overlaps(s, plan));
+  const sig = JSON.stringify(plan);
+  if (hit.length && form.dataset.ok !== sig) {
+    form.dataset.ok = sig;
+    errEl.textContent = `This overlaps ${hit.map(nameText).join(", ")}. Tap again to keep both, or remove the set first.`;
+    return;
+  }
+  const btn = form.querySelector("button[type=submit]"); btn.disabled = true;
+  try { await persistPlan({ add: plan }); closeSheet(); state.day = plan.day; store.set("day", state.day); render(); toast(`Blocked ${dayOf(plan.day).short} ${range(start, end)} · ${label}`); }
+  catch (e) { errEl.textContent = e.message; btn.disabled = false; }
+}
+async function persistPlan(change) {
+  if (!state.api) {
+    if (change.add) state.plans = [...state.plans, { ...change.add, id: Date.now() }];
+    if (change.remove != null) state.plans = state.plans.filter(p => String(p.id) !== String(change.remove));
+    store.set("plans", state.plans);
+  } else {
+    try { const r = await api("/api/plans", { method: "POST", body: change }); state.plans = r.plans; saveMe(); }
+    catch (e) { if (e.status === 401) throw new Error("Log in again to block time"); throw e.status ? e : new Error("Couldn't save. Check your connection."); }
+  }
+  afterFavChange();
+}
+async function removePlan(id) {
+  if (state.api && offlineBlock()) return;
+  const p = state.plans.find(x => String(x.id) === String(id)); if (!p) return;
+  try { await persistPlan({ remove: p.id }); toast(`Removed ${p.label}`); } catch (e) { toast(e.message); }
 }
 function emptyHTML(title, text, withBtn) {
   return `<div class="empty"><span class="heart-big">${ICON.heart.replace('<svg ', '<svg width="30" height="30" ')}</span><strong>${esc(title)}</strong>${text ? `<span>${esc(text)}</span>` : ""}${withBtn ? `<a class="btn primary" href="#lineup">Browse the line-up</a>` : ""}</div>`;
@@ -1510,8 +1616,11 @@ function route() {
 document.addEventListener("click", e => {
   const t = e.target.closest("button, a"); if (!t) return;
   if (t.dataset.fav) return toggleFav(t.dataset.fav);
+  if (t.dataset.planAdd !== undefined) return openPlanForm(t.dataset.planAdd || "b-eat");
+  if (t.dataset.planKind) { const keep = planFormValues(); return openPlanForm(t.dataset.planKind, keep); }
+  if (t.dataset.planDel) return removePlan(t.dataset.planDel);
   if ((t.dataset.swap || t.dataset.favArtist) && state.api && offlineBlock()) return;
-  if (t.dataset.swap) { const s = SETMAP.get(t.dataset.swap); const clash = conflictsOf(s).map(c => c.key); closeSheet(); persistFavs([s.key], clash); toast(`Swapped to ${nameText(s)}`); return; }
+  if (t.dataset.swap) { const s = SETMAP.get(t.dataset.swap); const clash = conflictsOf(s).map(c => c.key); closeSheet(); persistFavs([s.key], clash); toast(clash.length ? `Swapped to ${nameText(s)}` : `Booked ${nameText(s)}`); return; }
   if (t.dataset.auth) {
     const a = t.dataset.auth;
     if (a === "signup" || a === "login") return openAuth(a);
@@ -1524,7 +1633,8 @@ document.addEventListener("click", e => {
     const A = ARTISTS.get(t.dataset.favArtist), on = artistFav(A);
     if (state.api && !state.user) return openAuth("signup", `Sign up to save ${A.name}'s sets.`);
     if (on) { persistFavs([], A.sets.map(s => s.key)); toast(`Removed ${A.name}`); return; }
-    const free = A.sets.filter(s => !state.favs.has(s.key) && !conflictsOf(s).length), busy = A.sets.filter(s => !state.favs.has(s.key) && conflictsOf(s).length);
+    const taken = s => conflictsOf(s).length || planClashes(s).length;
+    const free = A.sets.filter(s => !state.favs.has(s.key) && !taken(s)), busy = A.sets.filter(s => !state.favs.has(s.key) && taken(s));
     if (!free.length && busy.length) return toggleFav(busy[0].key);
     persistFavs(free.map(s => s.key), []);
     toast(`Booked ${free.length} set${free.length === 1 ? "" : "s"}${busy.length ? ` · ${busy.length} clash${busy.length > 1 ? "es" : ""} skipped` : ""}`);
@@ -1851,6 +1961,7 @@ document.addEventListener("change", e => { if (e.target.id === "photoIn") { uplo
 
 document.addEventListener("submit", e => {
   if (e.target.id === "authForm") { e.preventDefault(); submitAuth(e.target); return; }
+  if (e.target.id === "planForm") { e.preventDefault(); submitPlan(e.target); return; }
   if (e.target.id === "nameForm") { e.preventDefault(); const v = $("#pName").value.trim(); if (!v) return toast("Your name can't be empty"); saveProfile({ display: v }, "Name saved"); return; }
   if (e.target.id === "joinForm") { e.preventDefault(); const c = $("#crewCode").value.toUpperCase().replace(/[^A-Z0-9]/g, ""); if (c.length !== 6) return toast("Crew codes have 6 letters or numbers"); setCrew(c); toast("Joined crew " + c); return; }
   if (e.target.id === "composer") {

@@ -10,6 +10,11 @@ const PENDING_COOKIE = "tml_new";   // Google account that still has to pick a u
 const SESSION_DAYS = 60;
 const ROOM_RE = /^(general|artist-[a-z0-9-]{1,60}|crew-[A-Z0-9]{6})$/;
 const SET_KEY_RE = /^2026-12-1[123]\/[a-z0-9+-]{1,120}$/;
+const DAY_RE = /^2026-12-1[123]$/;
+// Personal time blocks: booked dining sessions and the person's own breaks. Times are minutes after midnight of the
+// festival day, like the line-up (so 00:30 the next morning is 24*60+30).
+const PLAN_KINDS = ["b-eat", "papillon", "break"];
+const MAX_PLANS = 30;
 const COLORS = ["#F5A524", "#FF6370", "#4CC9DE", "#9D83FF", "#5BC26E", "#FF5F9E", "#C49A86", "#3B82F6", "#14B8A6", "#EAB308"];
 
 const json = (data, init = {}) => new Response(JSON.stringify(data), { ...init, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store", ...(init.headers || {}) } });
@@ -84,19 +89,19 @@ export default {
         if (r.error) return err(400, r.error);
         const h = new Headers({ "content-type": "application/json; charset=utf-8", "cache-control": "no-store" });
         h.append("set-cookie", sessionCookie(r.token, url, SESSION_DAYS * 86400)); h.append("set-cookie", tempCookie(PENDING_COOKIE, "", url, 0));
-        return new Response(JSON.stringify({ user: r.user, favs: r.favs }), { headers: h });
+        return new Response(JSON.stringify({ user: r.user, favs: r.favs, plans: r.plans || [] }), { headers: h });
       }
       if (p === "/api/signup" && req.method === "POST") {
         const b = await body();
         const r = await hub.signup(String(b.username || ""), String(b.password || ""), String(b.display || ""), Array.isArray(b.favs) ? b.favs : []);
         if (r.error) return err(400, r.error);
-        return json({ user: r.user, favs: r.favs }, { headers: { "set-cookie": sessionCookie(r.token, url, SESSION_DAYS * 86400) } });
+        return json({ user: r.user, favs: r.favs, plans: r.plans || [] }, { headers: { "set-cookie": sessionCookie(r.token, url, SESSION_DAYS * 86400) } });
       }
       if (p === "/api/login" && req.method === "POST") {
         const b = await body();
         const r = await hub.login(String(b.username || ""), String(b.password || ""), Array.isArray(b.favs) ? b.favs : []);
         if (r.error) return err(401, r.error);
-        return json({ user: r.user, favs: r.favs }, { headers: { "set-cookie": sessionCookie(r.token, url, SESSION_DAYS * 86400) } });
+        return json({ user: r.user, favs: r.favs, plans: r.plans || [] }, { headers: { "set-cookie": sessionCookie(r.token, url, SESSION_DAYS * 86400) } });
       }
       if (p === "/api/logout" && req.method === "POST") {
         if (token) await hub.logout(token);
@@ -105,12 +110,19 @@ export default {
       if (p === "/api/me" && req.method === "GET") {
         const r = token ? await hub.me(token) : null;
         const pending = r ? null : await hub.pendingFor(getCookie(req, PENDING_COOKIE) || "");
-        return json({ ...(r || { user: null, favs: [] }), google: googleReady(env), pending });
+        return json({ ...(r || { user: null, favs: [], plans: [] }), google: googleReady(env), pending });
       }
       if (p === "/api/favs" && req.method === "POST") {
         const b = await body();
         const r = token ? await hub.setFavs(token, b.add || [], b.remove || []) : null;
         if (!r) return err(401, "Sign in to save sets");
+        if (r.error) return err(400, r.error);
+        return json(r);
+      }
+      if (p === "/api/plans" && req.method === "POST") {
+        const b = await body();
+        const r = token ? await hub.setPlans(token, b.add || null, b.remove ?? null) : null;
+        if (!r) return err(401, "Sign in to block time");
         if (r.error) return err(400, r.error);
         return json(r);
       }
@@ -193,6 +205,8 @@ export class Hub extends DurableObject {
       CREATE TABLE IF NOT EXISTS favs (user_id INTEGER NOT NULL, set_key TEXT NOT NULL, created INTEGER NOT NULL, PRIMARY KEY (user_id, set_key));
       CREATE INDEX IF NOT EXISTS favs_by_set ON favs (set_key, created);
       CREATE TABLE IF NOT EXISTS fails (username TEXT NOT NULL, ts INTEGER NOT NULL);
+      CREATE TABLE IF NOT EXISTS plans (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, day TEXT NOT NULL, start_min INTEGER NOT NULL, end_min INTEGER NOT NULL, kind TEXT NOT NULL, label TEXT NOT NULL, created INTEGER NOT NULL);
+      CREATE INDEX IF NOT EXISTS plans_by_user ON plans (user_id);
       CREATE TABLE IF NOT EXISTS pending (token TEXT PRIMARY KEY, sub TEXT NOT NULL, name TEXT NOT NULL, expires INTEGER NOT NULL);
     `);
     const cols = this.sql.exec("PRAGMA table_info(users)").toArray().map(c => c.name);
@@ -237,6 +251,7 @@ export class Hub extends DurableObject {
   }
   photo(id) { return this.sql.exec("SELECT type, data FROM photos WHERE user_id = ?", id).toArray()[0] || null; }
   favsOf(id) { return this.sql.exec("SELECT set_key FROM favs WHERE user_id = ?", id).toArray().map(r => r.set_key); }
+  plansOf(id) { return this.sql.exec("SELECT id, day, start_min AS start, end_min AS [end], kind, label FROM plans WHERE user_id = ? ORDER BY day, start_min", id).toArray(); }
   addFavs(id, keys) {
     const now = Date.now();
     for (const k of keys.slice(0, 200)) if (SET_KEY_RE.test(k)) this.sql.exec("INSERT OR IGNORE INTO favs (user_id, set_key, created) VALUES (?, ?, ?)", id, k, now);
@@ -290,7 +305,7 @@ export class Hub extends DurableObject {
       u = this.sql.exec("INSERT INTO users (username, display, color, pass, salt, created, google_sub) VALUES (?, ?, ?, '', '', ?, ?) RETURNING *", username, display, color, Date.now(), row.sub).one();
     }
     this.sql.exec("DELETE FROM pending WHERE token = ?", h);
-    return { user: this.publicUser(u), favs: this.favsOf(u.id), token: await this.newSession(u.id) };
+    return { user: this.publicUser(u), favs: this.favsOf(u.id), plans: this.plansOf(u.id), token: await this.newSession(u.id) };
   }
 
   async signup(username, password, display, favs) {
@@ -303,7 +318,7 @@ export class Hub extends DurableObject {
     const color = COLORS[Math.floor(Math.random() * COLORS.length)];
     const u = this.sql.exec("INSERT INTO users (username, display, color, pass, salt, created) VALUES (?, ?, ?, ?, ?, ?) RETURNING *", username, display, color, pass, salt, Date.now()).one();
     this.addFavs(u.id, favs);
-    return { user: this.publicUser(u), favs: this.favsOf(u.id), token: await this.newSession(u.id) };
+    return { user: this.publicUser(u), favs: this.favsOf(u.id), plans: this.plansOf(u.id), token: await this.newSession(u.id) };
   }
 
   async login(username, password, favs) {
@@ -316,7 +331,7 @@ export class Hub extends DurableObject {
     const ok = u && u.salt && safeEqual(await hashPassword(password, u.salt), u.pass);
     if (!ok) { this.sql.exec("INSERT INTO fails (username, ts) VALUES (?, ?)", username, now); return { error: "Wrong username or password." }; }
     this.addFavs(u.id, favs);
-    return { user: this.publicUser(u), favs: this.favsOf(u.id), token: await this.newSession(u.id) };
+    return { user: this.publicUser(u), favs: this.favsOf(u.id), plans: this.plansOf(u.id), token: await this.newSession(u.id) };
   }
 
   async logout(token) { this.sql.exec("DELETE FROM sessions WHERE token = ?", await sha256(token)); }
@@ -329,7 +344,26 @@ export class Hub extends DurableObject {
 
   async me(token) {
     const u = await this.userFor(token);
-    return u ? { user: this.publicUser(u), favs: this.favsOf(u.id) } : null;
+    return u ? { user: this.publicUser(u), favs: this.favsOf(u.id), plans: this.plansOf(u.id) } : null;
+  }
+
+  async setPlans(token, add, remove) {
+    const u = await this.userFor(token);
+    if (!u) return null;
+    if (remove != null) this.sql.exec("DELETE FROM plans WHERE user_id = ? AND id = ?", u.id, +remove || 0);
+    if (add) {
+      const day = String(add.day || ""), start = Math.round(+add.start), end = Math.round(+add.end), kind = String(add.kind || "");
+      const label = String(add.label || "").replace(/\s+/g, " ").trim().slice(0, 40);
+      if (!DAY_RE.test(day)) return { error: "Pick a festival day." };
+      if (!PLAN_KINDS.includes(kind)) return { error: "Unknown type of block." };
+      if (!label) return { error: "Give it a name." };
+      // Allowed window: 10:00 on the day to 04:00 the next morning, at most 8 hours long.
+      if (!(start >= 600 && end <= 1680 && end > start && end - start <= 480)) return { error: "Pick a start and end time between 10 AM and 4 AM, up to 8 hours long." };
+      const n = this.sql.exec("SELECT COUNT(*) AS n FROM plans WHERE user_id = ?", u.id).one().n;
+      if (n >= MAX_PLANS) return { error: `You can block up to ${MAX_PLANS} slots.` };
+      this.sql.exec("INSERT INTO plans (user_id, day, start_min, end_min, kind, label, created) VALUES (?, ?, ?, ?, ?, ?, ?)", u.id, day, start, end, kind, label, Date.now());
+    }
+    return { plans: this.plansOf(u.id) };
   }
 
   async setFavs(token, add, remove) {
