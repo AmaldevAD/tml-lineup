@@ -22,7 +22,7 @@ const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
 camera.position.set(0, 0, 7);
 
 const U = { uTime: { value: 0 }, uPx: { value: pr }, uDark: { value: 0 }, uPulse: { value: 0 },
-  uInk: { value: new THREE.Color("#1D1B19") } };
+  uInk: { value: new THREE.Color("#2B1D14") } };
 
 const heart = new THREE.Group();
 scene.add(heart);
@@ -59,31 +59,46 @@ const ext = (shape, depth) => new THREE.ExtrudeGeometry(shape, { depth, bevelEna
 const circle = (r, hole) => { const s = new THREE.Shape().absarc(0, 0, r, 0, Math.PI * 2, false); if (hole) s.holes.push(new THREE.Path().absarc(0, 0, hole, 0, Math.PI * 2, true)); return s; };
 
 // Outer ring and inner disc
-part(ext(circle(1.25, 1.0), 0.22), "#9CC8FF", 0, 0, -0.11);
-part(ext(circle(1.0), 0.1), "#FFF3D6", 0, 0, -0.05);
+part(ext(circle(1.25, 1.0), 0.22), "#C8734A", 0, 0, -0.11);
+part(ext(circle(1.0), 0.1), "#EAD3AE", 0, 0, -0.05);
+// Golden sun rays fanning out behind the crest, alternating long and short
+for (let k = 0; k < 16; k++) { const r = new THREE.Shape(), L = k % 2 ? 1.75 : 2.15; r.moveTo(-0.08, 1.2); r.lineTo(0, L); r.lineTo(0.08, 1.2); r.closePath(); part(ext(r, 0.02), "#EDC266", 0, 0, -0.32, k * Math.PI / 8 + Math.PI / 16); }
 // Six emotion petals (one per colour), raised off the disc
 const petal = new THREE.Shape(); petal.moveTo(0, 0.3); petal.quadraticCurveTo(0.24, 0.62, 0, 0.94); petal.quadraticCurveTo(-0.24, 0.62, 0, 0.3);
-["#FF9EBB", "#FFE45C", "#8EE3BF", "#FFB36B", "#C9A8FF", "#7FD4F0"].forEach((c, k) => part(ext(petal, 0.12), c, 0, 0, 0.03, k * Math.PI / 3));
+["#D9825B", "#E8B84A", "#9DB58A", "#7E9CC6", "#A98BD8", "#D99A8B"].forEach((c, k) => part(ext(petal, 0.12), c, 0, 0, 0.03, k * Math.PI / 3));
 // Heart in the middle
 const hs = new THREE.Shape(); hs.moveTo(0, -0.2);
 hs.bezierCurveTo(-0.08, -0.12, -0.27, 0.0, -0.22, 0.12); hs.bezierCurveTo(-0.18, 0.24, -0.04, 0.24, 0, 0.13);
 hs.bezierCurveTo(0.04, 0.24, 0.18, 0.24, 0.22, 0.12); hs.bezierCurveTo(0.27, 0.0, 0.08, -0.12, 0, -0.2);
-part(ext(hs, 0.18), "#FF6F91", 0, 0.01, 0.05);
+part(ext(hs, 0.18), "#B8452F", 0, 0.01, 0.05);
 // Twelve gems around the ring
 const gem = new THREE.OctahedronGeometry(0.075, 0);
-for (let k = 0; k < 12; k++) { const a = k * Math.PI / 6 + Math.PI / 12; part(gem.clone(), k % 2 ? "#FF9EBB" : "#FFE45C", Math.cos(a) * 1.125, Math.sin(a) * 1.125, 0.12); }
+for (let k = 0; k < 12; k++) { const a = k * Math.PI / 6 + Math.PI / 12; part(gem.clone(), k % 2 ? "#F3E3C3" : "#E8B84A", Math.cos(a) * 1.125, Math.sin(a) * 1.125, 0.12); }
 // Star crown, with two small diamonds beside it
 const star = (ro, ri) => { const s = new THREE.Shape(); for (let i = 0; i < 10; i++) { const r = i % 2 ? ri : ro, a = Math.PI / 2 + i * Math.PI / 5; i ? s.lineTo(Math.cos(a) * r, Math.sin(a) * r) : s.moveTo(Math.cos(a) * r, Math.sin(a) * r); } return s; };
-part(ext(star(0.36, 0.16), 0.16), "#FFE45C", 0, 1.52, -0.08);
+part(ext(star(0.36, 0.16), 0.16), "#E8B84A", 0, 1.52, -0.08);
 const dia = new THREE.Shape(); dia.moveTo(0, 0.14); dia.lineTo(0.08, 0); dia.lineTo(0, -0.14); dia.lineTo(-0.08, 0); dia.closePath();
-part(ext(dia, 0.1), "#8EE3BF", -0.46, 1.36, -0.05, 0.5); part(ext(dia, 0.1), "#8EE3BF", 0.46, 1.36, -0.05, -0.5);
+part(ext(dia, 0.1), "#7E9CC6", -0.46, 1.36, -0.05, 0.5); part(ext(dia, 0.1), "#7E9CC6", 0.46, 1.36, -0.05, -0.5);
 // Ribbon banner across the bottom: a gentle smile curve with swallowtail ends
 const rib = new THREE.Shape(), W = 1.45, cy = x => -1.18 + 0.16 * (x / W) ** 2, N = 12;
 for (let i = 0; i <= N; i++) { const x = -W + 2 * W * i / N; i ? rib.lineTo(x, cy(x) + 0.17) : rib.moveTo(x, cy(x) + 0.17); }
 rib.lineTo(W - 0.16, cy(W)); rib.lineTo(W, cy(W) - 0.17);
 for (let i = N; i >= 0; i--) { const x = -W + 2 * W * i / N; rib.lineTo(x, cy(x) - 0.17); }
 rib.lineTo(-W + 0.16, cy(-W)); rib.closePath();
-part(ext(rib, 0.08), "#FF9EBB", 0, 0, 0.16);
+part(ext(rib, 0.08), "#6F8FBF", 0, 0, 0.16);
+// Cracks in the clay disc: a few branching hand-drawn fissures (ink lines only, they boil with the outlines)
+{ let seed = 7; const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  const cracks = [];
+  for (let c = 0; c < 5; c++) {
+    let a = c * 1.26 + 0.4, r = 0.98, x = Math.cos(a) * r, y = Math.sin(a) * r;
+    for (let st = 0; st < 5; st++) {
+      a += (rnd() - 0.5) * 0.9; r -= 0.1 + rnd() * 0.06;
+      const nx = Math.cos(a) * r, ny = Math.sin(a) * r; cracks.push(x, y, 0.052, nx, ny, 0.052);
+      if (st === 2) { const b = a + (rnd() > 0.5 ? 0.7 : -0.7); cracks.push(nx, ny, 0.052, nx + Math.cos(b) * 0.14, ny + Math.sin(b) * 0.14, 0.052); }
+      x = nx; y = ny;
+    }
+  }
+  edgeParts.push(new Float32Array(cracks)); }
 
 const crestMats = [];
 for (const [color, arrs] of buckets) {
@@ -110,7 +125,7 @@ function boil(g, amt) {
   }
   g.attributes.position.needsUpdate = true;
 }
-const inkMat = new THREE.LineBasicMaterial({ color: 0x1D1B19 });
+const inkMat = new THREE.LineBasicMaterial({ color: 0x2B1D14 });
 const crestLines = sketchLines(cat(edgeParts), 2, 0.12);
 boil(crestLines, 0.022);
 crest.add(new THREE.LineSegments(crestLines, inkMat));
@@ -118,7 +133,7 @@ crest.add(new THREE.LineSegments(crestLines, inkMat));
 // Loose doodled orbit ellipses (dashed pencil)
 function ellipseSrc(rx, rz, n) { const s = []; for (let i = 0; i < n; i++) { const a0 = i / n * 6.283, a1 = (i + 1) / n * 6.283;
   s.push(Math.cos(a0) * rx, 0, Math.sin(a0) * rz, Math.cos(a1) * rx, 0, Math.sin(a1) * rz); } return new Float32Array(s); }
-const orbitMat = new THREE.LineDashedMaterial({ color: 0x1D1B19, dashSize: 0.16, gapSize: 0.12, transparent: true, opacity: 0.6 });
+const orbitMat = new THREE.LineDashedMaterial({ color: 0x2B1D14, dashSize: 0.16, gapSize: 0.12, transparent: true, opacity: 0.6 });
 const orbits = [[2.3, 1.0, 0.35], [2.0, 0.85, -0.5]].map(([rx, rz, tilt]) => {
   const g = sketchLines(ellipseSrc(rx, rz, 56), 1, 0); boil(g, 0.025);
   const l = new THREE.LineSegments(g, orbitMat); l.computeLineDistances(); l.rotation.set(tilt, 0, tilt * 0.6); heart.add(l); return l;
@@ -134,9 +149,9 @@ function starTex(fill, ink) {
   x.beginPath(); x.moveTo(pts[9][0] + 3, pts[9][1] + 2); x.lineTo(pts[0][0] + 2, pts[0][1] + 3); x.stroke();
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
 }
-const STAR_FILLS = ["#FFE45C", "#FF9EBB", "#9CC8FF", "#8EE3BF", "#FFB36B", "#C9A8FF"];
+const STAR_FILLS = ["#E8B84A", "#D9825B", "#7E9CC6", "#9DB58A", "#EAD3AE", "#A98BD8"];
 const stars = STAR_FILLS.map((f, k) => {
-  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: starTex(f, "#1D1B19"), transparent: true, depthWrite: false }));
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: starTex(f, "#2B1D14"), transparent: true, depthWrite: false }));
   s.scale.setScalar(0.5 + (k % 3) * 0.08); s.userData = { k, fill: f }; heart.add(s); return s;
 });
 const orbitPos = (k, t, v) => {
@@ -158,10 +173,10 @@ function resize() {
 addEventListener("resize", resize); resize();
 
 function syncTheme() {
-  const d = isDark(), ink = d ? "#EDE9DE" : "#1D1B19";
-  U.uDark.value = d ? 1 : 0; U.uInk.value.set(d ? "#121214" : "#1D1B19");
+  const d = isDark(), ink = d ? "#F3E6D0" : "#2B1D14";
+  U.uDark.value = d ? 1 : 0; U.uInk.value.set(d ? "#16120E" : "#2B1D14");
   inkMat.color.set(ink); orbitMat.color.set(ink);
-  stars.forEach(s => { s.material.map.dispose(); s.material.map = starTex(s.userData.fill, d ? "#121214" : ink); s.material.needsUpdate = true; });
+  stars.forEach(s => { s.material.map.dispose(); s.material.map = starTex(s.userData.fill, d ? "#16120E" : ink); s.material.needsUpdate = true; });
 }
 new MutationObserver(syncTheme).observe(root, { attributes: true, attributeFilter: ["data-theme"] });
 matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change", syncTheme);
@@ -193,7 +208,7 @@ function frame() {
   const halfH = Math.tan(camera.fov * Math.PI / 360) * camera.position.z, halfW = halfH * camera.aspect;
   let sx = innerWidth * 0.5, sy = innerHeight * 0.5, ts = 0.38, to = 0.16;
   let off = false;
-  if (vis) { const r = hero.getBoundingClientRect(); sy = r.top + r.height * 0.4; sx = innerWidth * (innerWidth < 720 ? 0.7 : 0.72); ts = Math.min(r.height / 560, 0.85); to = 1; off = r.bottom < -40; }
+  if (vis) { const r = hero.getBoundingClientRect(); sy = r.top + r.height * (innerWidth < 720 ? 0.37 : 0.4); sx = innerWidth * (innerWidth < 720 ? 0.7 : 0.72); ts = Math.min(r.height / 560, 0.85) * (innerWidth < 720 ? 0.9 : 1); to = 1; off = r.bottom < -40; }
   goal.set((sx / innerWidth - 0.5) * 2 * halfW, (0.5 - sy / innerHeight) * 2 * halfH, vis ? 0 : -2);
   heart.position.lerp(goal, snap ? 0.25 : 1); snap = true;
   heart.position.y += Math.sin(t * 0.9) * 0.06;
