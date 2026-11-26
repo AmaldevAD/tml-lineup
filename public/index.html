@@ -242,35 +242,6 @@ main { padding-block: 6px calc(var(--tab-h) + var(--player-h) + env(safe-area-in
 .links a i { width: 10px; height: 10px; border-radius: 50%; background: var(--b); flex: none; }
 .sheet-sets { display: flex; flex-direction: column; gap: 10px; }
 
-/* Mini player */
-.player { position: fixed; z-index: 24; left: 0; right: 0; bottom: calc(var(--tab-h) + env(safe-area-inset-bottom, 0px)); padding: 0 max(10px, env(safe-area-inset-right, 0px)) 8px max(10px, env(safe-area-inset-left, 0px)); }
-.player-card { max-width: 640px; margin: 0 auto; display: grid; grid-template-columns: 48px 1fr auto auto; gap: 12px; align-items: center; padding: 8px 8px 8px 8px; border-radius: 18px; background: var(--fg); color: var(--bg); box-shadow: 0 10px 30px rgb(0 0 0 / .35); position: relative; overflow: hidden; }
-.player-card .art { width: 48px; height: 48px; border-radius: 12px; }
-.player-card .art .ini { font-size: 15px; }
-.player-card .who { all: unset; cursor: pointer; min-width: 0; display: flex; flex-direction: column; }
-.player-card .who b { font-size: 14.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.player-card .who small { font-size: 12px; opacity: .7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.player-card .pbtn { width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--bg); color: var(--fg); display: grid; place-items: center; text-decoration: none; }
-.player-card .pbtn svg { width: 20px; height: 20px; }
-.player-card .x { background: transparent; color: var(--bg); }
-.player-card .prog { position: absolute; left: 0; bottom: 0; height: 3px; background: var(--accent); width: 0; }
-
-.player-card { display: flex !important; flex-direction: column; align-items: stretch !important; gap: 8px; }
-.player-card .embed { width: 100%; }
-@media (min-width: 900px) { .player-card { max-width: 860px; } .player-card .embed iframe { max-height: 300px; } }
-.player-card .p-row { display: grid; grid-template-columns: 48px minmax(0, 1fr) repeat(4, 40px); gap: 4px; align-items: center; }
-.player-card .p-row .who { margin-left: 8px; }
-.player-card .pbtn.ghost { width: 40px; height: 44px; border-radius: 12px; background: transparent; color: var(--bg); }
-.player-card .pbtn.ghost svg { width: 20px; height: 20px; }
-.player-card.min .embed { height: 0; overflow: hidden; margin-top: -8px; }
-.player-card.min #pMin svg { transform: rotate(180deg); }
-.player-card .embed { grid-column: 1 / -1; display: flex; flex-direction: column; gap: 8px; }
-.player-card .embed iframe { width: 100%; aspect-ratio: 16 / 9; max-width: 100%; max-height: 40dvh; height: auto; border: 0; border-radius: 12px; background: #000; display: block; }
-.player-card .svc { display: flex; gap: 6px; overflow-x: auto; }
-.player-card .svc button { flex: none; display: inline-flex; align-items: center; gap: 6px; min-height: 34px; padding: 0 12px; border-radius: 99px; border: 1px solid color-mix(in srgb, var(--bg) 25%, transparent); background: transparent; color: var(--bg); font-size: 12.5px; font-weight: 600; }
-.player-card .svc button[aria-pressed="true"] { background: var(--bg); color: var(--fg); }
-.player-card .svc i { width: 8px; height: 8px; border-radius: 50%; }
-.player-card .hint { grid-column: 1 / -1; margin: 0; font-size: 12px; opacity: .7; display: none; }
 
 /* Tab bar */
 /* Floating dock with a sliding highlight */
@@ -486,6 +457,63 @@ footer.foot { margin-top: 32px; font-size: 12.5px; color: var(--muted); text-ali
   .artists { grid-template-columns: repeat(6, minmax(0, 1fr)); }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+/* Floating audio player (bottom-right). YouTube plays in a hidden frame; only the controls show. */
+.player { position: fixed; z-index: 26; right: max(12px, env(safe-area-inset-right, 0px)); bottom: calc(var(--tab-h) + env(safe-area-inset-bottom, 0px) + 10px); width: min(340px, calc(100vw - 24px)); pointer-events: none; display: flex; justify-content: flex-end; }
+.player > * { pointer-events: auto; }
+.player-card { position: relative; width: 100%; display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 12px; align-items: center; padding: 10px 10px 10px 10px;
+  background: var(--surface); color: var(--fg); border: 2px solid var(--ink); border-radius: 20px 8px 18px 9px / 9px 18px 8px 20px; box-shadow: var(--pop), 0 14px 36px rgb(0 0 0 / .28);
+  animation: pc-in .35s cubic-bezier(.2, 1.3, .4, 1); }
+@keyframes pc-in { from { transform: translateY(16px) scale(.96); opacity: 0; } }
+.pc-art { all: unset; position: relative; width: 64px; height: 64px; cursor: pointer; border-radius: 14px; }
+.pc-art .art { width: 64px; height: 64px; border-radius: 14px; border: 2px solid var(--ink); }
+.pc-art .art .ini { font-size: 18px; }
+.pc-body { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.pc-top { display: flex; align-items: flex-start; gap: 6px; }
+.pc-top .who { all: unset; cursor: pointer; flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.pc-top .who b { font-size: 15px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pc-top .who small { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pc-mini { all: unset; flex: none; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; color: var(--muted); cursor: pointer; margin: -4px -2px 0 0; }
+.pc-mini svg { width: 18px; height: 18px; }
+.pc-mini:hover { color: var(--fg); background: var(--surface-2); }
+.pc-prog { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 8px; font-size: 11px; color: var(--muted); font-weight: 600; }
+.pc-prog input { -webkit-appearance: none; appearance: none; width: 100%; height: 18px; background: transparent; margin: 0; cursor: pointer; --p: 0%; }
+.pc-prog input::-webkit-slider-runnable-track { height: 5px; border-radius: 99px; background: linear-gradient(90deg, var(--hi) var(--p), color-mix(in srgb, var(--fg) 18%, transparent) var(--p)); border: 1px solid var(--ink); }
+.pc-prog input::-moz-range-track { height: 5px; border-radius: 99px; background: linear-gradient(90deg, var(--hi) var(--p), color-mix(in srgb, var(--fg) 18%, transparent) var(--p)); border: 1px solid var(--ink); }
+.pc-prog input::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; margin-top: -5.5px; border-radius: 50%; background: var(--hi); border: 2px solid var(--ink); }
+.pc-prog input::-moz-range-thumb { width: 12px; height: 12px; border-radius: 50%; background: var(--hi); border: 2px solid var(--ink); }
+.pc-ctl { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.pc-ctl button, .pc-ctl a { all: unset; cursor: pointer; width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; color: var(--fg); }
+.pc-ctl button:hover, .pc-ctl a:hover { background: var(--surface-2); }
+.pc-ctl svg { width: 20px; height: 20px; }
+.pc-ctl .pc-play { width: 48px; height: 48px; background: var(--hi); color: #1D1B19; border: 2px solid var(--ink); box-shadow: 2px 3px 0 var(--ink); }
+.pc-ctl .pc-play:hover { background: var(--hi); transform: translateY(-1px); }
+.pc-ctl .pc-play svg { width: 22px; height: 22px; }
+.pc-ctl .pc-x { color: var(--muted); }
+.pc-note { font-size: 12px; color: var(--muted); }
+.pc-note a { color: var(--fg); font-weight: 700; }
+.pc-spin { width: 20px; height: 20px; border-radius: 50%; border: 2.5px solid currentColor; border-right-color: transparent; animation: pc-spin .8s linear infinite; }
+@keyframes pc-spin { to { transform: rotate(360deg); } }
+/* Equaliser shown on the artwork while audio plays */
+.pc-eq { position: absolute; right: 5px; bottom: 5px; display: flex; gap: 2px; align-items: flex-end; height: 14px; padding: 3px 4px; border-radius: 6px; background: rgb(0 0 0 / .55); }
+.pc-eq i { width: 3px; height: 100%; background: #fff; border-radius: 2px; transform-origin: bottom; animation: pc-eq .9s ease-in-out infinite; }
+.pc-eq i:nth-child(2) { animation-delay: -.3s; } .pc-eq i:nth-child(3) { animation-delay: -.6s; }
+@keyframes pc-eq { 0%, 100% { transform: scaleY(.3); } 50% { transform: scaleY(1); } }
+.player-card:not(.is-playing) .pc-eq { display: none; }
+/* Minimised: just the artwork bubble with a progress ring */
+.player-card.min { width: 72px; height: 72px; padding: 0; grid-template-columns: 1fr; border-radius: 50%; place-items: center; }
+.player-card.min .pc-body { display: none; }
+.player-card.min .pc-art, .player-card.min .pc-art .art { width: 60px; height: 60px; border-radius: 50%; }
+.pc-ring { position: absolute; inset: -6px; width: 72px; height: 72px; transform: rotate(-90deg); pointer-events: none; display: none; }
+.player-card.min .pc-ring { display: block; }
+.pc-ring circle { fill: none; stroke-width: 4; }
+.pc-ring .bg { stroke: color-mix(in srgb, var(--fg) 15%, transparent); }
+.pc-ring .fg { stroke: var(--hi); stroke-linecap: round; stroke-dasharray: 201; stroke-dashoffset: calc(201 - 201 * var(--p, 0)); transition: stroke-dashoffset .5s linear; }
+.player:has(.player-card.min) { width: auto; }
+#ytWrap { position: fixed; left: 0; bottom: 0; width: 200px; height: 200px; opacity: 0; pointer-events: none; z-index: -2; overflow: hidden; }
+@media (min-width: 900px) { .player { bottom: calc(env(safe-area-inset-bottom, 0px) + 14px); right: 20px; } }
+body.in-convo .player { bottom: calc(env(safe-area-inset-bottom, 0px) + 6px); }
+@media (prefers-reduced-motion: reduce) { .pc-eq i, .player-card, .pc-spin { animation: none; } }
 </style>
 <style>[hidden]{display:none!important} body{margin:0} img{max-width:100%}</style>
 <style id="magic-theme">
@@ -552,7 +580,7 @@ header.top { background: var(--bg); backdrop-filter: none; -webkit-backdrop-filt
 body::before { background: var(--bg); }
 
 /* Hand-drawn outlines */
-.set, .now-card, .card, .acard, .banner, .grid-scroll, .search input, .player-card, .composer, .sheet {
+.set, .now-card, .card, .acard, .banner, .grid-scroll, .search input, .composer, .sheet {
   background: var(--surface); border: 2px solid var(--ink); border-radius: var(--wob); box-shadow: var(--pop); }
 .set:nth-child(odd), .acard:nth-child(odd), .now-card:nth-child(odd) { border-radius: var(--wob2); }
 /* Smooth scrolling: let the browser skip work for cards far off screen */
@@ -710,6 +738,7 @@ footer.foot { font-family: var(--font-hand); font-size: 15px; }
 </main>
 
 <div class="player" id="player" hidden></div>
+<div id="ytWrap" aria-hidden="true"><div id="ytHost"></div></div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <div class="install" id="install" role="region" aria-label="Install the app" hidden></div>
 
@@ -1548,32 +1577,121 @@ function queue() {
 function step(dir) {
   const q = queue(); if (!q.length) return;
   const i = q.indexOf(state.playing);
-  state.playing = q[(i + dir + q.length) % q.length]; state.minimized = false;
+  state.playing = q[(i + dir + q.length) % q.length];
   renderPlayer(); syncPlayButtons();
 }
 const ICON_PREV = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>`;
 const ICON_NEXT = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>`;
 const ICON_DOWN = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>`;
-function setPlayerH() { requestAnimationFrame(() => document.documentElement.style.setProperty("--player-h", $("#player").offsetHeight + "px")); }
+const ICON_PLAYS = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.2-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></svg>`;
+const ICON_PAUSES = `<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6.5" y="5" width="4" height="14" rx="1.3"/><rect x="13.5" y="5" width="4" height="14" rx="1.3"/></svg>`;
+const ICON_PREVT = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 5h2v14H7zM20 6.2v11.6a.8.8 0 0 1-1.2.7L10.5 13a1.2 1.2 0 0 1 0-2l8.3-5.5a.8.8 0 0 1 1.2.7z"/></svg>`;
+const ICON_NEXTT = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M15 5h2v14h-2zM4 6.2v11.6a.8.8 0 0 0 1.2.7l8.3-5.5a1.2 1.2 0 0 0 0-2L5.2 5.5A.8.8 0 0 0 4 6.2z"/></svg>`;
+function setPlayerH() {
+  // Reserve room under the page only on narrow screens, where the card covers the content's bottom edge.
+  requestAnimationFrame(() => {
+    const p = $("#player"), narrow = !matchMedia("(min-width: 900px)").matches;
+    document.documentElement.style.setProperty("--player-h", !p.hidden && narrow ? p.offsetHeight + 10 + "px" : "0px");
+  });
+}
+
+// Audio-only YouTube: the IFrame API drives a hidden player; the card shows artwork, progress and controls.
+const audio = { id: null, state: "idle", t: 0, d: 0 };
+let YTP = null, ytApi = null, ytTimer = null;
+function loadYT() {
+  if (ytApi) return ytApi;
+  ytApi = new Promise((ok, bad) => {
+    if (window.YT?.Player) return ok();
+    const prev = window.onYouTubeIframeAPIReady;
+    window.onYouTubeIframeAPIReady = () => { prev?.(); ok(); };
+    const sc = document.createElement("script"); sc.src = "https://www.youtube.com/iframe_api"; sc.async = true;
+    sc.onerror = () => { ytApi = null; bad(); };
+    document.head.appendChild(sc);
+  });
+  return ytApi;
+}
+const YT_STATE = { "-1": "paused", 0: "ended", 1: "playing", 2: "paused", 3: "loading", 5: "paused" };
+async function audioStart(id) {
+  audio.id = id; audio.state = "loading"; audio.t = audio.d = 0; updateAudioUI();
+  try { await loadYT(); } catch { audio.state = "error"; return updateAudioUI(); }
+  if (audio.id !== id) return;
+  if (YTP && YTP.loadVideoById) { YTP.loadVideoById(id); return; }
+  if (YTP) return; // still being created; onReady picks up audio.id
+  YTP = new YT.Player("ytHost", {
+    host: "https://www.youtube-nocookie.com", videoId: id, width: 200, height: 200,
+    playerVars: { autoplay: 1, playsinline: 1, controls: 0, rel: 0, fs: 0, disablekb: 1, iv_load_policy: 3, modestbranding: 1 },
+    events: {
+      onReady: e => { if (!audio.id) return e.target.stopVideo(); if (e.target.getVideoData?.().video_id !== audio.id) e.target.loadVideoById(audio.id); else e.target.playVideo(); },
+      onStateChange: e => {
+        if (!audio.id) return;
+        audio.state = YT_STATE[e.data] || audio.state;
+        if (e.data === 0) return step(1); // ended: next artist, like a playlist
+        clearInterval(ytTimer);
+        if (e.data === 1) ytTimer = setInterval(tickAudio, 500);
+        tickAudio(); updateAudioUI();
+      },
+      onError: () => { audio.state = "error"; updateAudioUI(); }
+    }
+  });
+}
+function audioStop() { audio.id = null; audio.state = "idle"; clearInterval(ytTimer); try { YTP?.stopVideo?.(); } catch {} }
+function audioToggle() {
+  if (!YTP?.playVideo) return;
+  if (audio.state === "playing") YTP.pauseVideo(); else YTP.playVideo();
+}
+function tickAudio() {
+  if (!YTP?.getCurrentTime) return;
+  audio.t = YTP.getCurrentTime() || 0; audio.d = YTP.getDuration() || 0;
+  const pct = audio.d ? audio.t / audio.d : 0;
+  const seek = $("#pSeek"); if (seek && !seek.matches(":active")) { seek.value = Math.round(pct * 1000); seek.style.setProperty("--p", pct * 100 + "%"); }
+  const t = $("#pT"), d = $("#pD"); if (t) t.textContent = mmss(audio.t); if (d) d.textContent = audio.d ? mmss(audio.d) : "–:––";
+  $(".player-card")?.style.setProperty("--p", pct);
+}
+const mmss = x => { x = Math.max(0, Math.floor(x)); const h = Math.floor(x / 3600), m = Math.floor(x % 3600 / 60), s = String(x % 60).padStart(2, "0"); return h ? `${h}:${String(m).padStart(2, "0")}:${s}` : `${m}:${s}`; };
+function updateAudioUI() {
+  const card = $(".player-card"); if (!card) return;
+  const playing = audio.state === "playing", loading = audio.state === "loading";
+  card.classList.toggle("is-playing", playing);
+  const b = $("#pToggle");
+  if (b) { b.innerHTML = loading ? `<span class="pc-spin"></span>` : playing ? ICON_PAUSES : ICON_PLAYS; b.setAttribute("aria-label", playing ? "Pause" : "Play"); }
+  const note = $("#pNote");
+  if (note) note.hidden = audio.state !== "error";
+  if ("mediaSession" in navigator) navigator.mediaSession.playbackState = playing ? "playing" : "paused";
+  tickAudio();
+}
 function renderPlayer() {
   const p = $("#player");
-  if (!state.playing) { p.hidden = true; p.innerHTML = ""; document.documentElement.style.setProperty("--player-h", "0px"); return; }
+  if (!state.playing) { audioStop(); p.hidden = true; p.innerHTML = ""; setPlayerH(); return; }
   const A = ARTISTS.get(state.playing), s = [...A.sets].sort((a,b) => a.day.localeCompare(b.day) || a.start - b.start)[0];
-  const yt = ytFor(A.slug);
+  const yt = ytFor(A.slug), id = ytId(yt);
   p.hidden = false;
-  p.innerHTML = `<div class="player-card${yt ? " has-embed" : ""}${state.minimized ? " min" : ""}">
-    <div class="p-row">${art(A.slug, A.name, { play: false })}
-      <button class="who" data-open="${esc(A.slug)}"><b>${esc(A.name)}</b><small>${dayOf(s.day).short} ${fmt(s.start)} · ${esc(STAGE[s.stage].name)}</small></button>
-      <button class="pbtn ghost" id="pPrev" aria-label="Previous artist">${ICON_PREV}</button>
-      <button class="pbtn ghost" id="pNext" aria-label="Next artist">${ICON_NEXT}</button>
-      ${yt ? `<button class="pbtn ghost" id="pMin" aria-label="${state.minimized ? "Expand player" : "Minimize player"}" aria-expanded="${!state.minimized}">${ICON_DOWN}</button>`
-           : `<a class="pbtn ghost" href="${ytWatchUrl(A.slug, A.name)}" target="_blank" rel="noopener" aria-label="Watch ${esc(A.name)} on YouTube">${ICON.ext}</a>`}
-      <button class="pbtn ghost" id="pClose" aria-label="Stop and close player">${ICON.close}</button>
+  p.innerHTML = `<div class="player-card${state.minimized ? " min" : ""}" role="region" aria-label="Now playing: ${esc(A.name)}">
+    <button class="pc-art" id="pMin" aria-label="${state.minimized ? "Expand player" : "About " + esc(A.name)}" aria-expanded="${!state.minimized}">${art(A.slug, A.name, { play: false })}<span class="pc-eq" aria-hidden="true"><i></i><i></i><i></i></span><svg class="pc-ring" viewBox="0 0 72 72" aria-hidden="true"><circle class="bg" cx="36" cy="36" r="32"/><circle class="fg" cx="36" cy="36" r="32"/></svg></button>
+    <div class="pc-body">
+      <div class="pc-top"><button class="who" data-open="${esc(A.slug)}"><b>${esc(A.name)}</b><small>${dayOf(s.day).short} ${fmt(s.start)} · ${esc(STAGE[s.stage].name)}</small></button>
+        <button class="pc-mini" id="pMin2" aria-label="Minimise player">${ICON_DOWN}</button></div>
+      ${id ? `<div class="pc-prog"><span class="tnum" id="pT">0:00</span><input type="range" id="pSeek" min="0" max="1000" value="0" aria-label="Seek"><span class="tnum" id="pD">–:––</span></div>` : ""}
+      <p class="pc-note" id="pNote" ${id ? "hidden" : ""}>${id ? "This track can't play here." : "No preview here yet."} <a href="${ytWatchUrl(A.slug, A.name)}" target="_blank" rel="noopener">Open on YouTube</a></p>
+      <div class="pc-ctl">
+        <button id="pPrev" aria-label="Previous artist">${ICON_PREVT}</button>
+        ${id ? `<button class="pc-play" id="pToggle" aria-label="Play">${ICON_PLAYS}</button>` : ""}
+        <button id="pNext" aria-label="Next artist">${ICON_NEXTT}</button>
+        <button class="pc-x" id="pClose" aria-label="Stop and close player">${ICON.close}</button>
+      </div>
     </div>
-    ${yt ? `<div class="embed"><iframe title="${esc(A.name)} on YouTube" src="${esc(ytEmbedUrl(yt))}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>` : ""}
   </div>`;
+  if (id) { if (audio.id !== id) audioStart(id); else updateAudioUI(); } else audioStop();
+  if ("mediaSession" in navigator && window.MediaMetadata) {
+    navigator.mediaSession.metadata = new MediaMetadata({ title: A.name, artist: `Tomorrowland Thailand · ${STAGE[s.stage].name}`, artwork: IMG[A.slug] ? [{ src: IMG[A.slug], sizes: "512x512" }] : [] });
+    for (const [k, f] of [["play", audioToggle], ["pause", audioToggle], ["nexttrack", () => step(1)], ["previoustrack", () => step(-1)]]) { try { navigator.mediaSession.setActionHandler(k, f); } catch {} }
+  }
   setPlayerH();
 }
+document.addEventListener("input", e => {
+  if (e.target.id !== "pSeek") return;
+  const v = +e.target.value / 1000; e.target.style.setProperty("--p", v * 100 + "%");
+  if (YTP?.seekTo && audio.d) { YTP.seekTo(audio.d * v, true); $("#pT").textContent = mmss(audio.d * v); }
+});
 function syncPlayButtons() {
   document.querySelectorAll("[data-play]").forEach(b => {
     const on = state.playing === b.dataset.play;
@@ -1583,7 +1701,6 @@ function syncPlayButtons() {
 }
 function play(slug) {
   if (state.playing !== slug && navigator.onLine === false) return toast("Previews need an internet connection");
-  state.minimized = false;
   state.playing = state.playing === slug ? null : slug;
   renderPlayer(); syncPlayButtons();
 }
@@ -1676,7 +1793,12 @@ document.addEventListener("click", e => {
   if (t.id === "sheetClose") return closeSheet();
   if (t.id === "pPrev") return step(-1);
   if (t.id === "pNext") return step(1);
-  if (t.id === "pMin") { state.minimized = !state.minimized; const c = document.querySelector(".player-card"); c.classList.toggle("min", state.minimized); t.setAttribute("aria-expanded", !state.minimized); t.setAttribute("aria-label", state.minimized ? "Expand player" : "Minimize player"); setPlayerH(); return; }
+  if (t.id === "pMin" || t.id === "pMin2") {
+    if (t.id === "pMin" && !state.minimized) return openArtist(state.playing);
+    state.minimized = !state.minimized; const c = $(".player-card"); c.classList.toggle("min", state.minimized);
+    $("#pMin").setAttribute("aria-expanded", !state.minimized); $("#pMin").setAttribute("aria-label", state.minimized ? "Expand player" : "Open artist"); setPlayerH(); return;
+  }
+  if (t.id === "pToggle") return audioToggle();
   if (t.id === "pClose") { state.playing = null; renderPlayer(); syncPlayButtons(); return; }
   if (t.id === "themeBtn") {
     const r = document.documentElement, cur = r.dataset.theme || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
