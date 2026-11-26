@@ -495,19 +495,19 @@ footer.foot { margin-top: 32px; font-size: 12.5px; color: var(--muted); text-ali
   --grad: linear-gradient(transparent 55%, var(--hi) 55% 88%, transparent 88%);
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
-  --bg: #1F2624; --surface: #263030; --surface-2: #2E3938; --line: #EDE9DE; --fg: #F2EFE6; --muted: #AEB6AF;
-  --accent: #FFE27A; --accent-soft: #4A4526; --accent-ink: #1F2624; --heart: #FF8FA3;
-  --ink: #EDE9DE; --paper-dot: #33403E; --hi: #E8C766; --pink: #A8506A; --mint: #3F7F68; --sky: #3E5F8F;
-  --glass: #263030; --pop: 3px 4px 0 #0E1312;
-  --grad: linear-gradient(transparent 60%, #E8C76680 60% 90%, transparent 90%);
+  --bg: #121214; --surface: #1C1C20; --surface-2: #26262B; --line: #F1EDE3; --fg: #F6F3EA; --muted: #BDB8AD;
+  --accent: #FFD84D; --accent-soft: #3A3216; --accent-ink: #121214; --heart: #FF8FA3;
+  --ink: #F1EDE3; --paper-dot: #2A2A30; --hi: #FFD84D; --pink: #F48FB1; --mint: #5ED3B5; --sky: #7FB2FF;
+  --glass: #1C1C20; --pop: 3px 4px 0 #000;
+  --grad: linear-gradient(transparent 30%, #FFD84D 30% 94%, transparent 94%); --hi-ink: #1D1B19;
   color-scheme: dark;
 } }
 :root[data-theme="dark"] {
-  --bg: #1F2624; --surface: #263030; --surface-2: #2E3938; --line: #EDE9DE; --fg: #F2EFE6; --muted: #AEB6AF;
-  --accent: #FFE27A; --accent-soft: #4A4526; --accent-ink: #1F2624; --heart: #FF8FA3;
-  --ink: #EDE9DE; --paper-dot: #33403E; --hi: #E8C766; --pink: #A8506A; --mint: #3F7F68; --sky: #3E5F8F;
-  --glass: #263030; --pop: 3px 4px 0 #0E1312;
-  --grad: linear-gradient(transparent 60%, #E8C76680 60% 90%, transparent 90%);
+  --bg: #121214; --surface: #1C1C20; --surface-2: #26262B; --line: #F1EDE3; --fg: #F6F3EA; --muted: #BDB8AD;
+  --accent: #FFD84D; --accent-soft: #3A3216; --accent-ink: #121214; --heart: #FF8FA3;
+  --ink: #F1EDE3; --paper-dot: #2A2A30; --hi: #FFD84D; --pink: #F48FB1; --mint: #5ED3B5; --sky: #7FB2FF;
+  --glass: #1C1C20; --pop: 3px 4px 0 #000;
+  --grad: linear-gradient(transparent 30%, #FFD84D 30% 94%, transparent 94%); --hi-ink: #1D1B19;
   color-scheme: dark;
 }
 
@@ -517,9 +517,9 @@ body { background: var(--bg); }
   background: radial-gradient(circle at 1px 1px, var(--paper-dot) 1.2px, transparent 1.6px) 0 0 / 22px 22px, var(--bg); }
 .magic .sky3d { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 
-/* Floating doodle stickers (SVG, ink strokes); parallax set by JS through --py */
+/* Floating doodle stickers (SVG, ink strokes) */
 .magic .dd { position: absolute; width: var(--s, 46px); height: var(--s, 46px); color: var(--ink); opacity: .22; will-change: transform;
-  transform: translate3d(0, var(--py, 0px), 0) rotate(var(--r, 0deg)); }
+  transform: rotate(var(--r, 0deg)); }
 .magic .dd svg { width: 100%; height: 100%; display: block; animation: bob var(--d, 7s) ease-in-out var(--dl, 0s) infinite alternate; }
 .magic .dd svg * { fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
 .magic .dd .f { fill: var(--c, transparent); stroke: none; opacity: .9; }
@@ -545,8 +545,8 @@ body::before { background: var(--bg); }
 .set, .now-card, .card, .acard, .banner, .grid-scroll, .search input, .player-card, .composer, .sheet {
   background: var(--surface); border: 2px solid var(--ink); border-radius: var(--wob); box-shadow: var(--pop); }
 .set:nth-child(odd), .acard:nth-child(odd), .now-card:nth-child(odd) { border-radius: var(--wob2); }
-.set, .now-card, .acard { transform: rotate(-.35deg); }
-.set:nth-child(even), .now-card:nth-child(even), .acard:nth-child(even) { transform: rotate(.35deg); }
+/* Smooth scrolling: let the browser skip work for cards far off screen */
+.rows > .set { content-visibility: auto; contain-intrinsic-size: auto 104px; }
 .set .art, .now-act .art { border: 2px solid var(--ink); border-radius: 14px 6px 12px 5px / 5px 12px 6px 14px; }
 .days button, .chip, .icon-btn, .acct, .seg, .btn, .field, .preview-row select { border: 2px solid var(--ink); border-radius: var(--wob2); background: var(--surface); font-family: var(--font-hand); }
 .days b { font-family: var(--font-display); font-size: 22px; font-weight: 700; letter-spacing: 0; }
@@ -587,7 +587,7 @@ body::before { background: var(--bg); }
 .set:nth-child(4n+1) .art, .acard:nth-child(4n+1) .art, .poster:nth-child(4n+1) .art { --mk: var(--sky); }
 .set:nth-child(4n+2) .art, .acard:nth-child(4n+2) .art, .poster:nth-child(4n+2) .art { --mk: var(--mint); }
 .set:nth-child(4n+3) .art, .acard:nth-child(4n+3) .art, .poster:nth-child(4n+3) .art { --mk: var(--hi); }
-.art .ini { font-family: var(--font-display); color: var(--fg); text-shadow: none; font-weight: 700; }
+.art .ini { font-family: var(--font-display); color: #1D1B19; text-shadow: none; font-weight: 700; }
 .poster .art .ini { color: #1D1B19; }
 
 /* Hero (line-up page): the sketched 3D crystal is anchored here */
@@ -613,10 +613,9 @@ main:has(#v-lineup:not([hidden])) .hero3d { display: flex; }
 .poster { transform: rotateY(var(--ry, 0deg)) scale(var(--sc, 1)); will-change: transform; }
 
 /* Cards drop into place like stickers the first time they scroll into view */
-:root.reveal .set:not(.in), :root.reveal .now-card:not(.in), :root.reveal .acard:not(.in), :root.reveal .tl-item:not(.in) {
-  opacity: 0; transform: perspective(900px) rotateX(-24deg) translateY(26px) rotate(-2deg); }
-:root.reveal .in { transition: opacity .45s ease-out, transform .6s cubic-bezier(.2, .9, .25, 1.25); transform-origin: 50% 100%; }
-.set:active, .acard:active { transform: translate(2px, 3px) rotate(0deg); box-shadow: 1px 1px 0 var(--ink); transition: transform .08s, box-shadow .08s; }
+:root.reveal .now-card:not(.in), :root.reveal .acard:not(.in), :root.reveal .tl-item:not(.in) { opacity: 0; transform: translateY(14px); }
+:root.reveal .in { transition: opacity .3s ease-out, transform .35s cubic-bezier(.2, .8, .3, 1); }
+@media (hover: hover) { .set:active, .acard:active { transform: translate(2px, 3px); box-shadow: 1px 1px 0 var(--ink); transition: transform .08s, box-shadow .08s; } }
 
 /* Support (Ko-fi) */
 .support { text-decoration: none; position: relative; margin: 30px auto 0; max-width: 560px; padding: 18px 20px; text-align: left; color: var(--fg);
@@ -634,6 +633,13 @@ main:has(#v-lineup:not([hidden])) .hero3d { display: flex; }
 @media (min-width: 520px) { .support { grid-template-columns: 58px 1fr auto; } .support .btn { grid-column: auto; padding: 0 22px; } }
 @media (prefers-reduced-motion: reduce) { .support .cup .steam { animation: none; } }
 footer.foot { font-family: var(--font-hand); font-size: 15px; }
+
+/* Dark mode: solid marker fills with dark ink text, so pressed chips and highlights stay readable */
+:root[data-theme="dark"] .chip[aria-pressed="true"] { background: var(--c, var(--hi)); color: #1D1B19; }
+:root[data-theme="dark"] .chip[aria-pressed="true"] .dot { background: #1D1B19; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .chip[aria-pressed="true"] { background: var(--c, var(--hi)); color: #1D1B19; }
+  :root:not([data-theme="light"]) .chip[aria-pressed="true"] .dot { background: #1D1B19; } }
+.hero3d b em { color: var(--hi-ink, inherit); }
 </style>
 </head>
 <body>
@@ -1977,10 +1983,6 @@ setInterval(() => { if (state.view === "now" && festivalMoment()?.live) renderNo
   const sync = () => r.classList.toggle("paused", document.visibilityState !== "visible");
   document.addEventListener("visibilitychange", sync); sync();
   const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
-  // Doodle parallax: each sticker drifts at its own depth as you scroll
-  if (!reduced) { const dds = [...document.querySelectorAll(".magic .dd")]; let pq = 0;
-    addEventListener("scroll", () => { if (!pq) pq = requestAnimationFrame(() => { pq = 0; const y = scrollY;
-      dds.forEach(d => d.style.setProperty("--py", Math.max(-260, -y * .14 * parseFloat(d.style.getPropertyValue("--depth"))).toFixed(1) + "px")); }); }, { passive: true }); }
   // Hero stage above the line-up
   try {
     const n = new Set(RAW.split("\n").filter(l => l.includes(";")).map(l => l.split(";")[0].trim())).size;
@@ -2005,7 +2007,7 @@ setInterval(() => { if (state.view === "now" && festivalMoment()?.live) renderNo
   // Reveal: cards below the fold flip in once; cards already on screen show at once
   const io = "IntersectionObserver" in window && !reduced ? new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }), { rootMargin: "0px 0px -6% 0px" }) : null;
   if (io) r.classList.add("reveal");
-  const SEL = ".set, .now-card, .acard, .tl-item";
+  const SEL = ".now-card, .acard, .tl-item";
   const scan = () => { if (io) document.querySelectorAll(SEL).forEach(el => { if (el.classList.contains("in") || el.dataset.rv) return; el.dataset.rv = 1;
     if (el.getBoundingClientRect().top < innerHeight) el.classList.add("in"); else io.observe(el); }); ask(); };
   new MutationObserver(scan).observe(document.querySelector("main"), { childList: true, subtree: true });
