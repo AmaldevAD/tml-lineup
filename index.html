@@ -1,0 +1,1015 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0D0B14">
+<title>Tomorrowland Thailand Line-up</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;800&family=Inter:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: app shell for one-handed use. Compact sticky header, headliner carousel, artwork-led set cards, mini player + tab bar pinned to the bottom. */
+:root {
+  --bg: #F4F2F8; --surface: #FFFFFF; --surface-2: #ECE9F3; --fg: #17132A; --muted: #625C78; --line: #DEDAE8;
+  --accent: #A8480A; --accent-soft: #FBE9DA; --accent-ink: #FFFFFF; --heart: #D92D4B; --warn: #B4231F; --warn-bg: #FDECEA;
+  --st-mainstage: #C27A06; --st-freedom: #D83B47; --st-crystal: #1C93A8; --st-codex: #7553E0; --st-core: #3A8F4B; --st-papillon: #D3306F; --st-moose: #8B6A5C;
+  --font-display: "Unbounded", "Inter", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --r: 18px; --tab-h: 62px; --player-h: 0px;
+  --shadow: 0 1px 2px rgb(20 10 40 / .06), 0 6px 20px rgb(20 10 40 / .06);
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0D0B14; --surface: #17141F; --surface-2: #221E2E; --fg: #F3F0F9; --muted: #A49DBA; --line: #2B2639;
+  --accent: #FFB13B; --accent-soft: #33240F; --accent-ink: #1A1200; --heart: #FF5C72; --warn: #FF8A80; --warn-bg: #3A1618;
+  --st-mainstage: #FFB13B; --st-freedom: #FF6370; --st-crystal: #4CC9DE; --st-codex: #9D83FF; --st-core: #5BC26E; --st-papillon: #FF5F9E; --st-moose: #C49A86;
+  --shadow: 0 1px 0 rgb(255 255 255 / .03) inset, 0 8px 24px rgb(0 0 0 / .35);
+  color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0D0B14; --surface: #17141F; --surface-2: #221E2E; --fg: #F3F0F9; --muted: #A49DBA; --line: #2B2639;
+  --accent: #FFB13B; --accent-soft: #33240F; --accent-ink: #1A1200; --heart: #FF5C72; --warn: #FF8A80; --warn-bg: #3A1618;
+  --st-mainstage: #FFB13B; --st-freedom: #FF6370; --st-crystal: #4CC9DE; --st-codex: #9D83FF; --st-core: #5BC26E; --st-papillon: #FF5F9E; --st-moose: #C49A86;
+  --shadow: 0 1px 0 rgb(255 255 255 / .03) inset, 0 8px 24px rgb(0 0 0 / .35);
+  color-scheme: dark; }
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 15px; line-height: 1.45; -webkit-tap-highlight-color: transparent; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 30; background: var(--bg); }
+button, input, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+a { color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 10px; }
+.tnum { font-variant-numeric: tabular-nums; }
+.gutter { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.wrap { max-width: 1180px; margin: 0 auto; }
+.sr { position: absolute; left: 0; top: 0; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* Header */
+header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: color-mix(in srgb, var(--bg) 86%, transparent); backdrop-filter: saturate(1.5) blur(16px); -webkit-backdrop-filter: saturate(1.5) blur(16px); }
+.top-inner { display: flex; flex-direction: column; gap: 10px; padding-block: 10px; }
+.brand-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.eyebrow { font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
+h1 { font-family: var(--font-display); font-weight: 800; font-size: 24px; line-height: 1.05; margin: 3px 0 0; letter-spacing: -.02em; text-wrap: balance; }
+.hdr-actions { display: flex; gap: 8px; }
+.icon-btn { width: 44px; height: 44px; border-radius: 14px; border: 1px solid var(--line); background: var(--surface); display: inline-grid; place-items: center; flex: none; position: relative; text-decoration: none; }
+.icon-btn svg { width: 20px; height: 20px; }
+
+.days { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.days button { border: 1px solid var(--line); background: var(--surface); border-radius: 14px; min-height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1; gap: 2px; }
+.days b { font-family: var(--font-display); font-weight: 700; font-size: 14px; letter-spacing: .02em; }
+.days span { font-size: 11.5px; color: var(--muted); }
+.days button[aria-selected="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.days button[aria-selected="true"] span { color: color-mix(in srgb, var(--bg) 75%, var(--fg)); }
+
+.chips { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; margin-inline: calc(-1 * max(16px, env(safe-area-inset-left, 0px))); padding-inline: max(16px, env(safe-area-inset-left, 0px)); }
+.chips::-webkit-scrollbar { display: none; }
+.chip { flex: none; display: inline-flex; align-items: center; gap: 7px; min-height: 38px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); font-size: 13px; font-weight: 600; white-space: nowrap; }
+.chip[aria-pressed="true"] { background: color-mix(in srgb, var(--c, var(--accent)) 18%, var(--surface)); border-color: var(--c, var(--accent)); }
+.dot { width: 9px; height: 9px; border-radius: 50%; background: var(--c, var(--muted)); flex: none; }
+
+.toolbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.seg { display: inline-flex; padding: 3px; background: var(--surface-2); border-radius: 12px; gap: 2px; }
+.seg button { border: 0; background: transparent; min-height: 36px; padding: 0 14px; border-radius: 9px; font-size: 13px; font-weight: 600; color: var(--muted); display: inline-flex; align-items: center; gap: 6px; }
+.seg button svg { width: 16px; height: 16px; }
+.seg button[aria-pressed="true"] { background: var(--surface); color: var(--fg); box-shadow: 0 0 0 1px var(--line); }
+.toggle { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; font-size: 13px; font-weight: 600; color: var(--muted); border: 0; background: none; padding: 0 2px; }
+.toggle .sw { width: 40px; height: 24px; border-radius: 99px; background: var(--line); position: relative; transition: background .2s; }
+.toggle .sw::after { content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: transform .2s; box-shadow: 0 1px 2px rgb(0 0 0 / .3); }
+.toggle[aria-pressed="true"] { color: var(--fg); }
+.toggle[aria-pressed="true"] .sw { background: var(--heart); }
+.toggle[aria-pressed="true"] .sw::after { transform: translateX(16px); }
+
+main { padding-block: 6px calc(var(--tab-h) + var(--player-h) + env(safe-area-inset-bottom, 0px) + 28px); }
+.section-title { font-family: var(--font-display); font-size: 15px; font-weight: 700; margin: 18px 0 10px; display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.section-title small { font-family: var(--font-body); font-size: 12.5px; font-weight: 500; color: var(--muted); }
+
+/* Artwork */
+.art { position: relative; overflow: hidden; border-radius: 14px; background: var(--g); display: grid; place-items: center; color: #fff; flex: none; isolation: isolate; }
+.art img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; }
+.art .ini { font-family: var(--font-display); font-weight: 800; letter-spacing: -.03em; text-shadow: 0 2px 12px rgb(0 0 0 / .35); z-index: 0; }
+.art.has-img .ini { display: none; }
+.play { position: absolute; z-index: 2; border: 0; border-radius: 50%; display: grid; place-items: center; background: rgb(255 255 255 / .94); color: #120E1E; box-shadow: 0 4px 14px rgb(0 0 0 / .35); transition: transform .15s; }
+.play svg { width: 45%; height: 45%; margin-left: 8%; }
+.play.is-playing svg { margin-left: 0; }
+.play:active { transform: scale(.9); }
+
+/* Headliner carousel */
+.rail { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; margin-inline: calc(-1 * max(16px, env(safe-area-inset-left, 0px))); padding: 2px max(16px, env(safe-area-inset-left, 0px)) 6px; }
+.rail::-webkit-scrollbar { display: none; }
+.poster { flex: none; width: min(68vw, 250px); scroll-snap-align: start; border-radius: 22px; overflow: hidden; position: relative; aspect-ratio: 4 / 5; max-width: 100%; box-shadow: var(--shadow); }
+.poster .art { position: absolute; inset: 0; border-radius: 0; }
+.poster .art .ini { font-size: 54px; transform: translateY(-30px); }
+.poster .shade { position: absolute; inset: 0; background: linear-gradient(180deg, rgb(0 0 0 / 0) 35%, rgb(0 0 0 / .82)); z-index: 1; pointer-events: none; }
+.poster .info { position: absolute; z-index: 2; left: 14px; right: 14px; bottom: 14px; color: #fff; display: flex; flex-direction: column; gap: 3px; }
+.poster .info button { all: unset; cursor: pointer; font-family: var(--font-display); font-weight: 700; font-size: 19px; line-height: 1.1; overflow-wrap: anywhere; }
+.poster .info button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.poster .info small { font-size: 12.5px; opacity: .85; display: flex; align-items: center; gap: 6px; }
+.poster .play { width: 52px; height: 52px; right: 12px; top: 12px; }
+.poster .fav { position: absolute; z-index: 2; left: 10px; top: 10px; background: rgb(0 0 0 / .35); color: #fff; backdrop-filter: blur(6px); }
+
+/* Set cards */
+.hour { display: grid; grid-template-columns: 1fr; }
+.hour-label { position: sticky; top: calc(env(safe-area-inset-top, 0px) + var(--hdr, 180px)); z-index: 5; justify-self: start; font-size: 12px; font-weight: 700; letter-spacing: .04em; padding: 5px 11px; border-radius: 99px; background: var(--accent-soft); color: var(--accent); margin: 14px 0 8px; }
+.rows { display: grid; grid-template-columns: 1fr; gap: 10px; min-width: 0; }
+.set { display: grid; grid-template-columns: 76px 1fr auto; align-items: center; gap: 14px; padding: 10px 4px 10px 10px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); box-shadow: var(--shadow); }
+.set .art { width: 76px; height: 76px; }
+.set .art .ini { font-size: 22px; }
+.set .play { width: 34px; height: 34px; right: 6px; bottom: 6px; }
+.set-main { min-width: 0; border: 0; background: none; text-align: left; padding: 0; display: flex; flex-direction: column; gap: 3px; }
+.set-name { font-weight: 700; font-size: 16.5px; line-height: 1.2; overflow-wrap: anywhere; }
+.set-name .b2b { font-weight: 500; color: var(--muted); font-size: 13px; }
+.time { font-size: 13.5px; font-weight: 600; }
+.meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; font-size: 13px; color: var(--muted); }
+.pill { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; padding: 2px 9px 2px 7px; border-radius: 99px; background: color-mix(in srgb, var(--c) 14%, transparent); color: var(--fg); width: fit-content; }
+.genre { font-size: 12.5px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fav { width: 48px; height: 48px; border-radius: 14px; border: 0; background: none; display: grid; place-items: center; color: var(--muted); }
+.fav svg { width: 24px; height: 24px; transition: transform .18s cubic-bezier(.3,1.6,.5,1); }
+.fav[aria-pressed="true"] { color: var(--heart); }
+.fav[aria-pressed="true"] svg { fill: currentColor; transform: scale(1.08); }
+.fav:active svg { transform: scale(.8); }
+.set.is-fav { border-color: color-mix(in srgb, var(--heart) 45%, var(--line)); }
+
+/* Timetable grid */
+.grid-scroll { overflow: auto; border: 1px solid var(--line); border-radius: var(--r); background: var(--surface); max-height: calc(100dvh - 250px - var(--player-h)); min-height: 420px; position: relative; margin-top: 4px; }
+.grid { display: grid; grid-template-columns: 58px repeat(var(--cols), minmax(158px, 1fr)); min-width: min-content; position: relative; }
+.g-head { position: sticky; top: 0; z-index: 3; background: var(--surface); border-bottom: 1px solid var(--line); padding: 10px 8px; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; display: flex; gap: 6px; align-items: center; min-height: 46px; }
+.g-head.corner { left: 0; z-index: 4; }
+.g-times { position: sticky; left: 0; z-index: 2; background: var(--surface); border-right: 1px solid var(--line); }
+.g-times span { position: absolute; left: 0; right: 0; text-align: center; font-size: 11px; font-weight: 600; color: var(--muted); transform: translateY(-50%); }
+.g-col { position: relative; border-right: 1px solid var(--line); background-image: repeating-linear-gradient(to bottom, var(--line) 0 1px, transparent 1px calc(var(--ppm) * 60px)); background-position: 0 8px; }
+.g-set { position: absolute; left: 4px; right: 4px; border-radius: 12px; overflow: hidden; color: #fff; }
+.g-set .art { position: absolute; inset: 0; border-radius: 0; }
+.g-set .art .ini { font-size: 30px; opacity: .35; }
+.g-set .shade { position: absolute; inset: 0; z-index: 1; background: linear-gradient(180deg, rgb(0 0 0 / .55), rgb(0 0 0 / .2) 60%, rgb(0 0 0 / .45)); pointer-events: none; }
+.g-set .g-open { all: unset; cursor: pointer; position: absolute; inset: 0; z-index: 2; padding: 7px 40px 7px 9px; display: flex; flex-direction: column; gap: 1px; }
+.g-set .g-open:focus-visible { outline: 2px solid #fff; outline-offset: -3px; border-radius: 12px; }
+.g-set b { font-size: 13.5px; line-height: 1.15; overflow-wrap: anywhere; text-shadow: 0 1px 6px rgb(0 0 0 / .5); }
+.g-set small { font-size: 11.5px; opacity: .9; }
+.g-set .fav { position: absolute; z-index: 3; right: 0; top: 0; width: 40px; height: 40px; color: #fff; }
+.g-set .play { width: 30px; height: 30px; right: 6px; bottom: 6px; z-index: 3; }
+.g-set.short .play { display: none; }
+.g-set.is-fav { box-shadow: inset 0 0 0 2px var(--heart); }
+
+/* Now */
+.banner { padding: 20px; border-radius: 22px; background: radial-gradient(120% 140% at 100% 0%, color-mix(in srgb, var(--accent) 30%, transparent), transparent 60%), var(--surface); border: 1px solid var(--line); display: flex; flex-direction: column; gap: 6px; box-shadow: var(--shadow); }
+.banner .big { font-family: var(--font-display); font-weight: 800; font-size: 30px; line-height: 1.05; letter-spacing: -.02em; }
+.banner p { margin: 0; color: var(--muted); }
+.preview-row { position: relative; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 8px; }
+.preview-row label { font-size: 13px; font-weight: 600; color: var(--muted); width: 100%; }
+.preview-row select { min-height: 46px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface-2); padding: 0 12px; font-weight: 600; }
+.btn { min-height: 46px; padding: 0 18px; border-radius: 14px; border: 1px solid var(--line); background: var(--surface); font-weight: 700; font-size: 14px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.now-grid { display: grid; grid-template-columns: 1fr; gap: 12px; margin-top: 14px; }
+.now-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 14px; display: flex; flex-direction: column; gap: 12px; min-width: 0; box-shadow: var(--shadow); }
+.now-card h3 { margin: 0; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; display: flex; align-items: center; gap: 7px; }
+.now-act { display: grid; grid-template-columns: 84px 1fr auto; gap: 14px; align-items: center; }
+.now-act .art { width: 84px; height: 84px; }
+.now-act .art .ini { font-size: 24px; }
+.now-act .play { width: 36px; height: 36px; right: 6px; bottom: 6px; }
+.now-act .set-name { font-size: 19px; }
+.bar { height: 6px; border-radius: 9px; background: var(--surface-2); overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--c); border-radius: 9px; }
+.bar-meta { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); }
+.next { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 0 0; border: 0; border-top: 1px dashed var(--line); font-size: 14px; background: none; width: 100%; text-align: left; min-height: 44px; }
+.next em { font-style: normal; font-size: 11px; font-weight: 700; letter-spacing: .1em; color: var(--muted); margin-right: 6px; }
+.idle { color: var(--muted); font-size: 14px; }
+
+/* Timeline */
+.tl-item { display: grid; grid-template-columns: 62px 1fr; gap: 10px; }
+.tl-time { font-size: 13px; font-weight: 700; padding-top: 14px; text-align: right; line-height: 1.25; }
+.tl-time small { display: block; color: var(--muted); font-weight: 500; }
+.tl-item + .tl-item, .gap + .tl-item { margin-top: 10px; }
+.gap { margin: 10px 0 0 72px; padding: 6px 0 6px 12px; font-size: 12.5px; color: var(--muted); border-left: 2px dotted var(--line); }
+.clash { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 700; color: var(--warn); background: var(--warn-bg); padding: 2px 9px; border-radius: 99px; width: fit-content; }
+.empty { text-align: center; padding: 48px 20px; color: var(--muted); display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.empty .heart-big { width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center; background: color-mix(in srgb, var(--heart) 14%, var(--surface)); color: var(--heart); }
+.empty strong { color: var(--fg); font-size: 17px; }
+.day-summary { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 14px; }
+.tag { font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 99px; background: var(--surface-2); color: var(--muted); }
+
+/* Explore */
+.search { position: relative; margin-top: 6px; }
+.search input { width: 100%; min-height: 52px; border-radius: 16px; border: 1px solid var(--line); background: var(--surface); padding: 0 16px 0 46px; font-size: 16px; box-shadow: var(--shadow); }
+.search svg { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); width: 20px; height: 20px; color: var(--muted); }
+.count { font-size: 13px; color: var(--muted); margin: 14px 0 8px; }
+.artists { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.acard { position: relative; border-radius: var(--r); overflow: hidden; background: var(--surface); border: 1px solid var(--line); display: flex; flex-direction: column; box-shadow: var(--shadow); min-width: 0; }
+.acard .art { aspect-ratio: 1; width: 100%; max-width: 100%; border-radius: 0; }
+.acard .art .ini { font-size: 34px; }
+.acard .play { width: 40px; height: 40px; right: 8px; bottom: 8px; }
+.acard .open { all: unset; cursor: pointer; padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.acard .open:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.acard .set-name { font-size: 15px; }
+.acard .days-mini { display: flex; gap: 4px; flex-wrap: wrap; }
+.acard .days-mini span { font-size: 10.5px; font-weight: 700; padding: 2px 7px; border-radius: 6px; background: var(--surface-2); color: var(--muted); }
+.acard .fav { position: absolute; top: 6px; right: 6px; z-index: 3; color: #fff; background: rgb(0 0 0 / .3); width: 42px; height: 42px; border-radius: 50%; backdrop-filter: blur(6px); }
+.acard .fav[aria-pressed="true"] { color: #fff; background: var(--heart); }
+
+/* Sheet */
+.scrim { position: fixed; inset: 0; background: rgb(8 6 14 / .55); z-index: 40; opacity: 0; transition: opacity .2s; }
+.scrim.open { opacity: 1; }
+.sheet { position: fixed; z-index: 41; left: 0; right: 0; bottom: 0; max-height: 92dvh; overflow: auto; background: var(--surface); border-radius: 26px 26px 0 0; padding: 0 0 calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateY(100%); transition: transform .3s cubic-bezier(.2,.8,.2,1); box-shadow: 0 -10px 40px rgb(0 0 0 / .3); }
+.sheet.open { transform: none; }
+.sheet-hero { position: relative; height: 260px; }
+.sheet-hero .art { position: absolute; inset: 0; border-radius: 0; }
+.sheet-hero .art .ini { font-size: 72px; transform: translateY(-20px); }
+.sheet-hero .shade { position: absolute; inset: 0; background: linear-gradient(180deg, rgb(0 0 0 / .25), rgb(0 0 0 / 0) 30%, rgb(0 0 0 / .8)); z-index: 1; }
+.sheet-hero .grab { position: absolute; z-index: 2; top: 8px; left: 50%; transform: translateX(-50%); width: 40px; height: 5px; border-radius: 9px; background: rgb(255 255 255 / .6); }
+.sheet-hero .close { position: absolute; z-index: 2; top: 14px; right: max(14px, env(safe-area-inset-right, 0px)); width: 44px; height: 44px; border-radius: 50%; border: 0; background: rgb(0 0 0 / .4); color: #fff; display: grid; place-items: center; backdrop-filter: blur(6px); }
+.sheet-hero .close svg { width: 20px; height: 20px; }
+.sheet-hero .info { position: absolute; z-index: 2; left: max(18px, env(safe-area-inset-left, 0px)); right: 90px; bottom: 16px; color: #fff; }
+.sheet h2 { font-family: var(--font-display); font-size: 26px; line-height: 1.05; margin: 0; overflow-wrap: anywhere; letter-spacing: -.02em; }
+.sheet-hero .info .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.sheet-hero .info .tags span { font-size: 12px; padding: 3px 9px; border-radius: 99px; background: rgb(255 255 255 / .18); backdrop-filter: blur(4px); }
+.sheet-hero .play { width: 60px; height: 60px; right: max(18px, env(safe-area-inset-right, 0px)); bottom: 16px; background: var(--accent); color: var(--accent-ink); }
+.sheet-body { padding: 4px max(18px, env(safe-area-inset-right, 0px)) 0 max(18px, env(safe-area-inset-left, 0px)); }
+.sheet h4 { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 22px 0 10px; }
+.fav-all { margin-top: 16px; width: 100%; }
+.fav-all[aria-pressed="true"] { background: color-mix(in srgb, var(--heart) 14%, var(--surface)); border-color: var(--heart); color: var(--heart); }
+.fav-all svg { width: 20px; height: 20px; }
+.fav-all[aria-pressed="true"] svg { fill: currentColor; }
+.links { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.links a { min-height: 50px; display: flex; align-items: center; gap: 10px; padding: 0 14px; border-radius: 14px; border: 1px solid var(--line); text-decoration: none; font-weight: 600; font-size: 14px; }
+.links a i { width: 10px; height: 10px; border-radius: 50%; background: var(--b); flex: none; }
+.sheet-sets { display: flex; flex-direction: column; gap: 10px; }
+
+/* Mini player */
+.player { position: fixed; z-index: 24; left: 0; right: 0; bottom: calc(var(--tab-h) + env(safe-area-inset-bottom, 0px)); padding: 0 max(10px, env(safe-area-inset-right, 0px)) 8px max(10px, env(safe-area-inset-left, 0px)); }
+.player-card { max-width: 640px; margin: 0 auto; display: grid; grid-template-columns: 48px 1fr auto auto; gap: 12px; align-items: center; padding: 8px 8px 8px 8px; border-radius: 18px; background: var(--fg); color: var(--bg); box-shadow: 0 10px 30px rgb(0 0 0 / .35); position: relative; overflow: hidden; }
+.player-card .art { width: 48px; height: 48px; border-radius: 12px; }
+.player-card .art .ini { font-size: 15px; }
+.player-card .who { all: unset; cursor: pointer; min-width: 0; display: flex; flex-direction: column; }
+.player-card .who b { font-size: 14.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.player-card .who small { font-size: 12px; opacity: .7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.player-card .pbtn { width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--bg); color: var(--fg); display: grid; place-items: center; text-decoration: none; }
+.player-card .pbtn svg { width: 20px; height: 20px; }
+.player-card .x { background: transparent; color: var(--bg); }
+.player-card .prog { position: absolute; left: 0; bottom: 0; height: 3px; background: var(--accent); width: 0; }
+
+.player-card { display: flex !important; flex-direction: column; align-items: stretch !important; gap: 8px; }
+.player-card .embed { width: 100%; }
+@media (min-width: 900px) { .player-card { max-width: 860px; } .player-card .embed iframe { max-height: 300px; } }
+.player-card .p-row { display: grid; grid-template-columns: 48px minmax(0, 1fr) repeat(4, 40px); gap: 4px; align-items: center; }
+.player-card .p-row .who { margin-left: 8px; }
+.player-card .pbtn.ghost { width: 40px; height: 44px; border-radius: 12px; background: transparent; color: var(--bg); }
+.player-card .pbtn.ghost svg { width: 20px; height: 20px; }
+.player-card.min .embed { height: 0; overflow: hidden; margin-top: -8px; }
+.player-card.min #pMin svg { transform: rotate(180deg); }
+.player-card .embed { grid-column: 1 / -1; display: flex; flex-direction: column; gap: 8px; }
+.player-card .embed iframe { width: 100%; aspect-ratio: 16 / 9; max-width: 100%; max-height: 40dvh; height: auto; border: 0; border-radius: 12px; background: #000; display: block; }
+.player-card .svc { display: flex; gap: 6px; overflow-x: auto; }
+.player-card .svc button { flex: none; display: inline-flex; align-items: center; gap: 6px; min-height: 34px; padding: 0 12px; border-radius: 99px; border: 1px solid color-mix(in srgb, var(--bg) 25%, transparent); background: transparent; color: var(--bg); font-size: 12.5px; font-weight: 600; }
+.player-card .svc button[aria-pressed="true"] { background: var(--bg); color: var(--fg); }
+.player-card .svc i { width: 8px; height: 8px; border-radius: 50%; }
+.player-card .hint { grid-column: 1 / -1; margin: 0; font-size: 12px; opacity: .7; display: none; }
+
+/* Tab bar */
+nav.tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 25; background: color-mix(in srgb, var(--surface) 92%, transparent); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom, 0px); padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px); }
+.tabs-inner { display: grid; grid-template-columns: repeat(4, 1fr); max-width: 560px; margin: 0 auto; }
+.tabs a { height: var(--tab-h); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; text-decoration: none; font-size: 11.5px; font-weight: 600; color: var(--muted); position: relative; }
+.tabs a svg { width: 23px; height: 23px; }
+.tabs a .ico { display: grid; place-items: center; width: 56px; height: 30px; border-radius: 99px; transition: background .2s; }
+.tabs a[aria-current="page"] { color: var(--fg); }
+.tabs a[aria-current="page"] .ico { background: var(--accent-soft); color: var(--accent); }
+.badge { position: absolute; top: 4px; left: calc(50% + 10px); min-width: 18px; height: 18px; padding: 0 5px; border-radius: 99px; background: var(--heart); color: #fff; font-size: 10.5px; display: grid; place-items: center; font-weight: 700; }
+
+.toast { position: fixed; z-index: 50; left: 50%; bottom: calc(var(--tab-h) + var(--player-h) + env(safe-area-inset-bottom, 0px) + 14px); transform: translate(-50%, 20px); opacity: 0; transition: .25s; background: var(--fg); color: var(--bg); padding: 10px 16px; border-radius: 99px; font-size: 13.5px; font-weight: 600; pointer-events: none; white-space: nowrap; max-width: calc(100% - 32px); overflow: hidden; text-overflow: ellipsis; }
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+.toast.up { bottom: auto; top: calc(env(safe-area-inset-top, 0px) + 16px); }
+
+footer.foot { margin-top: 32px; font-size: 12.5px; color: var(--muted); text-align: center; display: flex; flex-direction: column; gap: 4px; }
+
+@media (min-width: 720px) {
+  h1 { font-size: 30px; }
+  .now-grid { grid-template-columns: repeat(2, 1fr); }
+  .rows { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .artists { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .sheet { left: 50%; right: auto; width: 560px; bottom: 24px; border-radius: 26px; transform: translate(-50%, 110%); }
+  .sheet.open { transform: translate(-50%, 0); }
+  .sheet-hero .art, .sheet-hero { border-radius: 26px 26px 0 0; }
+}
+@media (min-width: 1040px) {
+  .now-grid { grid-template-columns: repeat(3, 1fr); }
+  .rows { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .artists { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+<style>[hidden]{display:none!important} body{margin:0} img{max-width:100%}</style>
+</head>
+<body>
+
+
+<header class="top" id="hdr">
+  <div class="wrap gutter top-inner">
+    <div class="brand-row">
+      <div>
+        <div class="eyebrow">Tomorrowland Thailand · 11–13 Dec</div>
+        <h1 id="viewTitle">Line-up</h1>
+      </div>
+      <div class="hdr-actions">
+        <button class="icon-btn" id="themeBtn" aria-label="Switch light or dark theme" title="Theme">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="days" role="tablist" aria-label="Festival day" id="days"></div>
+    <div class="chips" id="stageChips" role="group" aria-label="Filter by stage"></div>
+    <div class="toolbar" id="lineupTools">
+      <div class="seg" role="group" aria-label="Layout">
+        <button id="modeList" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>List</button>
+        <button id="modeGrid" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="18" rx="2"/><rect x="14" y="3" width="7" height="11" rx="2"/></svg>Timetable</button>
+      </div>
+      <button class="toggle" id="favOnly" aria-pressed="false"><span>Favourites</span><span class="sw" aria-hidden="true"></span></button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap gutter">
+  <section class="view" id="v-lineup" aria-label="Line-up"></section>
+  <section class="view" id="v-now" aria-label="Now and next" hidden></section>
+  <section class="view" id="v-timeline" aria-label="My timeline" hidden></section>
+  <section class="view" id="v-explore" aria-label="Explore artists" hidden>
+    <div class="search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="q" type="search" placeholder="Search artists or genres" autocomplete="off" aria-label="Search artists or genres">
+    </div>
+    <div class="chips" id="genreChips" style="margin-top:12px" role="group" aria-label="Filter by genre"></div>
+    <div class="count" id="artistCount"></div>
+    <div class="artists" id="artistList"></div>
+  </section>
+  <footer class="foot">
+    <span>Unofficial fan site. Not affiliated with Tomorrowland.</span>
+    <span>All times are Thailand time.</span>
+  </footer>
+</main>
+
+<div class="player" id="player" hidden></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<nav class="tabs" aria-label="Sections">
+  <div class="tabs-inner">
+    <a href="#lineup" data-view="lineup"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M3 9h18M8 2v4M16 2v4"/></svg></span>Line-up</a>
+    <a href="#now" data-view="now"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>Now</a>
+    <a href="#timeline" data-view="timeline"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 20.5s-8-4.7-8-10.6A4.4 4.4 0 0 1 12 7a4.4 4.4 0 0 1 8 2.9c0 5.9-8 10.6-8 10.6z"/></svg></span>My timeline<span class="badge" id="favBadge" hidden></span></a>
+    <a href="#explore" data-view="explore"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></span>Explore</a>
+  </div>
+</nav>
+
+<div class="scrim" id="scrim" hidden></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle" hidden></div>
+
+<script>
+// ---------- Data (from tomorrowland.aiko.dev, 26 Nov 2026) ----------
+const STAGES = [
+  ["mainstage","Mainstage","--st-mainstage"],
+  ["freedom-by-budweiser","Freedom by Budweiser","--st-freedom"],
+  ["crystal-garden-by-anker","Crystal Garden by Anker","--st-crystal"],
+  ["codex","Codex","--st-codex"],
+  ["core","Core","--st-core"],
+  ["papillon","Papillon","--st-papillon"],
+  ["moose-bar","Moose Bar","--st-moose"]
+];
+const DAYS = [
+  {id:"2026-12-11", short:"Fri", label:"11 Dec", long:"Friday 11 December"},
+  {id:"2026-12-12", short:"Sat", label:"12 Dec", long:"Saturday 12 December"},
+  {id:"2026-12-13", short:"Sun", label:"13 Dec", long:"Sunday 13 December"}
+];
+const RAW = `#2026-12-11
+@mainstage
+Goldfish;1300;1425;Downtempo, Electro swing
+Rave Republic;1425;1525;Edm
+Youna;1525;1625;Melodic techno, Melodic house
+Henri PFR;1630;1730;Dance
+Lilly Palmer;1735;1835;Techno
+John Newman;1835;1935;Pop, Pop soul, Soul
+Kevin de Vries;1940;2040;Melodic techno
+HALŌ;2040;2140;
+Vini Vici;2145;2245;Psytrance
+Alan Walker;2250;2350;Electro house
+Martin Garrix;2350;0050;Electro house, Big room house
+@freedom-by-budweiser
+Mike Bond;1300;1430;Dance
+Sm1le;1430;1600;Edm, House
+Kryder;1600;1730;House, Progressive house
+Raiden;1730;1900;Electro house, Progressive house, House
+Honey Gee;1900;2000;Electro house
+Wukong;2000;2100;Dance, Edm, Electronica
+Bassjackers;2100;2200;Bass house, Big room house, Electro house
+MANDY;2200;2300;House
+Da Tweekaz;2300;0000;Hardstyle
+Yellow Claw|Flosstradamus;0000;0100;Trap, Moombahton, Dubstep, Festival trap, Hip hop
+@crystal-garden-by-anker
+Jonnie B;1300;1500;Trance
+Lonskii;1500;1630;Trance, Hardcore
+Amy Wiles;1630;1800;Breakbeat, Breaks
+Marsh;1800;1930;Progressive house
+Yotto|Eli & Fur;1930;2100;Deep house, House, Progressive house
+Cosmic Gate;2100;2200;Trance
+Aly & Fila;2200;2330;Trance
+Ferry Corsten|Marsh;2330;0000;Trance, Progressive trance, Progressive house
+Ferry Corsten;0000;0100;Trance, Progressive trance
+@codex
+DaDoo;1300;1500;Dance
+DJ Licious;1500;1630;House, Future house, Progressive house
+Camila Jun;1630;1800;Tech house, House
+ELFIGO;1800;1930;House
+Linska;1930;2100;Techno
+Solardo;2100;2230;Tech house, House
+Camelphat;2230;0000;House, Deep house
+@core
+CLAUDINE;1300;1430;House, Tech house
+Hyalyte;1430;1600;Dance
+Saint Ludo;1600;1730;House
+Oppidan;1730;1900;Uk garage
+Pegassi;1900;2100;Trance, Techno
+X CLUB.;2100;2300;Techno
+Funk Tribu;2300;0100;Techno, Trance
+@papillon
+Jijie;1300;1500;
+Vicky Kroon;1500;1700;Electronic
+Makasi;1700;1900;House
+Palmera;1900;2030;Electronic
+Lennert Wolfs;2030;2200;Future bass
+TA:REK~tarek;2200;0000;House
+@moose-bar
+Jelle DK;1300;1700;Pop
+Jan V;1700;2100;Dance
+Jerrooo;2100;0100;
+#2026-12-12
+@mainstage
+Riviere;1300;1425;
+KARTY;1425;1525;Dance
+Meaghan;1525;1625;House
+Ian Asher;1630;1730;Dance
+Miss Monique;1735;1835;Melodic techno, Progressive house, Trance
+NERVO;1835;1935;Progressive house, Electro house
+Sub Zero Project;1940;2040;Hardstyle
+ARTBAT;2040;2140;House, Techno, Deep house
+Afrojack;2145;2245;House, Dutch house, Electro house
+Dimitri Vegas & Like Mike;2250;2350;Big room house, Electro house, Deep house
+Steve Aoki;2350;0050;House, Electro house
+@freedom-by-budweiser
+ROW1;1300;1430;
+XY;1430;1600;House
+Meguru;1600;1800;Hardcore
+Nakadia;1800;1930;Techno
+Space 92|Amber Broos;1930;2100;Techno, Peak time techno
+Hannah Laing;2100;2230;Hard house
+Nico Moreno;2230;0000;Industrial techno, Techno
+@crystal-garden-by-anker
+Puffer P;1300;1430;Psytrance
+Tripical Note;1430;1600;Trance
+Firaga;1600;1730;Electronic
+Ghost Rider;1730;1900;Psytrance, Psychedelic
+Somnia;1900;2000;Psytrance
+Blazy;2000;2100;Psytrance
+WHITENO1SE|Blastoyz;2100;2200;Psytrance, Progressive trance
+Vegas;2200;2300;Psytrance
+Mad Maxx|Stryker;2300;0000;Psytrance
+Infected Mushroom;0000;0100;Psytrance, Goa trance
+@codex
+PETRA;1300;1430;Drum and bass
+Romeo Blanco;1430;1600;Progressive house, House, Electro house
+Manuals;1600;1730;Future house, Dance pop
+NOME.;1730;1900;Dance
+DJ Sally;1900;2000;House
+22 Bullets;2000;2100;Electro house, Melodic techno
+Dubvision;2100;2200;Electro house
+Yves V;2200;2300;House
+Third Party;2300;0000;Progressive house, House
+DVBBS;0000;0100;Electro house
+@core
+An!ka~anka;1300;1500;House
+Meltmode;1500;1700;House
+Bibi Seck;1700;1900;Dance
+Luuk van Dijk;1900;2030;House, Tech house, Deep house
+DJ BORING|Luuk van Dijk;2030;2130;House, Tech house, Deep house
+DJ BORING;2130;2300;House
+Mind Against;2300;0100;Melodic techno
+@papillon
+ARTEN;1300;1500;Afro house, Melodic house
+Semsei;1500;1700;House
+Rebeca Ark;1700;1900;Techno
+DJ Licious;1900;2100;House, Future house, Progressive house
+Carly Wilford;2100;2230;Tech house, House
+Coco Bevan;2230;0000;Dance
+@moose-bar
+Jan V;1300;1700;Dance
+Jerrooo;1700;2100;
+Jelle DK;2100;0100;Pop
+#2026-12-13
+@mainstage
+Nuttrix;1300;1425;House
+Halo~halo-thailand;1425;1525;
+Botcash;1525;1625;Electronic
+MATTN;1630;1730;House
+Kölsch;1735;1835;House
+Novah;1835;1935;Techno
+R3HAB;1940;2040;Dutch house, Electro house
+ALOK;2040;2140;Deep house
+Lost Frequencies;2145;2245;House, Deep house
+Swedish House Mafia;2250;2350;House, Electro house
+@freedom-by-budweiser
+Yukio;1300;1500;Trance
+Xenia Dia;1500;1630;Techno
+Luna & Lenthe;1630;1800;Afro house, House
+Henri Bergmann;1800;1930;Tech house
+Agents of Time;1930;2100;Melodic techno, House, Melodic house
+Kevin de Vries|MORTEN;2100;2230;Melodic techno, Future rave
+R3HAB|ARTBAT;2230;0000;Dutch house, Electro house, House, Techno, Deep house
+@crystal-garden-by-anker
+Lora Matia;1300;1430;
+Angemi;1430;1600;House
+Tiger Drama;1600;1730;Techno, House
+Whisnu Santika;1730;1830;Breakbeat
+Matisse & Sadko;1830;1930;Progressive house
+Lucas & Steve;1930;2030;House
+Laidback Luke;2030;2200;House, Electro house
+Quintino;2200;2300;Big room house, Electro house
+Brennan Heart;2300;0000;Hardstyle
+@codex
+J-Nana;1300;1430;Hip hop, Bass house
+Maysaa;1430;1600;
+Pixzy;1600;1700;House
+Merow;1700;1800;Electro house, Future house
+RayRay;1800;1900;Hard techno, Electro house
+SABAI;1900;2000;Future bass
+Andromedik;2000;2100;Drum and bass
+APASHE;2100;2200;Dubstep, Electro, Electro house
+Netsky;2200;2300;Drum and bass, Liquid funk
+Yellow Claw;2300;0000;Trap, Moombahton, Dubstep
+@core
+Dennis Gold;1300;1500;House
+Capoon;1500;1630;Progressive house
+Dino Lenny;1630;1800;House
+Maxi Meraki;1800;1930;Deep house, Progressive house
+Amémé|Honeyluv;1930;2100;Afro house, House, Tech house
+DJ Tennis;2100;2230;House, Tech house, Deep house
+Joris Voorn|Krystal Klear;2230;0000;House, Detroit techno, Melodic techno, Progressive house, Nu-disco
+@papillon
+JOULIE;1300;1500;
+Neon;1500;1700;House
+Onfaya;1830;2000;Afro house, Ambient
+ADAM K;2000;2130;House, Progressive house
+JoWaves;2130;2300;House
+@moose-bar
+Jerrooo;1300;1700;
+Jelle DK;1700;2100;Pop
+Jan V;2100;0000;Dance`;
+
+// ---------- Parse ----------
+const slugify = n => n.normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase().replace(/&/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
+const toMin = s => { let h = +s.slice(0,2), m = +s.slice(2); if (h < 12) h += 24; return h*60 + m; };
+// 12-hour clock
+const parts12 = m => { const h24 = Math.floor(m/60) % 24, mm = m % 60; return { t: ((h24 % 12) || 12) + ":" + String(mm).padStart(2,"0"), p: h24 < 12 ? "AM" : "PM" }; };
+const fmt = m => { const x = parts12(m); return x.t + " " + x.p; };
+const fmtHour = m => { const x = parts12(m); return x.t.replace(":00","") + " " + x.p; };
+const range = (a, b) => { const x = parts12(a), y = parts12(b); return x.p === y.p ? `${x.t} – ${y.t} ${y.p}` : `${x.t} ${x.p} – ${y.t} ${y.p}`; };
+// Photos and players are read live from the original site when the page is allowed to reach it.
+const SOURCE = "https://tomorrowland.aiko.dev", IMG = {}, PLAYERS = {}; let PLAYERS_LOADED = false;
+
+const STAGE = Object.fromEntries(STAGES.map(([id,name,c]) => [id,{id,name,c}]));
+const SETS = [], ARTISTS = new Map();
+{
+  let day, stage;
+  for (const line of RAW.split("\n")) {
+    if (line.startsWith("#")) { day = line.slice(1); continue; }
+    if (line.startsWith("@")) { stage = line.slice(1); continue; }
+    const [who, s, e, g] = line.split(";");
+    const artists = who.split("|").map(p => { const [name, sl] = p.split("~"); return { name, slug: sl || slugify(name) }; });
+    const genres = g ? g.split(",").map(x => x.trim()).filter(Boolean) : [];
+    const set = { key: day + "/" + artists.map(a=>a.slug).join("+"), day, stage, artists, start: toMin(s), end: toMin(e), genres };
+    SETS.push(set);
+    for (const a of artists) {
+      if (!ARTISTS.has(a.slug)) ARTISTS.set(a.slug, { slug: a.slug, name: a.name, sets: [], solo: new Set(), any: new Set() });
+      const A = ARTISTS.get(a.slug);
+      A.sets.push(set);
+      genres.forEach(x => (artists.length === 1 ? A.solo : A.any).add(x));
+    }
+  }
+  for (const A of ARTISTS.values()) A.genres = [...(A.solo.size ? A.solo : A.any)];
+}
+const SETMAP = new Map(SETS.map(s => [s.key, s]));
+const FIRST = 13*60, LAST = 25*60;
+
+// ---------- State ----------
+const store = {
+  get(k, d) { try { const v = localStorage.getItem("tml:" + k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem("tml:" + k, JSON.stringify(v)); } catch {} }
+};
+const state = {
+  view: "lineup",
+  day: store.get("day", DAYS[0].id),
+  stage: "all",
+  mode: store.get("mode", window.matchMedia("(min-width: 900px)").matches ? "grid" : "list"),
+  favOnly: false,
+  favs: new Set(store.get("favs", [])),
+  q: "", genre: "all",
+  preview: null,
+  playing: null, // artist slug in the mini player
+  sheet: null
+};
+
+// ---------- Helpers ----------
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const initials = name => { const w = name.replace(/[^\p{L}\p{N} ]/gu," ").trim().split(/\s+/); return (w.length > 1 ? w[0][0] + w[1][0] : name.replace(/[^\p{L}\p{N}]/gu,"").slice(0,2)).toUpperCase(); };
+const nameHTML = set => set.artists.map(a => esc(a.name)).join(' <span class="b2b">b2b</span> ');
+const nameText = set => set.artists.map(a => a.name).join(" b2b ");
+const dayOf = id => DAYS.find(d => d.id === id);
+const setsFor = (day, stage) => SETS.filter(s => s.day === day && (stage === "all" || s.stage === stage));
+const dur = m => (m >= 60 ? Math.floor(m/60) + " h" + (m%60 ? " " + (m%60) + " min" : "") : m + " min");
+const hash = s => { let h = 2166136261; for (const c of s) h = Math.imul(h ^ c.charCodeAt(0), 16777619); return h >>> 0; };
+// Generated cover art: two-tone glow unique to each artist (stands in until a real photo is bundled)
+function gradient(slug) {
+  const h = hash(slug), a = h % 360, b = (a + 35 + (h >> 9) % 90) % 360, x = 20 + (h >> 4) % 60, y = 15 + (h >> 12) % 50;
+  return `radial-gradient(120% 90% at ${x}% ${y}%, hsl(${a} 92% 62% / .95), transparent 55%), radial-gradient(90% 80% at ${100-x}% ${100-y/2}%, hsl(${b} 85% 52% / .9), transparent 60%), linear-gradient(160deg, hsl(${a} 55% 20%), hsl(${b} 60% 10%))`;
+}
+const ICON = {
+  heart: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 20.5s-8-4.7-8-10.6A4.4 4.4 0 0 1 12 7a4.4 4.4 0 0 1 8 2.9c0 5.9-8 10.6-8 10.6z"/></svg>`,
+  play: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15a1 1 0 0 0 1.5.86l12.4-7.5a1 1 0 0 0 0-1.72L8.5 3.64A1 1 0 0 0 7 4.5z"/></svg>`,
+  pause: `<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4.5" height="16" rx="1.2"/><rect x="13.5" y="4" width="4.5" height="16" rx="1.2"/></svg>`,
+  close: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>`,
+  ext: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M7 17 17 7M8 7h9v9"/></svg>`
+};
+function art(slug, name, { play = true, label } = {}) {
+  const img = IMG[slug];
+  return `<span class="art${img ? " has-img" : ""}" style="--g:${gradient(slug)}">${img ? `<img src="${esc(img)}" alt="" loading="lazy" decoding="async">` : ""}<span class="ini" aria-hidden="true">${esc(initials(name))}</span>${play ? playBtn(slug, label || name) : ""}</span>`;
+}
+const playBtn = (slug, name) => (PLAYERS_LOADED && !ytFor(slug)) ? "" : `<button class="play${state.playing === slug ? " is-playing" : ""}" data-play="${esc(slug)}" data-name="${esc(name)}" aria-label="${state.playing === slug ? "Stop preview of" : "Play a preview of"} ${esc(name)}">${state.playing === slug ? ICON.pause : ICON.play}</button>`;
+const favBtn = set => { const on = state.favs.has(set.key); return `<button class="fav" data-fav="${esc(set.key)}" aria-pressed="${on}" aria-label="${on ? "Remove" : "Save"} ${esc(nameText(set))} ${on ? "from" : "to"} favourites">${ICON.heart}</button>`; };
+const pill = st => `<span class="pill" style="--c:var(${st.c})"><span class="dot"></span>${esc(st.name)}</span>`;
+
+let toastT;
+function toast(msg) { const t = $("#toast"); t.textContent = msg; t.classList.toggle("up", !$("#sheet").hidden); t.classList.add("show"); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("show"), 1800); }
+
+// Bangkok time
+const epochOf = (day, min) => { const [y,mo,d] = day.split("-").map(Number); return Date.UTC(y, mo-1, d, 0, min) - 7*3600e3; };
+
+// ---------- Header ----------
+function renderDays() {
+  $("#days").innerHTML = DAYS.map(d => `<button role="tab" aria-selected="${d.id === state.day}" data-day="${d.id}"><b>${d.short.toUpperCase()}</b><span>${d.label}</span></button>`).join("");
+}
+function renderStageChips() {
+  $("#stageChips").innerHTML = `<button class="chip" data-stage="all" aria-pressed="${state.stage === "all"}">All stages</button>` +
+    STAGES.map(([id,name,c]) => `<button class="chip" style="--c:var(${c})" data-stage="${id}" aria-pressed="${state.stage === id}"><span class="dot"></span>${esc(name)}</button>`).join("");
+}
+function updateBadge() { const b = $("#favBadge"); b.hidden = !state.favs.size; b.textContent = state.favs.size; }
+
+// ---------- Line-up ----------
+function setRow(set, opts = {}) {
+  const st = STAGE[set.stage], lead = set.artists[0];
+  return `<div class="set${state.favs.has(set.key) ? " is-fav" : ""}">
+    ${art(lead.slug, lead.name, { label: nameText(set) })}
+    <button class="set-main" data-open="${esc(lead.slug)}">
+      <span class="set-name">${nameHTML(set)}</span>
+      <span class="time tnum">${range(set.start, set.end)}${opts.dayLabel ? ` · ${dayOf(set.day).short} ${dayOf(set.day).label}` : ""}</span>
+      ${opts.hideStage ? "" : pill(st)}
+      ${opts.extra || ""}
+      ${set.genres.length ? `<span class="genre">${esc(set.genres.join(" · "))}</span>` : ""}
+    </button>
+    ${favBtn(set)}
+  </div>`;
+}
+function headliners(day) {
+  return SETS.filter(s => s.day === day && s.end - s.start >= 60 && s.start >= 21*60).sort((a,b) => (b.stage === "mainstage") - (a.stage === "mainstage") || b.start - a.start).slice(0, 8);
+}
+function posterHTML(s) {
+  const lead = s.artists[0], st = STAGE[s.stage];
+  return `<div class="poster">${art(lead.slug, lead.name, { label: nameText(s) })}<span class="shade"></span>${favBtn(s)}
+    <div class="info"><button data-open="${esc(lead.slug)}">${s.artists.map(a => esc(a.name)).join(" b2b ")}</button><small class="tnum">${range(s.start, s.end)}</small><small><span class="dot" style="--c:var(${st.c})"></span>${esc(st.name)}</small></div></div>`;
+}
+function renderLineup() {
+  const el = $("#v-lineup");
+  let sets = setsFor(state.day, state.stage);
+  if (state.favOnly) sets = sets.filter(s => state.favs.has(s.key));
+  if (!sets.length) { el.innerHTML = emptyHTML(state.favOnly ? "No favourites here yet" : "Nothing on this stage", state.favOnly ? "Turn off Favourites and tap the heart on any set." : ""); return; }
+  if (state.mode === "grid") return renderGrid(el, sets);
+  sets.sort((a,b) => a.start - b.start || STAGES.findIndex(x=>x[0]===a.stage) - STAGES.findIndex(x=>x[0]===b.stage));
+  const groups = new Map();
+  for (const s of sets) { const h = Math.floor(s.start/60); if (!groups.has(h)) groups.set(h, []); groups.get(h).push(s); }
+  const heads = state.stage === "all" && !state.favOnly ? headliners(state.day) : [];
+  el.innerHTML = (heads.length ? `<h2 class="section-title">Headliners <small>${esc(dayOf(state.day).long)}</small></h2><div class="rail">${heads.map(posterHTML).join("")}</div><h2 class="section-title">Full line-up <small>${sets.length} sets</small></h2>` : "") +
+    [...groups].map(([h, list]) => `<div class="hour"><div class="hour-label tnum">${fmtHour(h*60)}</div><div class="rows">${list.map(s => setRow(s, {hideStage: state.stage !== "all"})).join("")}</div></div>`).join("");
+}
+function renderGrid(el, sets) {
+  const ppm = 1.6;
+  const stages = state.stage === "all" ? STAGES.map(s=>s[0]) : [state.stage];
+  const h = (LAST - FIRST) * ppm + 16;
+  let times = "";
+  for (let m = FIRST; m <= LAST; m += 60) times += `<span class="tnum" style="top:${(m-FIRST)*ppm + 8}px">${fmtHour(m)}</span>`;
+  const cols = stages.map(id => {
+    const items = sets.filter(s => s.stage === id).map(s => {
+      const top = (s.start - FIRST) * ppm + 10, height = Math.max(30, (s.end - s.start) * ppm - 4), lead = s.artists[0];
+      return `<div class="g-set${state.favs.has(s.key) ? " is-fav" : ""}${height < 90 ? " short" : ""}" style="top:${top}px;height:${height}px">
+        ${art(lead.slug, lead.name, { play: false })}<span class="shade"></span>
+        <button class="g-open" data-open="${esc(lead.slug)}"><b>${s.artists.map(a => esc(a.name)).join(" b2b ")}</b><small class="tnum">${range(s.start, s.end)}</small>${height > 110 && s.genres.length ? `<small>${esc(s.genres.slice(0,2).join(", "))}</small>` : ""}</button>
+        ${favBtn(s)}${playBtn(lead.slug, nameText(s))}</div>`;
+    }).join("");
+    return `<div class="g-col" style="height:${h}px;--ppm:${ppm}">${items}</div>`;
+  }).join("");
+  const heads = `<div class="g-head corner"></div>` + stages.map(id => `<div class="g-head"><span class="dot" style="--c:var(${STAGE[id].c})"></span>${esc(STAGE[id].name)}</div>`).join("");
+  el.innerHTML = `<div class="grid-scroll" id="gridScroll"><div class="grid" style="--cols:${stages.length}">${heads}<div class="g-times" style="height:${h}px">${times}</div>${cols}</div></div>`;
+}
+
+// ---------- Now & next ----------
+function festivalMoment() {
+  if (state.preview) return state.preview;
+  const t = Date.now();
+  for (const d of DAYS) if (t >= epochOf(d.id, FIRST) && t < epochOf(d.id, LAST)) return { day: d.id, min: Math.floor((t - epochOf(d.id, 0)) / 60000), live: true };
+  return null;
+}
+function renderNow() {
+  const el = $("#v-now");
+  const t = Date.now(), startT = epochOf(DAYS[0].id, FIRST);
+  let mo = festivalMoment();
+  let banner;
+  if (mo && mo.live) banner = `<div class="banner"><span class="eyebrow">Live now · ${esc(dayOf(mo.day).long)}</span><span class="big tnum">${fmt(mo.min)}</span><p>What's playing on every stage right now.</p></div>`;
+  else {
+    if (!mo) mo = state.preview = { day: DAYS[0].id, min: 21*60 };
+    const before = t < startT, days = Math.ceil((startT - t) / 864e5);
+    banner = `<div class="banner">
+      <span class="eyebrow">${before ? "Countdown" : "That's a wrap"}</span>
+      <span class="big">${before ? (days <= 1 ? "Starts tomorrow" : `${days} days to go`) : "See you next year"}</span>
+      <p>${before ? "First sets Friday 11 December at 1:00 PM Thailand time. Preview any moment of the weekend:" : "The festival has ended. Browse any moment below."}</p>
+      <div class="preview-row">
+        <label for="pvDay" class="sr">Day</label>
+        <select id="pvDay">${DAYS.map(d => `<option value="${d.id}" ${mo.day === d.id ? "selected" : ""}>${d.short} ${d.label}</option>`).join("")}</select>
+        <label for="pvTime" class="sr">Time</label>
+        <select id="pvTime" class="tnum">${Array.from({length: 24}, (_, i) => FIRST + i*30).map(m => `<option value="${m}" ${mo.min === m ? "selected" : ""}>${fmt(m)}</option>`).join("")}</select>
+      </div>
+    </div>`;
+  }
+  const m = mo;
+  const cards = STAGES.map(([id, name, c]) => {
+    const list = SETS.filter(s => s.day === m.day && s.stage === id).sort((a,b) => a.start - b.start);
+    const cur = list.find(s => s.start <= m.min && m.min < s.end);
+    const nxt = list.find(s => s.start >= (cur ? cur.end : m.min));
+    let body;
+    if (cur) {
+      const p = Math.round((m.min - cur.start) / (cur.end - cur.start) * 100), lead = cur.artists[0];
+      body = `<div class="now-act">${art(lead.slug, lead.name, { label: nameText(cur) })}<button class="set-main" data-open="${esc(lead.slug)}"><span class="set-name">${nameHTML(cur)}</span>${cur.genres.length ? `<span class="genre">${esc(cur.genres.join(" · "))}</span>` : ""}</button>${favBtn(cur)}</div>
+        <div class="bar" style="--c:var(${c})" role="progressbar" aria-valuenow="${p}" aria-valuemin="0" aria-valuemax="100" aria-label="Set progress"><i style="width:${p}%"></i></div>
+        <div class="bar-meta tnum"><span>${fmt(cur.start)}</span><span>${dur(cur.end - m.min)} left</span><span>${fmt(cur.end)}</span></div>`;
+    } else body = `<div class="idle">${list.length && m.min < list[0].start ? "Not started yet" : "Nothing playing"}</div>`;
+    const next = nxt ? `<button class="next" data-open="${esc(nxt.artists[0].slug)}"><span><em>NEXT</em><b>${nameHTML(nxt)}</b></span><span class="tnum" style="color:var(--muted)">${fmt(nxt.start)}</span></button>` : "";
+    return `<article class="now-card"><h3><span class="dot" style="--c:var(${c})"></span>${esc(name)}</h3>${body}${next}</article>`;
+  }).join("");
+  el.innerHTML = banner + `<div class="now-grid">${cards}</div>`;
+}
+
+// ---------- My timeline ----------
+function renderTimeline() {
+  const el = $("#v-timeline");
+  const favs = SETS.filter(s => s.day === state.day && state.favs.has(s.key)).sort((a,b) => a.start - b.start || a.end - b.end);
+  if (!favs.length) { el.innerHTML = emptyHTML(`No favourites on ${dayOf(state.day).short}`, "Tap the heart on any set and it lands here in order, with clashes flagged.", true); return; }
+  let clashes = 0, html = "", maxEnd = null;
+  favs.forEach((s, i) => {
+    const clash = maxEnd != null && s.start < maxEnd;
+    if (clash) clashes++;
+    if (maxEnd != null && !clash && s.start - maxEnd >= 15) html += `<div class="gap tnum">${dur(s.start - maxEnd)} free</div>`;
+    const clashWith = clash ? favs.slice(0, i).filter(o => o.end > s.start).map(nameText).join(", ") : "";
+    html += `<div class="tl-item"><div class="tl-time tnum">${fmt(s.start)}<small>${fmt(s.end)}</small></div><div class="rows" style="grid-template-columns:1fr">${setRow(s, { extra: clash ? `<span class="clash">Clashes with ${esc(clashWith)}</span>` : "" })}</div></div>`;
+    maxEnd = Math.max(maxEnd ?? 0, s.end);
+  });
+  const total = favs.reduce((a, s) => a + s.end - s.start, 0);
+  el.innerHTML = `<div class="day-summary"><span class="tag">${favs.length} set${favs.length > 1 ? "s" : ""}</span><span class="tag tnum">${dur(total)} of music</span>${clashes ? `<span class="clash">${clashes} clash${clashes > 1 ? "es" : ""}</span>` : `<span class="tag">No clashes</span>`}</div><div class="tl">${html}</div>`;
+}
+function emptyHTML(title, text, withBtn) {
+  return `<div class="empty"><span class="heart-big">${ICON.heart.replace('<svg ', '<svg width="30" height="30" ')}</span><strong>${esc(title)}</strong>${text ? `<span>${esc(text)}</span>` : ""}${withBtn ? `<a class="btn primary" href="#lineup">Browse the line-up</a>` : ""}</div>`;
+}
+
+// ---------- Explore ----------
+const GENRES = (() => { const c = new Map(); for (const A of ARTISTS.values()) A.genres.forEach(g => c.set(g, (c.get(g) || 0) + 1)); return [...c].sort((a,b) => b[1] - a[1]).slice(0, 14).map(x => x[0]); })();
+function renderGenreChips() {
+  $("#genreChips").innerHTML = `<button class="chip" data-genre="all" aria-pressed="${state.genre === "all"}">All genres</button>` + GENRES.map(g => `<button class="chip" data-genre="${esc(g)}" aria-pressed="${state.genre === g}">${esc(g)}</button>`).join("");
+}
+const artistFav = A => A.sets.length && A.sets.every(s => state.favs.has(s.key));
+function renderExplore() {
+  const q = state.q.trim().toLowerCase();
+  const list = [...ARTISTS.values()].filter(A =>
+    (state.genre === "all" || A.genres.includes(state.genre)) &&
+    (!q || A.name.toLowerCase().includes(q) || A.genres.some(g => g.toLowerCase().includes(q)))
+  ).sort((a,b) => a.name.localeCompare(b.name, "en", { sensitivity: "base" }));
+  $("#artistCount").textContent = `${list.length} artist${list.length === 1 ? "" : "s"}`;
+  $("#artistList").innerHTML = list.map(A => {
+    const days = [...new Set(A.sets.map(s => dayOf(s.day).short))], on = artistFav(A);
+    return `<div class="acard">${art(A.slug, A.name)}<button class="fav" data-fav-artist="${esc(A.slug)}" aria-pressed="${on}" aria-label="${on ? "Remove" : "Save"} all ${esc(A.name)} sets ${on ? "from" : "to"} favourites">${ICON.heart}</button>
+      <button class="open" data-open="${esc(A.slug)}"><span class="set-name">${esc(A.name)}</span><span class="genre">${esc(A.genres.join(" · ") || "Genre to be announced")}</span><span class="days-mini">${days.map(d => `<span>${d}</span>`).join("")}</span></button></div>`;
+  }).join("") || `<div class="empty" style="grid-column:1/-1"><strong>No artists match “${esc(state.q)}”</strong><span>Try a shorter name or another genre.</span></div>`;
+}
+
+// ---------- Artist sheet ----------
+let lastFocus = null;
+function sheetHTML(A) {
+  const enc = encodeURIComponent(A.name), on = artistFav(A);
+  const sets = [...A.sets].sort((a,b) => a.day.localeCompare(b.day) || a.start - b.start);
+  return `<div class="sheet-hero">${art(A.slug, A.name, { play: false })}<span class="shade"></span><span class="grab" aria-hidden="true"></span>
+      <button class="close" id="sheetClose" aria-label="Close">${ICON.close}</button>
+      <div class="info"><h2 id="sheetTitle">${esc(A.name)}</h2><div class="tags">${(A.genres.length ? A.genres : ["Genre to be announced"]).map(g => `<span>${esc(g)}</span>`).join("")}</div></div>
+      ${playBtn(A.slug, A.name)}
+    </div>
+    <div class="sheet-body">
+      <button class="btn fav-all" data-fav-artist="${esc(A.slug)}" aria-pressed="${on}">${ICON.heart}${on ? "In your favourites" : `Add ${A.sets.length > 1 ? "all sets" : "to favourites"}`}</button>
+      <h4>When &amp; where</h4>
+      <div class="sheet-sets">${sets.map(s => setRow(s, { dayLabel: true })).join("")}</div>
+      <h4>Watch</h4>
+      <div class="links">
+        <a href="${ytWatchUrl(A.slug, A.name)}" target="_blank" rel="noopener" style="grid-column:1/-1"><i style="--b:#FF0000"></i>Open on YouTube</a>
+      </div>
+    </div>`;
+}
+function openArtist(slug) {
+  const A = ARTISTS.get(slug); if (!A) return;
+  if ($("#sheet").hidden) lastFocus = document.activeElement;
+  state.sheet = slug;
+  $("#sheet").innerHTML = sheetHTML(A);
+  $("#sheet").scrollTop = 0;
+  const sheet = $("#sheet"), scrim = $("#scrim");
+  sheet.hidden = scrim.hidden = false;
+  requestAnimationFrame(() => { sheet.classList.add("open"); scrim.classList.add("open"); $("#sheetClose").focus({ preventScroll: true }); });
+  document.body.style.overflow = "hidden";
+}
+function closeSheet() {
+  const sheet = $("#sheet"), scrim = $("#scrim");
+  if (sheet.hidden) return;
+  state.sheet = null;
+  sheet.classList.remove("open"); scrim.classList.remove("open");
+  document.body.style.overflow = "";
+  setTimeout(() => { sheet.hidden = scrim.hidden = true; }, 280);
+  lastFocus?.focus?.({ preventScroll: true });
+}
+
+// ---------- Player ----------
+// YouTube only, played inline in the page (playsinline keeps iPhones from going fullscreen).
+const ytFor = slug => (PLAYERS[slug] || []).find(p => p.service === "youtube" && p.src);
+const ytId = yt => yt ? new URL(yt.src).pathname.split("/").pop() : null;
+function ytEmbedUrl(yt) {
+  const u = new URL(yt.autoplaySrc || yt.src);
+  u.searchParams.set("autoplay", "1"); u.searchParams.set("playsinline", "1"); u.searchParams.set("rel", "0");
+  return u.href;
+}
+function ytWatchUrl(slug, name) { const id = ytId(ytFor(slug)); return id ? `https://www.youtube.com/watch?v=${id}` : `https://www.youtube.com/results?search_query=${encodeURIComponent(name)}`; }
+// Previous / next follow the selected day's line-up in running order, like the original site.
+function queue() {
+  const seen = new Set(), out = [];
+  for (const x of SETS.filter(x => x.day === state.day).sort((a,b) => a.start - b.start))
+    for (const ar of x.artists) if (!seen.has(ar.slug) && (!PLAYERS_LOADED || ytFor(ar.slug))) { seen.add(ar.slug); out.push(ar.slug); }
+  return out;
+}
+function step(dir) {
+  const q = queue(); if (!q.length) return;
+  const i = q.indexOf(state.playing);
+  state.playing = q[(i + dir + q.length) % q.length]; state.minimized = false;
+  renderPlayer(); syncPlayButtons();
+}
+const ICON_PREV = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>`;
+const ICON_NEXT = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>`;
+const ICON_DOWN = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>`;
+function setPlayerH() { requestAnimationFrame(() => document.documentElement.style.setProperty("--player-h", $("#player").offsetHeight + "px")); }
+function renderPlayer() {
+  const p = $("#player");
+  if (!state.playing) { p.hidden = true; p.innerHTML = ""; document.documentElement.style.setProperty("--player-h", "0px"); return; }
+  const A = ARTISTS.get(state.playing), s = [...A.sets].sort((a,b) => a.day.localeCompare(b.day) || a.start - b.start)[0];
+  const yt = ytFor(A.slug);
+  p.hidden = false;
+  p.innerHTML = `<div class="player-card${yt ? " has-embed" : ""}${state.minimized ? " min" : ""}">
+    <div class="p-row">${art(A.slug, A.name, { play: false })}
+      <button class="who" data-open="${esc(A.slug)}"><b>${esc(A.name)}</b><small>${dayOf(s.day).short} ${fmt(s.start)} · ${esc(STAGE[s.stage].name)}</small></button>
+      <button class="pbtn ghost" id="pPrev" aria-label="Previous artist">${ICON_PREV}</button>
+      <button class="pbtn ghost" id="pNext" aria-label="Next artist">${ICON_NEXT}</button>
+      ${yt ? `<button class="pbtn ghost" id="pMin" aria-label="${state.minimized ? "Expand player" : "Minimize player"}" aria-expanded="${!state.minimized}">${ICON_DOWN}</button>`
+           : `<a class="pbtn ghost" href="${ytWatchUrl(A.slug, A.name)}" target="_blank" rel="noopener" aria-label="Watch ${esc(A.name)} on YouTube">${ICON.ext}</a>`}
+      <button class="pbtn ghost" id="pClose" aria-label="Stop and close player">${ICON.close}</button>
+    </div>
+    ${yt ? `<div class="embed"><iframe title="${esc(A.name)} on YouTube" src="${esc(ytEmbedUrl(yt))}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>` : ""}
+  </div>`;
+  setPlayerH();
+}
+function syncPlayButtons() {
+  document.querySelectorAll("[data-play]").forEach(b => {
+    const on = state.playing === b.dataset.play;
+    b.classList.toggle("is-playing", on); b.innerHTML = on ? ICON.pause : ICON.play;
+    b.setAttribute("aria-label", (on ? "Stop preview of " : "Play a preview of ") + b.dataset.name);
+  });
+}
+function play(slug) {
+  state.minimized = false;
+  state.playing = state.playing === slug ? null : slug;
+  renderPlayer(); syncPlayButtons();
+}
+
+// ---------- Favourites ----------
+function saveFavs() { store.set("favs", [...state.favs]); updateBadge(); }
+function refreshFavUI() {
+  document.querySelectorAll("[data-fav]").forEach(b => {
+    const on = state.favs.has(b.dataset.fav), s = SETMAP.get(b.dataset.fav);
+    b.setAttribute("aria-pressed", on);
+    b.setAttribute("aria-label", `${on ? "Remove" : "Save"} ${nameText(s)} ${on ? "from" : "to"} favourites`);
+    b.closest(".set, .g-set")?.classList.toggle("is-fav", on);
+  });
+  document.querySelectorAll("[data-fav-artist]").forEach(b => {
+    const A = ARTISTS.get(b.dataset.favArtist), on = artistFav(A);
+    b.setAttribute("aria-pressed", on);
+    if (b.classList.contains("fav-all")) b.innerHTML = ICON.heart + (on ? "In your favourites" : `Add ${A.sets.length > 1 ? "all sets" : "to favourites"}`);
+  });
+  if (state.view === "timeline" || (state.view === "lineup" && state.favOnly)) rerenderKeepScroll();
+}
+function rerenderKeepScroll() {
+  const y = scrollY; ({ lineup: renderLineup, timeline: renderTimeline, explore: renderExplore, now: renderNow })[state.view](); scrollTo(0, y);
+}
+
+// ---------- Routing ----------
+const TITLES = { lineup: "Line-up", now: "Now & next", timeline: "My timeline", explore: "Explore artists" };
+function render() {
+  for (const v of Object.keys(TITLES)) $("#v-" + v).hidden = v !== state.view;
+  document.querySelectorAll(".tabs a").forEach(a => { if (a.dataset.view === state.view) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
+  $("#viewTitle").textContent = TITLES[state.view];
+  $("#days").hidden = !(state.view === "lineup" || state.view === "timeline");
+  $("#stageChips").hidden = $("#lineupTools").hidden = state.view !== "lineup";
+  $("#modeList").setAttribute("aria-pressed", state.mode === "list");
+  $("#modeGrid").setAttribute("aria-pressed", state.mode === "grid");
+  $("#favOnly").setAttribute("aria-pressed", state.favOnly);
+  renderDays(); renderStageChips();
+  ({ lineup: renderLineup, now: renderNow, timeline: renderTimeline, explore: renderExplore })[state.view]();
+  document.documentElement.style.setProperty("--hdr", $("#hdr").offsetHeight + "px");
+}
+function route() { const h = location.hash.slice(1); state.view = TITLES[h] ? h : "lineup"; render(); window.scrollTo(0, 0); }
+
+// ---------- Events ----------
+document.addEventListener("click", e => {
+  const t = e.target.closest("button, a"); if (!t) return;
+  if (t.dataset.fav) {
+    const k = t.dataset.fav, s = SETMAP.get(k);
+    if (state.favs.has(k)) { state.favs.delete(k); toast("Removed from favourites"); } else { state.favs.add(k); toast(`Saved ${nameText(s)} · ${dayOf(s.day).short} ${fmt(s.start)}`); }
+    saveFavs(); refreshFavUI(); return;
+  }
+  if (t.dataset.favArtist) {
+    const A = ARTISTS.get(t.dataset.favArtist), on = artistFav(A);
+    A.sets.forEach(s => on ? state.favs.delete(s.key) : state.favs.add(s.key));
+    toast(on ? `Removed ${A.name}` : `Saved ${A.sets.length} set${A.sets.length > 1 ? "s" : ""} by ${A.name}`);
+    saveFavs(); refreshFavUI(); return;
+  }
+  if (t.dataset.play) { e.stopPropagation(); return play(t.dataset.play); }
+  if (t.dataset.open) return openArtist(t.dataset.open);
+  if (t.dataset.day) { state.day = t.dataset.day; store.set("day", state.day); render(); return; }
+  if (t.dataset.stage) { state.stage = t.dataset.stage; render(); return; }
+  if (t.dataset.genre) { state.genre = t.dataset.genre; renderGenreChips(); renderExplore(); return; }
+  if (t.id === "modeList" || t.id === "modeGrid") { state.mode = t.id === "modeGrid" ? "grid" : "list"; store.set("mode", state.mode); render(); return; }
+  if (t.id === "favOnly") { state.favOnly = !state.favOnly; render(); return; }
+  if (t.id === "sheetClose") return closeSheet();
+  if (t.id === "pPrev") return step(-1);
+  if (t.id === "pNext") return step(1);
+  if (t.id === "pMin") { state.minimized = !state.minimized; const c = document.querySelector(".player-card"); c.classList.toggle("min", state.minimized); t.setAttribute("aria-expanded", !state.minimized); t.setAttribute("aria-label", state.minimized ? "Expand player" : "Minimize player"); setPlayerH(); return; }
+  if (t.id === "pClose") { state.playing = null; renderPlayer(); syncPlayButtons(); return; }
+  if (t.id === "themeBtn") {
+    const r = document.documentElement, cur = r.dataset.theme || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    r.dataset.theme = cur === "dark" ? "light" : "dark"; store.set("theme", r.dataset.theme); return;
+  }
+});
+$("#scrim").addEventListener("click", closeSheet);
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeSheet(); });
+document.addEventListener("change", e => {
+  if (e.target.id === "pvDay" || e.target.id === "pvTime") { state.preview = { day: $("#pvDay").value, min: +$("#pvTime").value }; renderNow(); }
+});
+$("#q").addEventListener("input", e => { state.q = e.target.value; renderExplore(); });
+window.addEventListener("hashchange", route);
+window.addEventListener("resize", () => document.documentElement.style.setProperty("--hdr", $("#hdr").offsetHeight + "px"));
+{ let y0 = null; const sh = $("#sheet");
+  sh.addEventListener("touchstart", e => { if (sh.scrollTop <= 0) y0 = e.touches[0].clientY; }, { passive: true });
+  sh.addEventListener("touchmove", e => { if (y0 != null && e.touches[0].clientY - y0 > 90) { y0 = null; closeSheet(); } }, { passive: true });
+  sh.addEventListener("touchend", () => { y0 = null; });
+}
+
+const savedTheme = store.get("theme", null); if (savedTheme) document.documentElement.dataset.theme = savedTheme;
+renderGenreChips(); updateBadge(); route();
+
+// ---------- Live photos & players from the original site ----------
+async function loadRemote() {
+  try {
+    const pages = await Promise.all(DAYS.map(d => fetch(`${SOURCE}/${d.id}/`).then(r => { if (!r.ok) throw 0; return r.text(); })));
+    for (const html of pages) {
+      const doc = new DOMParser().parseFromString(html, "text/html");
+      for (const li of doc.querySelectorAll("li.set")) {
+        const slugs = [...li.querySelectorAll(".artists a")].map(a => (a.getAttribute("href") || "").split("/").filter(Boolean).pop()).filter(Boolean);
+        const img = li.querySelector("img")?.getAttribute("src");
+        if (img && slugs.length) for (const sl of slugs) if (slugs.length === 1 || !IMG[sl]) IMG[sl] = new URL(img, SOURCE + "/").href;
+        for (const b of li.querySelectorAll("button[data-players]")) {
+          const id = b.dataset.artistId || slugs[0];
+          try { const list = JSON.parse(b.dataset.players).map(x => ({ service: x.service, src: x.player?.src, autoplaySrc: x.player?.autoplaySrc })); if (id && !PLAYERS[id]) PLAYERS[id] = list; } catch {}
+        }
+      }
+    }
+    PLAYERS_LOADED = true;
+    // Solo-set photos win; artists only seen in b2b sets keep the shared photo.
+    const y = scrollY; render(); scrollTo(0, y); if (state.sheet) openArtist(state.sheet); if (state.playing) renderPlayer();
+  } catch { /* offline or blocked: generated artwork stays */ }
+}
+loadRemote();
+setInterval(() => { if (state.view === "now" && festivalMoment()?.live) renderNow(); }, 60000);
+</script>
+
+</body>
+</html>
