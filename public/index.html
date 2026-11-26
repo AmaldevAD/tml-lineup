@@ -323,9 +323,12 @@ nav.tabs { position: fixed; z-index: 25; left: 50%; transform: translateX(-50%);
 .plan-ico { width: 76px; height: 76px; border-radius: 14px; display: grid; place-items: center; font-size: 30px; background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--heart) 18%, var(--surface-2)) 0 6px, var(--surface-2) 6px 13px); }
 .set.plan-row .set-main { cursor: default; }
 .plan-tools { display: flex; justify-content: flex-end; margin: 4px 0 12px; }
-.seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-.seg button { min-height: 44px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface-2); font-weight: 700; font-size: 13px; padding: 4px 6px; }
-.seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.plan-seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.plan-seg button { min-height: 44px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface-2); font-weight: 700; font-size: 13px; padding: 4px 6px; }
+.plan-seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.toolbar .add-block { min-height: 42px; padding: 0 12px; font-size: 13px; white-space: nowrap; }
+.toolbar-end { display: flex; align-items: center; gap: 8px; }
+@media (max-width: 520px) { #lineupTools { flex-wrap: wrap; row-gap: 8px; } #lineupTools .toolbar-end { width: 100%; justify-content: space-between; } }
 .times { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 
 /* Chat */
@@ -678,7 +681,10 @@ footer.foot { font-family: var(--font-hand); font-size: 15px; }
         <button id="modeList" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>List</button>
         <button id="modeGrid" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="18" rx="2"/><rect x="14" y="3" width="7" height="11" rx="2"/></svg>Timetable</button>
       </div>
-      <button class="toggle" id="favOnly" aria-pressed="false"><span>Favourites</span><span class="sw" aria-hidden="true"></span></button>
+      <div class="toolbar-end">
+        <button class="btn add-block" data-plan-add="" aria-label="Add dining or a break">+ Dining/break</button>
+        <button class="toggle" id="favOnly" aria-pressed="false"><span>Favourites</span><span class="sw" aria-hidden="true"></span></button>
+      </div>
     </div>
   </div>
 </header>
@@ -1251,14 +1257,17 @@ function renderLineup() {
   const el = $("#v-lineup");
   let sets = setsFor(state.day, state.stage);
   if (state.favOnly) sets = sets.filter(s => state.favs.has(s.key));
-  if (!sets.length) { el.innerHTML = emptyHTML(state.favOnly ? "No favourites here yet" : "Nothing on this stage", state.favOnly ? "Turn off Favourites and tap the heart on any set." : ""); return; }
+  const plans = state.plans.filter(p => p.day === state.day);
+  if (!sets.length && !(state.favOnly && plans.length)) { el.innerHTML = emptyHTML(state.favOnly ? "No favourites here yet" : "Nothing on this stage", state.favOnly ? "Turn off Favourites and tap the heart on any set." : ""); return; }
   if (state.mode === "grid") return renderGrid(el, sets);
   sets.sort((a,b) => a.start - b.start || STAGES.findIndex(x=>x[0]===a.stage) - STAGES.findIndex(x=>x[0]===b.stage));
-  const groups = new Map();
-  for (const s of sets) { const h = Math.floor(s.start/60); if (!groups.has(h)) groups.set(h, []); groups.get(h).push(s); }
+  let groups = new Map();
+  // Your dining sessions and breaks sit in the list with that day's sets.
+  for (const s of [...plans, ...sets].sort((a,b) => a.start - b.start)) { const h = Math.floor(s.start/60); if (!groups.has(h)) groups.set(h, []); groups.get(h).push(s); }
+  groups = new Map([...groups].sort((a, b) => a[0] - b[0]));
   const heads = state.stage === "all" && !state.favOnly ? headliners(state.day) : [];
   el.innerHTML = (heads.length ? `<h2 class="section-title">Headliners <small>${esc(dayOf(state.day).long)}</small></h2><div class="rail">${heads.map(posterHTML).join("")}</div><h2 class="section-title">Full line-up <small>${sets.length} sets</small></h2>` : "") +
-    [...groups].map(([h, list]) => `<div class="hour"><div class="hour-label tnum">${fmtHour(h*60)}</div><div class="rows">${list.map(s => setRow(s, {hideStage: state.stage !== "all"})).join("")}</div></div>`).join("");
+    [...groups].map(([h, list]) => `<div class="hour"><div class="hour-label tnum">${fmtHour(h*60)}</div><div class="rows">${list.map(s => s.artists ? setRow(s, {hideStage: state.stage !== "all"}) : planRow(s)).join("")}</div></div>`).join("");
 }
 function renderGrid(el, sets) {
   const ppm = 1.6;
@@ -1388,7 +1397,7 @@ function openPlanForm(kind = "b-eat", keep = {}) {
   openSheetHTML(`<div class="auth" style="position:relative">${closeBtnHTML}
     <h2>Block time</h2>
     <p>Booked a dining session or need a break? Add it and that time is blocked across every stage, like a booked set.</p>
-    <div class="seg" role="group" aria-label="What is it?">
+    <div class="plan-seg" role="group" aria-label="What is it?">
       ${[["b-eat", "B-EAT"], ["papillon", "Papillon"], ["break", "Own break"]].map(([k, t]) => `<button type="button" data-plan-kind="${k}" aria-pressed="${k === kind}">${t}</button>`).join("")}
     </div>
     <form id="planForm" data-kind="${kind}" class="swap" novalidate>
