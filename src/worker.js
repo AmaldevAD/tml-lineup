@@ -261,6 +261,7 @@ export class Hub extends DurableObject {
     const cols = this.sql.exec("PRAGMA table_info(users)").toArray().map(c => c.name);
     if (!cols.includes("google_sub")) this.sql.exec("ALTER TABLE users ADD COLUMN google_sub TEXT");
     if (!cols.includes("avatar")) this.sql.exec("ALTER TABLE users ADD COLUMN avatar TEXT NOT NULL DEFAULT ''");
+    if (!cols.includes("last_seen")) this.sql.exec("ALTER TABLE users ADD COLUMN last_seen INTEGER NOT NULL DEFAULT 0");
     if (!cols.includes("admin")) this.sql.exec("ALTER TABLE users ADD COLUMN admin INTEGER NOT NULL DEFAULT 0");
     const pcols = this.sql.exec("PRAGMA table_info(pending)").toArray().map(c => c.name);
     if (!pcols.includes("admin")) this.sql.exec("ALTER TABLE pending ADD COLUMN admin INTEGER NOT NULL DEFAULT 0");
@@ -317,7 +318,17 @@ export class Hub extends DurableObject {
       FROM reports r JOIN users ru ON ru.id = r.reporter_id WHERE r.target_id IN (SELECT target_id FROM reports GROUP BY target_id ORDER BY MAX(ts) DESC LIMIT 100)
       ORDER BY r.ts DESC LIMIT 400`).toArray();
     const banned = this.sql.exec("SELECT id, username, display, color, avatar FROM users WHERE banned = 1 AND id NOT IN (SELECT target_id FROM reports) LIMIT 100").toArray();
-    return { users: users.map(u => ({ ...u, banned: !!u.banned, reports: recent.filter(r => r.target_id === u.id).slice(0, 10) })), banned, cleared: this.chatCutoff() };
+    // Everyone who has an account, newest first, with what they've done on the site. No emails are stored, so none are shown.
+    const people = this.sql.exec(`SELECT u.id, u.username, u.display, u.color, u.avatar, u.created, u.last_seen, u.banned, u.admin,
+        (u.google_sub IS NOT NULL) AS google, (u.salt <> '') AS password,
+        (SELECT COUNT(*) FROM favs f WHERE f.user_id = u.id) AS sets,
+        (SELECT COUNT(*) FROM plans pl WHERE pl.user_id = u.id) AS plans,
+        (SELECT COUNT(*) FROM reports r WHERE r.target_id = u.id) AS reported,
+        (SELECT COUNT(*) FROM reports r WHERE r.reporter_id = u.id) AS reports_made,
+        (SELECT group_concat(set_key, ' ') FROM favs f WHERE f.user_id = u.id) AS set_keys
+      FROM users u ORDER BY u.created DESC LIMIT 2000`).toArray()
+      .map(u => ({ ...u, banned: !!u.banned, admin: !!u.admin, google: !!u.google, password: !!u.password, set_keys: u.set_keys ? u.set_keys.split(" ") : [] }));
+    return { users: users.map(u => ({ ...u, banned: !!u.banned, reports: recent.filter(r => r.target_id === u.id).slice(0, 10) })), banned, people, cleared: this.chatCutoff() };
   }
 
   // Profile: display name, colour, and avatar ("" = initials, "e:<emoji>", "p:<version>" = uploaded photo).
@@ -439,7 +450,10 @@ export class Hub extends DurableObject {
 
   async userFor(token) {
     if (!token || token.length > 100) return null;
-    const row = this.sql.exec("SELECT u.* FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.token = ? AND s.expires > ?", await sha256(token), Date.now()).toArray()[0];
+    const now = Date.now();
+    const row = this.sql.exec("SELECT u.* FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.token = ? AND s.expires > ?", await sha256(token), now).toArray()[0];
+    // "Last active" for the admin's People list, written at most every 5 minutes per person.
+    if (row && now - (row.last_seen || 0) > 5 * 60e3) this.sql.exec("UPDATE users SET last_seen = ? WHERE id = ?", now, row.id);
     return row || null;
   }
 
