@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0D0B14">
+<meta name="theme-color" content="#08051A">
 <meta name="description" content="Unofficial Tomorrowland Thailand 2026 line-up: timetable, book your sets, see who is going, live chat.">
 <title>TML Unofficial · Tomorrowland Thailand 2026 Line-up</title>
 <link rel="manifest" href="/manifest.webmanifest">
@@ -478,8 +478,130 @@ footer.foot { margin-top: 32px; font-size: 12.5px; color: var(--muted); text-ali
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 <style>[hidden]{display:none!important} body{margin:0} img{max-width:100%}</style>
+<style id="magic-theme">
+/* Magic theme: an original "six emotions" night-sky look (inspired by the mood of the 2026 festival story, no official art).
+   Animation budget: only transform + opacity on a fixed, composited layer; no filters, no JS loop. Paused when hidden or reduced motion. */
+:root {
+  --bg: #F3EEFB; --surface: #FFFFFF; --surface-2: #EEE7F8; --line: #E0D6EF; --fg: #1A1233; --muted: #635A7E;
+  --accent: #9A3FD6; --accent-soft: #F1E3FB; --accent-ink: #FFFFFF;
+  --glass: rgb(255 255 255 / .78);
+  --e-wonder: #7B6CFF; --e-love: #FF5C9A; --e-anger: #FF6A3D; --e-joy: #FFC24B; --e-desire: #D94BFF; --e-sad: #3FA9F5;
+  --magic-a: .38; --star-o: 0;
+  --grad: linear-gradient(100deg, #7B4DFF, #D94BFF 45%, #FF7A59);
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #08051A; --surface: #140F2A; --surface-2: #1F1838; --line: #2D2550; --fg: #F5F1FF; --muted: #ABA2CC;
+  --accent: #FFC24B; --accent-soft: #352610; --accent-ink: #1A1200;
+  --glass: rgb(22 16 46 / .72);
+  --magic-a: .55; --star-o: 1;
+  --grad: linear-gradient(100deg, #FFD36E, #FF8BC1 50%, #B79BFF);
+} }
+:root[data-theme="dark"] {
+  --bg: #08051A; --surface: #140F2A; --surface-2: #1F1838; --line: #2D2550; --fg: #F5F1FF; --muted: #ABA2CC;
+  --accent: #FFC24B; --accent-soft: #352610; --accent-ink: #1A1200;
+  --glass: rgb(22 16 46 / .72);
+  --magic-a: .55; --star-o: 1;
+  --grad: linear-gradient(100deg, #FFD36E, #FF8BC1 50%, #B79BFF);
+}
+
+.magic { position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; contain: strict;
+  background: radial-gradient(120% 70% at 50% 110%, color-mix(in srgb, var(--e-desire) 22%, transparent), transparent 60%),
+              radial-gradient(90% 60% at 50% -10%, color-mix(in srgb, var(--e-wonder) 20%, transparent), transparent 65%), var(--bg); }
+.magic i { position: absolute; display: block; will-change: transform, opacity; backface-visibility: hidden; }
+
+/* Aurora: six soft emotion-coloured clouds that drift and breathe */
+.magic .au { width: 80vmax; height: 80vmax; left: 50%; top: 50%; margin: -40vmax 0 0 -40vmax; border-radius: 50%; opacity: var(--magic-a);
+  background: radial-gradient(closest-side, var(--c), color-mix(in srgb, var(--c) 35%, transparent) 45%, transparent 72%);
+  animation: drift var(--d, 34s) ease-in-out var(--dl, 0s) infinite alternate; }
+.magic .au:nth-child(1) { --c: var(--e-wonder); --x: -38vw; --y: -34vh; --x2: -10vw; --y2: -18vh; --d: 31s; }
+.magic .au:nth-child(2) { --c: var(--e-love);   --x:  36vw; --y: -26vh; --x2: 14vw;  --y2: -40vh; --d: 37s; --dl: -9s; }
+.magic .au:nth-child(3) { --c: var(--e-joy);    --x:  30vw; --y:  34vh; --x2: 42vw;  --y2: 12vh;  --d: 41s; --dl: -17s; width: 60vmax; height: 60vmax; margin: -30vmax 0 0 -30vmax; }
+.magic .au:nth-child(4) { --c: var(--e-sad);    --x: -34vw; --y:  30vh; --x2: -44vw; --y2: 46vh;  --d: 29s; --dl: -5s; }
+.magic .au:nth-child(5) { --c: var(--e-desire); --x:   0vw; --y:  46vh; --x2: 12vw;  --y2: 28vh;  --d: 45s; --dl: -22s; }
+.magic .au:nth-child(6) { --c: var(--e-anger);  --x:  44vw; --y:   4vh; --x2: 24vw;  --y2: 18vh;  --d: 39s; --dl: -13s; width: 46vmax; height: 46vmax; margin: -23vmax 0 0 -23vmax; }
+@keyframes drift {
+  0%   { transform: translate3d(var(--x), var(--y), 0) scale(1) rotate(0deg); }
+  100% { transform: translate3d(var(--x2), var(--y2), 0) scale(1.25) rotate(40deg); }
+}
+
+/* Halo: a slow turning ring of light, like a portal behind the sky */
+.magic .halo { width: 130vmax; height: 130vmax; left: 50%; top: 18%; margin: -65vmax 0 0 -65vmax; border-radius: 50%; opacity: calc(var(--magic-a) * .5);
+  background: repeating-conic-gradient(from 0deg, transparent 0 7deg, color-mix(in srgb, var(--e-joy) 22%, transparent) 8deg 9deg, transparent 10deg 20deg);
+  -webkit-mask: radial-gradient(closest-side, transparent 52%, #000 60%, #000 66%, transparent 74%); mask: radial-gradient(closest-side, transparent 52%, #000 60%, #000 66%, transparent 74%);
+  animation: spin 160s linear infinite; }
+@keyframes spin { to { transform: rotate(1turn); } }
+
+/* Stars: tiled dots, two layers twinkling out of phase */
+.magic .stars { inset: -10%; opacity: var(--star-o); background-image:
+  radial-gradient(1.2px 1.2px at 20px 30px, #fff 50%, transparent 51%), radial-gradient(1px 1px at 130px 80px, #fff 50%, transparent 51%),
+  radial-gradient(1.5px 1.5px at 210px 160px, #FFE3A3 50%, transparent 51%), radial-gradient(1px 1px at 60px 200px, #fff 50%, transparent 51%),
+  radial-gradient(1.3px 1.3px at 260px 40px, #D9CCFF 50%, transparent 51%);
+  background-size: 300px 260px; animation: twinkle 5s ease-in-out infinite alternate; }
+.magic .stars.s2 { background-size: 420px 380px; background-position: 150px 90px; animation-duration: 7s; animation-delay: -3s; }
+@keyframes twinkle { from { opacity: calc(var(--star-o) * .25); } to { opacity: var(--star-o); } }
+
+/* Spirit motes: small glowing orbs that float upward */
+.magic .mote { width: var(--s, 6px); height: var(--s, 6px); border-radius: 50%; left: var(--l); bottom: -20px; opacity: 0;
+  background: radial-gradient(circle, #fff 0 20%, var(--c) 45%, transparent 70%);
+  box-shadow: 0 0 12px 3px color-mix(in srgb, var(--c) 60%, transparent);
+  animation: rise var(--d, 16s) linear var(--dl, 0s) infinite; }
+@keyframes rise {
+  0% { transform: translate3d(0, 0, 0) scale(.6); opacity: 0; }
+  12% { opacity: .95; }
+  50% { transform: translate3d(var(--sw, 30px), -55vh, 0) scale(1); }
+  85% { opacity: .8; }
+  100% { transform: translate3d(calc(var(--sw, 30px) * -1), -110vh, 0) scale(.4); opacity: 0; }
+}
+.magic .mote:nth-of-type(7)  { --l: 8%;  --c: var(--e-joy);    --d: 18s; --dl: -2s;  --sw: 26px; }
+.magic .mote:nth-of-type(8)  { --l: 22%; --c: var(--e-love);   --d: 22s; --dl: -11s; --sw: -34px; --s: 5px; }
+.magic .mote:nth-of-type(9)  { --l: 37%; --c: var(--e-wonder); --d: 16s; --dl: -6s;  --sw: 40px; --s: 7px; }
+.magic .mote:nth-of-type(10) { --l: 51%; --c: var(--e-sad);    --d: 25s; --dl: -15s; --sw: -22px; }
+.magic .mote:nth-of-type(11) { --l: 64%; --c: var(--e-desire); --d: 19s; --dl: -9s;  --sw: 30px; --s: 5px; }
+.magic .mote:nth-of-type(12) { --l: 78%; --c: var(--e-anger);  --d: 21s; --dl: -3s;  --sw: -40px; --s: 6px; }
+.magic .mote:nth-of-type(13) { --l: 90%; --c: var(--e-joy);    --d: 17s; --dl: -13s; --sw: 24px; --s: 4px; }
+.magic .mote:nth-of-type(14) { --l: 45%; --c: var(--e-love);   --d: 27s; --dl: -20s; --sw: -28px; --s: 8px; }
+.magic .mote:nth-of-type(15) { --l: 14%; --c: var(--e-sad);    --d: 23s; --dl: -17s; --sw: 36px; --s: 5px; }
+.magic .mote:nth-of-type(16) { --l: 71%; --c: var(--e-wonder); --d: 20s; --dl: -7s;  --sw: -26px; --s: 6px; }
+:root.lite .magic .mote:nth-of-type(n+12), :root.lite .magic .halo, :root.lite .magic .s2 { display: none; }
+:root:not([data-theme="dark"]) .magic .mote { box-shadow: none; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .magic .mote { box-shadow: 0 0 12px 3px color-mix(in srgb, var(--c) 60%, transparent); } }
+:root.paused .magic *, :root.paused .magic { animation-play-state: paused !important; }
+@media (prefers-reduced-motion: reduce) { .magic *, .magic { animation: none !important; } .magic .mote { display: none; } }
+
+/* Let the sky show through: glassy cards, gradient accents */
+body { background: var(--bg); }
+body::before { background: color-mix(in srgb, var(--bg) 92%, transparent); }
+header.top { background: var(--bg); backdrop-filter: none; -webkit-backdrop-filter: none; box-shadow: 0 1px 0 color-mix(in srgb, var(--line) 70%, transparent), 0 12px 24px -18px color-mix(in srgb, var(--e-desire) 40%, transparent); }
+.set, .now-card, .card, .acard, .banner, .days button, .chip, .icon-btn, .acct:not(.signin), .search input { background-color: var(--glass); }
+.set, .now-card, .card, .acard { border-color: color-mix(in srgb, var(--line) 80%, transparent); }
+h1, .banner .big { background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.eyebrow { color: var(--accent); text-shadow: 0 0 18px color-mix(in srgb, var(--accent) 45%, transparent); }
+.days button[aria-selected="true"] { background: var(--grad); color: #fff; border-color: transparent; box-shadow: 0 6px 22px color-mix(in srgb, var(--e-desire) 35%, transparent); }
+.days button[aria-selected="true"] span { color: rgb(255 255 255 / .85); }
+.btn.primary, .acct.signin { background: var(--grad); border-color: transparent; color: #fff; }
+.poster { box-shadow: 0 10px 30px color-mix(in srgb, var(--e-desire) 25%, transparent), 0 0 0 1px rgb(255 255 255 / .08); }
+.hour-label { background: color-mix(in srgb, var(--accent-soft) 90%, transparent); }
+
+/* Support (Ko-fi) */
+.support { text-decoration: none; position: relative; overflow: hidden; margin: 28px auto 0; max-width: 560px; padding: 20px; border-radius: 22px; text-align: left;
+  display: grid; grid-template-columns: 56px 1fr; gap: 14px; align-items: center; color: var(--fg);
+  background: radial-gradient(140% 120% at 0% 0%, color-mix(in srgb, var(--e-joy) 22%, transparent), transparent 55%),
+              radial-gradient(120% 120% at 100% 100%, color-mix(in srgb, var(--e-love) 20%, transparent), transparent 60%), var(--glass);
+  border: 1px solid color-mix(in srgb, var(--e-joy) 35%, var(--line)); }
+.support .cup { width: 56px; height: 56px; border-radius: 18px; display: grid; place-items: center; background: var(--grad); color: #fff; box-shadow: 0 8px 22px color-mix(in srgb, var(--e-love) 35%, transparent); }
+.support .cup svg { width: 28px; height: 28px; }
+.support .cup .steam { animation: steam 2.6s ease-in-out infinite; transform-origin: center bottom; }
+.support .cup .steam:nth-child(2) { animation-delay: -1.3s; }
+@keyframes steam { 0%,100% { opacity: .25; transform: translateY(1px); } 50% { opacity: 1; transform: translateY(-1.5px); } }
+.support .t { display: block; margin: 0; font-family: var(--font-display); font-size: 16px; }
+.support .d { display: block; margin: 3px 0 0; font-size: 13.5px; color: var(--muted); }
+.support .btn { grid-column: 1 / -1; background: var(--grad); color: #fff; border-color: transparent; min-height: 48px; font-size: 15px; }
+@media (min-width: 520px) { .support { grid-template-columns: 56px 1fr auto; } .support .btn { grid-column: auto; } }
+@media (prefers-reduced-motion: reduce) { .support .cup .steam { animation: none; } }
+</style>
 </head>
 <body>
+<div class="magic" aria-hidden="true"><i class="au"></i><i class="au"></i><i class="au"></i><i class="au"></i><i class="au"></i><i class="au"></i><i class="halo"></i><i class="stars"></i><i class="stars s2"></i><i class="mote"></i><i class="mote"></i><i class="mote"></i><i class="mote"></i><i class="mote"></i><i class="mote"></i><i class="mote"></i><i class="mote"></i><i class="mote"></i><i class="mote"></i></div>
 
 
 <header class="top" id="hdr">
@@ -525,6 +647,11 @@ footer.foot { margin-top: 32px; font-size: 12.5px; color: var(--muted); text-ali
     <div class="artists" id="artistList"></div>
   </section>
   <footer class="foot">
+    <a class="support" href="https://ko-fi.com/amaldevad" target="_blank" rel="noopener" aria-label="Support this fan site on Ko-fi (opens in a new tab)">
+      <span class="cup" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path class="steam" d="M8 2.5c-.6.8-.6 1.7 0 2.5"/><path class="steam" d="M12 2.5c-.6.8-.6 1.7 0 2.5"/><path d="M4 8h12v6a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V8z"/><path d="M16 9.5h1.5a2.5 2.5 0 0 1 0 5H16"/><path d="M3 21.5h14"/></svg></span>
+      <span><strong class="t">Buy me a coffee</strong><span class="d">This fan site is free and ad-free. If it helped you plan your weekend, a coffee keeps it running.</span></span>
+      <span class="btn">Support on Ko-fi</span>
+    </a>
     <span>Unofficial fan site. Not affiliated with Tomorrowland.</span>
     <span>All times are Thailand time.</span>
   </footer>
@@ -1805,5 +1932,15 @@ setInterval(() => { if (state.view === "now" && festivalMoment()?.live) renderNo
 </script>
 
 
+<script>
+// Magic background: pause when the tab is hidden, trim effects on low-power devices.
+(() => {
+  const r = document.documentElement;
+  const lite = (navigator.hardwareConcurrency || 8) <= 4 || (navigator.connection && navigator.connection.saveData);
+  if (lite) r.classList.add("lite");
+  const sync = () => r.classList.toggle("paused", document.visibilityState !== "visible");
+  document.addEventListener("visibilitychange", sync); sync();
+})();
+</script>
 </body>
 </html>
