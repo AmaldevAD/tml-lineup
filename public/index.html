@@ -303,6 +303,8 @@ nav.tabs { position: fixed; z-index: 25; left: 50%; transform: translateX(-50%);
 .share-hero .note { margin: 2px 0 0; }
 .share-acts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 .share-note { margin: 0 0 12px; }
+.share-on { font-size: 12px; vertical-align: 3px; margin-left: 6px; color: var(--accent); }
+.share-link { display: block; font-size: 13px; padding: 10px 12px; border-radius: 12px; background: var(--surface-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .auth label.check { flex-direction: row; align-items: center; gap: 10px; font-size: 14px; min-height: 44px; }
 .auth label.check input { width: 20px; height: 20px; accent-color: var(--accent); }
 .imp-list { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; font-size: 14px; }
@@ -1221,7 +1223,7 @@ async function submitAuth(form) {
 }
 async function logout() {
   try { await api("/api/logout", { method: "POST" }); } catch {}
-  state.user = null; state.favs = new Set(); state.plans = []; chat.sum = {}; updateChatBadge(); closeSheet(); chatDisconnect(); renderAcct(); updateBadge(); render(); toast("Logged out");
+  state.user = null; state.favs = new Set(); state.plans = []; chat.sum = {}; myShare = undefined; updateChatBadge(); closeSheet(); chatDisconnect(); renderAcct(); updateBadge(); render(); toast("Logged out");
 }
 
 // ---------- Saving sets: one pick per time slot ----------
@@ -2102,11 +2104,12 @@ function renderProfile() {
         <a href="#chat"><b>${rooms.fest.length + rooms.artists.length}</b><span>Chats</span></a>
         <a href="#explore"><b>${ARTISTS.size}</b><span>Artists</span></a>
       </div>
-      <button class="btn" data-share="open">${ICON.share}Share my plan</button>
     </div>
+    <div class="card" id="shareCard">${shareCardHTML()}    </div>
     ${offlineCardHTML()}
     <button class="btn" data-auth="logout">Log out</button>
   </div>`;
+  loadMyShare();
 }
 async function saveProfile(body, msg) {
   if (!state.user) return;
@@ -2272,7 +2275,27 @@ async function openShare() {
   openSheetHTML(`<div class="auth" style="position:relative">${closeBtnHTML}<h2>Share my plan</h2><p>Loading…</p></div>`);
   try { renderShareSheet((await api("/api/share")).share); } catch (e) { toast(e.message); closeSheet(); }
 }
+// Profile: see at a glance whether your plan is shared, copy the link, or stop sharing (two taps).
+let myShare; // undefined = not checked yet, null = not shared, { token, withPlans }
+async function loadMyShare() {
+  if (!state.user || state.offline) return;
+  try { myShare = (await api("/api/share")).share; } catch { return; }
+  const c = $("#shareCard"); if (c) c.innerHTML = shareCardHTML();
+}
+function shareCardHTML(confirm) {
+  if (myShare === undefined) return `<h3>Sharing</h3><p>Checking…</p>`;
+  if (!myShare) return `<h3>Sharing</h3><p>Your plan isn't shared. Only you can see it.</p><button class="btn" data-share="open">${ICON.share}Share my plan</button>`;
+  return `<h3>Sharing <span class="tag share-on">On</span></h3>
+    <p>Anyone with your link can view your sets${myShare.withPlans ? ", dining and breaks" : ""}. Stop sharing and the link stops working straight away.</p>
+    <code class="share-link">${esc(shareUrl(myShare.token).replace(/^https?:\/\//, ""))}</code>
+    <div class="share-acts" style="margin-top:0">
+      <button class="btn" data-share="copy-card">Copy link</button>
+      <button class="btn" data-share="open">Manage</button>
+      <button class="btn danger" data-share="${confirm ? "revoke-card-yes" : "revoke-card"}">${confirm ? "Tap again to stop" : "Stop sharing"}</button>
+    </div>`;
+}
 function renderShareSheet(share) {
+  myShare = share; { const c = $("#shareCard"); if (c) c.innerHTML = shareCardHTML(); }
   const intro = `<p>Anyone with the link can see the sets you've booked, without signing in, and add them to their own line-up. They can't change your plan.</p>`;
   const plansBox = on => `<label class="check"><input type="checkbox" id="shPlans"${on ? " checked" : ""}> Include my dining and breaks</label>`;
   const body = share
@@ -2295,6 +2318,19 @@ function renderShareSheet(share) {
 async function shareAction(a, t) {
   const url = $("#shUrl")?.value;
   if (a === "open") return openShare();
+  if (a === "copy-card") {
+    const u = shareUrl(myShare.token);
+    try { await navigator.clipboard.writeText(u); toast("Link copied"); } catch { toast("Open Manage to copy the link"); }
+    return;
+  }
+  if (a === "revoke-card") { $("#shareCard").innerHTML = shareCardHTML(true); return; }
+  if (a === "revoke-card-yes") {
+    if (offlineBlock()) return;
+    try { myShare = (await api("/api/share", { method: "POST", body: { action: "revoke" } })).share; toast("Sharing stopped. The link no longer works."); }
+    catch (e) { toast(e.message); }
+    const c = $("#shareCard"); if (c) c.innerHTML = shareCardHTML();
+    return;
+  }
   if (a === "import") return openImport();
   if (a === "native") {
     try { await navigator.share({ title: `${state.user.display}'s TML plan`, text: "Here's who I'm seeing at Tomorrowland Thailand. Open it to add my sets to your line-up.", url }); }
