@@ -164,10 +164,6 @@ main { padding-block: 6px calc(var(--tab-h) + var(--player-h) + env(safe-area-in
 .banner { padding: 20px; border-radius: 22px; background: radial-gradient(120% 140% at 100% 0%, color-mix(in srgb, var(--accent) 30%, transparent), transparent 60%), var(--surface); border: 1px solid var(--line); display: flex; flex-direction: column; gap: 6px; box-shadow: var(--shadow); }
 .banner .big { font-family: var(--font-display); font-weight: 800; font-size: 30px; line-height: 1.05; letter-spacing: -.02em; }
 .banner p { margin: 0; color: var(--muted); }
-.preview-note { margin: 12px 2px 0; font-size: 13px; font-weight: 700; color: var(--accent); }
-.preview-row { position: relative; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 8px; }
-.preview-row label { font-size: 13px; font-weight: 600; color: var(--muted); width: 100%; }
-.preview-row select { min-height: 46px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface-2); padding: 0 12px; font-weight: 600; }
 .btn { min-height: 46px; padding: 0 18px; border-radius: 14px; border: 1px solid var(--line); background: var(--surface); font-weight: 700; font-size: 14px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; }
 .btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
 .now-grid { display: grid; grid-template-columns: 1fr; gap: 12px; margin-top: 14px; }
@@ -183,6 +179,7 @@ main { padding-block: 6px calc(var(--tab-h) + var(--player-h) + env(safe-area-in
 .bar-meta { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); }
 .next { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 0 0; border: 0; border-top: 1px dashed var(--line); font-size: 14px; background: none; width: 100%; text-align: left; min-height: 44px; }
 .next em { font-style: normal; font-size: 11px; font-weight: 700; letter-spacing: .1em; color: var(--muted); margin-right: 6px; }
+.now-card h3 + .next { border-top: 0; }
 .idle { color: var(--muted); font-size: 14px; }
 
 /* Timeline */
@@ -652,7 +649,7 @@ body::before { background: var(--bg); }
 /* Smooth scrolling: let the browser skip work for cards far off screen */
 .rows > .set { content-visibility: auto; contain-intrinsic-size: auto 104px; }
 .set .art, .now-act .art { border: 2px solid var(--ink); border-radius: 14px 6px 12px 5px / 5px 12px 6px 14px; }
-.days button, .chip, .icon-btn, .acct, .seg, .btn, .field, .preview-row select { border: 2px solid var(--ink); border-radius: var(--wob2); background: var(--surface); font-family: var(--font-hand); }
+.days button, .chip, .icon-btn, .acct, .seg, .btn, .field { border: 2px solid var(--ink); border-radius: var(--wob2); background: var(--surface); font-family: var(--font-hand); }
 .days b { font-family: var(--font-display); font-size: 22px; font-weight: 700; letter-spacing: 0; }
 .days span { font-family: var(--font-hand); font-size: 14px; }
 .days button[aria-selected="true"] { background: var(--hi); color: var(--hi-text); border-color: var(--ink); box-shadow: var(--pop); transform: rotate(-1deg); }
@@ -1084,7 +1081,6 @@ const state = {
   plans: store.get("plans", []), // your own blocks: dining sessions and breaks ({ id, day, start, end, kind, label })
   user: null, api: false, offline: false, social: { sets: {} },
   q: "", genre: "all",
-  preview: null,
   playing: null, // artist slug in the mini player
   sheet: null
 };
@@ -1404,43 +1400,38 @@ function renderGrid(el, sets) {
 function festivalMoment() {
   const t = Date.now();
   for (const d of DAYS) if (t >= epochOf(d.id, FIRST) && t < epochOf(d.id, LAST)) return { day: d.id, min: Math.floor((t - epochOf(d.id, 0)) / 60000), live: true };
-  return state.preview;
+  return null;
 }
 function renderNow() {
   const el = $("#v-now");
   const t = Date.now(), startT = epochOf(DAYS[0].id, FIRST);
-  let mo = festivalMoment();
+  const live = festivalMoment();
+  // Not live: the next festival day still to come (its first sets are "next"), or none once it's over.
+  const upcoming = live ? null : DAYS.find(d => t < epochOf(d.id, FIRST));
   let banner;
-  if (mo && mo.live) banner = `<div class="banner"><span class="eyebrow">Live now · ${esc(dayOf(mo.day).long)}</span><span class="big tnum">${fmt(mo.min)}</span><p>What's playing on every stage right now.</p></div>`;
+  if (live) banner = `<div class="banner"><span class="eyebrow">Live now · ${esc(dayOf(live.day).long)}</span><span class="big tnum">${fmt(live.min)}</span><p>What's playing on every stage right now, and who's next.</p></div>`;
   else {
-    if (!mo) mo = state.preview = { day: DAYS[0].id, min: 21*60 };
-    const before = t < startT, ended = t >= epochOf(DAYS[DAYS.length-1].id, LAST), days = Math.ceil((startT - t) / 864e5);
+    const before = t < startT, days = Math.ceil((startT - t) / 864e5);
     banner = `<div class="banner">
-      <span class="eyebrow">${before ? "Countdown" : ended ? "That's a wrap" : "Between days"}</span>
-      <span class="big">${before ? (days <= 1 ? "Starts tomorrow" : `${days} days to go`) : ended ? "See you next year" : "Back at 1:00 PM"}</span>
-      <p>${before ? "First sets Friday 11 December at 1:00 PM Thailand time." : ended ? "The festival has ended." : "The stages reopen at 1:00 PM Thailand time."} Nothing is playing right now. Pick a day and time to see what will be on:</p>
-      <div class="preview-row">
-        <label for="pvDay" class="sr">Day</label>
-        <select id="pvDay">${DAYS.map(d => `<option value="${d.id}" ${mo.day === d.id ? "selected" : ""}>${d.short} ${d.label}</option>`).join("")}</select>
-        <label for="pvTime" class="sr">Time</label>
-        <select id="pvTime" class="tnum">${Array.from({length: 24}, (_, i) => FIRST + i*30).map(m => `<option value="${m}" ${mo.min === m ? "selected" : ""}>${fmt(m)}</option>`).join("")}</select>
-      </div>
-    </div>
-    <p class="preview-note">Preview of ${esc(dayOf(mo.day).short)} ${esc(dayOf(mo.day).label)} at ${fmt(mo.min)} Thailand time, not live.</p>`;
+      <span class="eyebrow">${before ? "Countdown" : upcoming ? "Between days" : "That's a wrap"}</span>
+      <span class="big">${before ? (days <= 1 ? "Starts tomorrow" : `${days} days to go`) : upcoming ? "Back at 1:00 PM" : "See you next year"}</span>
+      <p>${upcoming ? `Nothing is playing right now. First sets ${esc(dayOf(upcoming.id).long)} at 1:00 PM Thailand time.` : "The festival has ended."}</p>
+    </div>`;
   }
-  const m = mo, live = !!mo.live;
+  const day = live ? live.day : upcoming?.id;
+  if (!day) { el.innerHTML = banner; return; }
   const cards = STAGES.map(([id, name, c]) => {
-    const list = SETS.filter(s => s.day === m.day && s.stage === id).sort((a,b) => a.start - b.start);
-    const cur = list.find(s => s.start <= m.min && m.min < s.end);
-    const nxt = list.find(s => s.start >= (cur ? cur.end : m.min));
-    let body;
+    const list = SETS.filter(s => s.day === day && s.stage === id).sort((a,b) => a.start - b.start);
+    const cur = live && list.find(s => s.start <= live.min && live.min < s.end);
+    const nxt = live ? list.find(s => s.start >= (cur ? cur.end : live.min)) : list[0];
+    let body = "";
     if (cur) {
-      const p = Math.round((m.min - cur.start) / (cur.end - cur.start) * 100), lead = cur.artists[0];
+      const p = Math.round((live.min - cur.start) / (cur.end - cur.start) * 100), lead = cur.artists[0];
       body = `<div class="now-act">${art(lead.slug, lead.name, { label: nameText(cur) })}<button class="set-main" data-open="${esc(lead.slug)}"><span class="set-name">${nameHTML(cur)}</span>${cur.genres.length ? `<span class="genre">${esc(cur.genres.join(" · "))}</span>` : ""}</button>${favBtn(cur)}</div>
         <div class="bar" style="--c:var(${c})" role="progressbar" aria-valuenow="${p}" aria-valuemin="0" aria-valuemax="100" aria-label="Set progress"><i style="width:${p}%"></i></div>
-        <div class="bar-meta tnum"><span>${fmt(cur.start)}</span><span>${live ? dur(cur.end - m.min) + " left" : (m.min === cur.start ? "Starts at " + fmt(m.min) : dur(cur.end - m.min) + " left at " + fmt(m.min))}</span><span>${fmt(cur.end)}</span></div>`;
-    } else body = `<div class="idle">${list.length && m.min < list[0].start ? "Not started yet" : "Nothing playing"}</div>`;
-    const next = nxt ? `<button class="next" data-open="${esc(nxt.artists[0].slug)}"><span><em>NEXT</em><b>${nameHTML(nxt)}</b></span><span class="tnum" style="color:var(--muted)">${fmt(nxt.start)}</span></button>` : "";
+        <div class="bar-meta tnum"><span>${fmt(cur.start)}</span><span>${dur(cur.end - live.min)} left</span><span>${fmt(cur.end)}</span></div>`;
+    } else if (live) body = `<div class="idle">${list.length && live.min < list[0].start ? "Not started yet" : "Nothing playing"}</div>`;
+    const next = nxt ? `<button class="next" data-open="${esc(nxt.artists[0].slug)}"><span><em>${live ? "NEXT" : "FIRST UP"}</em><b>${nameHTML(nxt)}</b></span><span class="tnum" style="color:var(--muted)">${live ? "" : esc(dayOf(day).short) + " "}${fmt(nxt.start)}</span></button>` : "";
     return `<article class="now-card"><h3><span class="dot" style="--c:var(${c})"></span>${esc(name)}${cur ? `<a class="chat-link" href="#chat" data-room="artist-${cur.artists[0].slug}">Chat</a>` : ""}</h3>${body}${next}</article>`;
   }).join("");
   el.innerHTML = banner + `<div class="now-grid">${cards}</div>`;
@@ -1900,7 +1891,6 @@ $("#scrim").addEventListener("click", closeSheet);
 document.addEventListener("keydown", e => { if (e.key === "Escape") closeSheet(); });
 document.addEventListener("change", e => {
   if (e.target.id === "plSession") { const f = $("#planForm"); return openPlanForm(f.dataset.kind, { ...planFormValues(), end: "" }); }
-  if (e.target.id === "pvDay" || e.target.id === "pvTime") { state.preview = { day: $("#pvDay").value, min: +$("#pvTime").value }; renderNow(); }
 });
 $("#q").addEventListener("input", e => { state.q = e.target.value; renderExplore(); });
 window.addEventListener("hashchange", route);
