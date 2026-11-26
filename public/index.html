@@ -481,32 +481,40 @@ footer.foot { margin-top: 32px; font-size: 12.5px; color: var(--muted); text-ali
 <style id="magic-theme">
 /* Magic theme: an original "six emotions" night-sky look (inspired by the mood of the 2026 festival story, no official art).
    Animation budget: only transform + opacity on a fixed, composited layer; no filters, no JS loop. Paused when hidden or reduced motion. */
+/* Palette: neon-on-black "dopamine" set (hot pink, ultraviolet, electric blue, cyan, acid lime) with chrome type. */
 :root {
-  --bg: #F3EEFB; --surface: #FFFFFF; --surface-2: #EEE7F8; --line: #E0D6EF; --fg: #1A1233; --muted: #635A7E;
-  --accent: #9A3FD6; --accent-soft: #F1E3FB; --accent-ink: #FFFFFF;
-  --glass: rgb(255 255 255 / .78);
-  --e-wonder: #7B6CFF; --e-love: #FF5C9A; --e-anger: #FF6A3D; --e-joy: #FFC24B; --e-desire: #D94BFF; --e-sad: #3FA9F5;
-  --magic-a: .38; --star-o: 0;
-  --grad: linear-gradient(100deg, #7B4DFF, #D94BFF 45%, #FF7A59);
+  --bg: #F3F2EE; --surface: #FFFFFF; --surface-2: #EAE9E4; --line: #DCDAD3; --fg: #0B0B0F; --muted: #5C5C66;
+  --accent: #4B2BFF; --accent-soft: #E7E3FF; --accent-ink: #FFFFFF;
+  --glass: rgb(255 255 255 / .82);
+  --e-wonder: #3D6BFF; --e-love: #FF2E88; --e-anger: #FF4A1C; --e-joy: #D7FF3B; --e-desire: #B13DFF; --e-sad: #22D3FF;
+  --magic-a: 0; --star-o: 0;
+  --grad: linear-gradient(100deg, #FF2E88, #7A2BFF 50%, #1FA6FF);
+  --chrome: linear-gradient(180deg, #0B0B0F 35%, #4A4A5C 70%, #0B0B0F);
+  --glow-a: #FF2E8833; --glow-b: #3D6BFF2B;
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
-  --bg: #08051A; --surface: #140F2A; --surface-2: #1F1838; --line: #2D2550; --fg: #F5F1FF; --muted: #ABA2CC;
-  --accent: #FFC24B; --accent-soft: #352610; --accent-ink: #1A1200;
-  --glass: rgb(22 16 46 / .72);
-  --magic-a: .55; --star-o: 1;
-  --grad: linear-gradient(100deg, #FFD36E, #FF8BC1 50%, #B79BFF);
+  --bg: #050507; --surface: #101014; --surface-2: #1A1A21; --line: #25252E; --fg: #F6F6F8; --muted: #9B9BA8;
+  --accent: #D7FF3B; --accent-soft: #1D2310; --accent-ink: #0A0A0A;
+  --glass: rgb(14 14 18 / .74);
+  --magic-a: 0; --star-o: 1;
+  --grad: linear-gradient(100deg, #FF2E88, #B13DFF 45%, #22D3FF);
+  --chrome: linear-gradient(180deg, #FFFFFF 30%, #B9C3E6 58%, #6E7798 62%, #E9ECFF 85%);
+  --glow-a: #FF2E8838; --glow-b: #3D6BFF33;
 } }
 :root[data-theme="dark"] {
-  --bg: #08051A; --surface: #140F2A; --surface-2: #1F1838; --line: #2D2550; --fg: #F5F1FF; --muted: #ABA2CC;
-  --accent: #FFC24B; --accent-soft: #352610; --accent-ink: #1A1200;
-  --glass: rgb(22 16 46 / .72);
-  --magic-a: .55; --star-o: 1;
-  --grad: linear-gradient(100deg, #FFD36E, #FF8BC1 50%, #B79BFF);
+  --bg: #050507; --surface: #101014; --surface-2: #1A1A21; --line: #25252E; --fg: #F6F6F8; --muted: #9B9BA8;
+  --accent: #D7FF3B; --accent-soft: #1D2310; --accent-ink: #0A0A0A;
+  --glass: rgb(14 14 18 / .74);
+  --magic-a: 0; --star-o: 1;
+  --grad: linear-gradient(100deg, #FF2E88, #B13DFF 45%, #22D3FF);
+  --chrome: linear-gradient(180deg, #FFFFFF 30%, #B9C3E6 58%, #6E7798 62%, #E9ECFF 85%);
+  --glow-a: #FF2E8838; --glow-b: #3D6BFF33;
 }
 
 .magic { position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; contain: strict;
-  background: radial-gradient(120% 70% at 50% 110%, color-mix(in srgb, var(--e-desire) 22%, transparent), transparent 60%),
-              radial-gradient(90% 60% at 50% -10%, color-mix(in srgb, var(--e-wonder) 20%, transparent), transparent 65%), var(--bg); }
+  background: radial-gradient(90% 55% at 85% 105%, var(--glow-a), transparent 65%),
+              radial-gradient(80% 50% at 0% 0%, var(--glow-b), transparent 65%), var(--bg); }
+.magic .au { display: none; }
 .magic i { position: absolute; display: block; will-change: transform, opacity; backface-visibility: hidden; }
 
 /* Aurora: six soft emotion-coloured clouds that drift and breathe */
@@ -574,9 +582,9 @@ body::before { background: color-mix(in srgb, var(--bg) 92%, transparent); }
 header.top { background: var(--bg); backdrop-filter: none; -webkit-backdrop-filter: none; box-shadow: 0 1px 0 color-mix(in srgb, var(--line) 70%, transparent), 0 12px 24px -18px color-mix(in srgb, var(--e-desire) 40%, transparent); }
 .set, .now-card, .card, .acard, .banner, .days button, .chip, .icon-btn, .acct:not(.signin), .search input { background-color: var(--glass); }
 .set, .now-card, .card, .acard { border-color: color-mix(in srgb, var(--line) 80%, transparent); }
-h1, .banner .big { background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+h1, .banner .big { background: var(--chrome); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .eyebrow { color: var(--accent); text-shadow: 0 0 18px color-mix(in srgb, var(--accent) 45%, transparent); }
-.days button[aria-selected="true"] { background: var(--grad); color: #fff; border-color: transparent; box-shadow: 0 6px 22px color-mix(in srgb, var(--e-desire) 35%, transparent); }
+.days button[aria-selected="true"] { background: var(--grad); color: #fff; border-color: transparent; box-shadow: 0 8px 26px -6px color-mix(in srgb, var(--e-love) 55%, transparent); }
 .days button[aria-selected="true"] span { color: rgb(255 255 255 / .85); }
 .btn.primary, .acct.signin { background: var(--grad); border-color: transparent; color: #fff; }
 .poster { box-shadow: 0 10px 30px color-mix(in srgb, var(--e-desire) 25%, transparent), 0 0 0 1px rgb(255 255 255 / .08); }
@@ -628,16 +636,22 @@ h1, .banner .big { background: var(--grad); -webkit-background-clip: text; backg
 main:has(#v-lineup:not([hidden])) .hero3d { display: flex; }
 .hero3d .ht { position: relative; z-index: 1; max-width: 62%; display: flex; flex-direction: column; gap: 8px; }
 .hero3d .kick { font-size: 11px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
-.hero3d b { font-family: var(--font-display); font-weight: 800; font-size: clamp(34px, 10vw, 64px); line-height: .95; letter-spacing: -.035em; }
+.hero3d b { font-family: var(--font-display); font-weight: 800; font-size: clamp(38px, 11.5vw, 76px); line-height: .92; letter-spacing: -.04em; text-transform: uppercase; background: var(--chrome); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .hero3d b em { font-style: normal; background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .hero3d .sub { font-size: 13.5px; color: var(--muted); font-weight: 600; }
-.hero3d .sub i { font-style: normal; color: var(--fg); }
+.hero3d .sub i { font-style: normal; color: var(--accent); font-weight: 800; }
 :root:not(.three) .hero3d .ht::after { content: ""; position: absolute; right: -60%; top: -20%; width: 150px; height: 150px; border-radius: 50%;
   background: radial-gradient(circle, color-mix(in srgb, var(--e-joy) 60%, transparent), transparent 70%); z-index: -1; }
 :root.reveal .hero3d .ht > * { animation: heroin .9s cubic-bezier(.2, .9, .25, 1.1) both; }
 :root.reveal .hero3d .ht > :nth-child(2) { animation-delay: .08s; } :root.reveal .hero3d .ht > :nth-child(3) { animation-delay: .16s; }
 @keyframes heroin { from { opacity: 0; transform: perspective(700px) rotateX(-40deg) translateY(24px); } }
 @media (min-width: 720px) { .hero3d .ht { max-width: 55%; } }
+
+/* Recolour the generated artist artwork (no photo) into the neon palette, keeping its light and shade */
+.art:not(.has-img)::before { content: ""; position: absolute; inset: 0; z-index: 0; background: var(--grad); mix-blend-mode: color; pointer-events: none; }
+.set:nth-child(3n+1) .art:not(.has-img)::before, .acard:nth-child(3n+1) .art:not(.has-img)::before { background: linear-gradient(200deg, #22D3FF, #3D6BFF 50%, #B13DFF); }
+.set:nth-child(3n+2) .art:not(.has-img)::before, .acard:nth-child(3n+2) .art:not(.has-img)::before { background: linear-gradient(140deg, #FF2E88, #FF4A1C 60%, #B13DFF); }
+.poster:nth-child(even) .art:not(.has-img)::before { background: linear-gradient(160deg, #22D3FF, #B13DFF 55%, #FF2E88); }
 </style>
 </head>
 <body>
