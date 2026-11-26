@@ -48,7 +48,7 @@ const faceMat = new THREE.ShaderMaterial({
       if (l < 0.72) h = max(h, hatch(p, 0.8, 0.12));
       if (l < 0.45) h = max(h, hatch(p, -0.7, 0.12));
       if (l < 0.25) h = max(h, hatch(p + 3.0, 0.8, 0.16));
-      vec3 base = mix(vC, vC * 0.55 + 0.1, uDark) + uPulse * 0.25;
+      vec3 base = mix(vC, vC * 0.85, uDark) + uPulse * 0.25;
       gl_FragColor = vec4(mix(base, uInk, h * 0.75), 1.0);
     }`
 });
@@ -124,9 +124,9 @@ addEventListener("resize", resize); resize();
 
 function syncTheme() {
   const d = isDark(), ink = d ? "#EDE9DE" : "#1D1B19";
-  U.uDark.value = d ? 1 : 0; U.uInk.value.set(d ? "#11171A" : "#1D1B19");
+  U.uDark.value = d ? 1 : 0; U.uInk.value.set(d ? "#121214" : "#1D1B19");
   inkMat.color.set(ink); orbitMat.color.set(ink);
-  stars.forEach(s => { s.material.map.dispose(); s.material.map = starTex(s.userData.fill, d ? "#11171A" : ink); s.material.needsUpdate = true; });
+  stars.forEach(s => { s.material.map.dispose(); s.material.map = starTex(s.userData.fill, d ? "#121214" : ink); s.material.needsUpdate = true; });
 }
 new MutationObserver(syncTheme).observe(root, { attributes: true, attributeFilter: ["data-theme"] });
 matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change", syncTheme);
