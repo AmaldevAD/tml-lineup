@@ -392,7 +392,13 @@ nav.tabs { position: fixed; z-index: 25; left: 50%; transform: translateX(-50%);
 .adm-rep { display: flex; flex-direction: column; gap: 6px; padding-top: 10px; border-top: 1px solid var(--line); }
 .adm-rep.done { opacity: .6; }
 .adm-rep .note { margin: 0; }
-.adm-user.is-banned { border-color: color-mix(in srgb, var(--warn) 40%, var(--line)); }
+.person summary { list-style: none; cursor: pointer; }
+.person summary::-webkit-details-marker { display: none; }
+.person[open] summary { padding-bottom: 6px; border-bottom: 1px solid var(--line); }
+.pdl { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; margin: 0; font-size: 14px; }
+.pdl dt { color: var(--muted); }
+.pdl dd { margin: 0; }
+.person.is-banned, .adm-user.is-banned { border-color: color-mix(in srgb, var(--warn) 40%, var(--line)); }
 .convo-empty { flex: 1; display: grid; place-items: center; color: var(--muted); padding: 40px; text-align: center; }
 body.in-convo { --tab-h: 0px; }
 body.in-convo #hdr, body.in-convo nav.tabs { display: none; }
@@ -2223,7 +2229,7 @@ function renderProfile() {
 }
 
 // ---------- Admin: reports and bans (only for the admin account; the server checks every call) ----------
-const admin = { data: null, filter: "open", busy: false };
+const admin = { data: null, filter: null, busy: false, q: "" };
 const REASON_LABEL = Object.fromEntries(REASONS);
 async function loadAdmin() {
   if (admin.busy) return; admin.busy = true;
@@ -2237,7 +2243,8 @@ async function adminAct(path, body, msg) {
     if (state.view === "admin") renderAdmin(true);
   } catch (e) { toast(e.message); }
 }
-function renderAdmin(fresh) {
+function renderAdmin(fresh) { renderAdminInner(fresh); if (admin.filter === "people") filterPeople(); }
+function renderAdminInner(fresh) {
   const el = $("#v-admin");
   if (!state.user?.admin) { el.innerHTML = `<div class="card"><h3>Admins only</h3><p>This page is for the site's moderators.</p></div>`; return; }
   if (!fresh) loadAdmin();
@@ -2246,6 +2253,8 @@ function renderAdmin(fresh) {
   if (d.error) { el.innerHTML = `<div class="card"><h3>Couldn't load reports</h3><p>${esc(d.error)}</p><button class="btn" data-admin="reload">Try again</button></div>`; return; }
   const users = d.users || [], open = users.reduce((n, u) => n + (u.open || 0), 0);
   const bannedAll = [...users.filter(u => u.banned), ...(d.banned || []).map(u => ({ ...u, banned: true, total: 0, open: 0, people: 0, reports: [] }))];
+  const people = d.people || [];
+  if (!admin.filter) admin.filter = open ? "open" : "people";
   const list = admin.filter === "open" ? users.filter(u => u.open > 0) : admin.filter === "banned" ? bannedAll : users;
   const f = (k, l, n) => `<button class="chip" data-admin="filter" data-f="${k}" aria-pressed="${admin.filter === k}">${l} <b>${n}</b></button>`;
   const roomLabel = r => r === "general" ? "Everyone" : r.startsWith("crew-") ? "Crew " + r.slice(5) : (ARTISTS.get(r.slice(7))?.name || r.slice(7)) + " fans";
@@ -2262,14 +2271,51 @@ function renderAdmin(fresh) {
         ${u.open ? `<button class="btn" data-admin="dismiss" data-uid="${u.id}">Dismiss reports</button>` : ""}
       </div>
     </div>`;
+  const day = 864e5, now = Date.now();
+  const joinedToday = people.filter(u => now - u.created < day).length, activeToday = people.filter(u => now - (u.last_seen || 0) < day).length;
   el.innerHTML = `<div class="profile admin">
-    <div class="stats card"><div><b>${open}</b><span>To review</span></div><div><b>${users.length}</b><span>People reported</span></div><div><b>${bannedAll.length}</b><span>Banned</span></div></div>
-    <div class="chips" role="group" aria-label="Show">${f("open", "To review", users.filter(u => u.open > 0).length)}${f("all", "All reported", users.length)}${f("banned", "Banned", bannedAll.length)}</div>
-    ${list.length ? list.map(card).join("") : `<div class="card"><p class="note">${admin.filter === "banned" ? "Nobody is banned." : admin.filter === "open" ? "Nothing to review. 🎉" : "Nobody has been reported yet."}</p></div>`}
+    <div class="stats card"><div><b>${people.length}</b><span>Members</span></div><div><b>${open}</b><span>To review</span></div><div><b>${bannedAll.length}</b><span>Banned</span></div></div>
+    <div class="chips" role="group" aria-label="Show">${f("people", "People", people.length)}${f("open", "To review", users.filter(u => u.open > 0).length)}${f("all", "All reported", users.length)}${f("banned", "Banned", bannedAll.length)}</div>
+    ${admin.filter === "people" ? peopleHTML(people, joinedToday, activeToday)
+      : list.length ? list.map(card).join("") : `<div class="card"><p class="note">${admin.filter === "banned" ? "Nobody is banned." : admin.filter === "open" ? "Nothing to review. 🎉" : "Nobody has been reported yet."}</p></div>`}
     <p class="note">Banned people can still sign in and read chats, but can't post. Most reported people are at the top.</p>
     <div class="card"><h3>Clear all chats</h3><p class="note">Deletes every message in every room (Everyone, artist rooms and crew rooms). Reports stay here.${d.cleared ? ` Last cleared ${ago(d.cleared)}.` : ""}</p><button class="btn danger" data-admin="clear-ask">Clear all chats…</button></div>
   </div>`;
 }
+// People tab: everyone with an account, newest first, searchable by name or username.
+const fullDate = ts => new Date(ts).toLocaleString([], { day: "numeric", month: "short", year: "numeric", hour: "numeric", minute: "2-digit", hour12: true });
+function personHTML(u) {
+  const sets = u.set_keys.map(k => SETMAP.get(k)).filter(Boolean).sort((a, b) => a.day.localeCompare(b.day) || a.start - b.start);
+  const how = [u.google && "Google", u.password && "Password"].filter(Boolean).join(" + ") || "—";
+  return `<details class="card person${u.banned ? " is-banned" : ""}" data-pq="${esc((u.display + " " + u.username).toLowerCase())}">
+    <summary class="adm-head">${avatar(u.display, u.color, "", u.avatar, u.id)}<div style="min-width:0;flex:1"><b>${esc(u.display)}</b> <span class="note">@${esc(u.username)}</span>
+      <div class="adm-tags"><span class="tag">Joined ${ago(u.created)}</span>${u.last_seen ? `<span class="tag">Active ${ago(u.last_seen)}</span>` : ""}<span class="tag">${u.sets} set${u.sets === 1 ? "" : "s"}</span>${u.admin ? `<span class="tag hot">Admin</span>` : ""}${u.reported ? `<span class="tag hot">${u.reported} report${u.reported === 1 ? "" : "s"}</span>` : ""}${u.banned ? `<span class="tag ban">Banned</span>` : ""}</div></div></summary>
+    <dl class="pdl">
+      <dt>User ID</dt><dd>${u.id}</dd>
+      <dt>Signs in with</dt><dd>${how}</dd>
+      <dt>Joined</dt><dd>${fullDate(u.created)}</dd>
+      <dt>Last active</dt><dd>${u.last_seen ? fullDate(u.last_seen) : "Not since this was added"}</dd>
+      <dt>Saved sets</dt><dd>${u.sets}</dd>
+      <dt>Dining &amp; breaks</dt><dd>${u.plans}</dd>
+      <dt>Reported by others</dt><dd>${u.reported}</dd>
+      <dt>Reports they sent</dt><dd>${u.reports_made}</dd>
+    </dl>
+    ${sets.length ? `<p class="note" style="margin:0">Booked: ${sets.map(s => `${esc(nameText(s))} <span class="tnum">(${dayOf(s.day)?.short || ""} ${range(s.start, s.end)})</span>`).join(" · ")}</p>` : ""}
+    ${u.admin ? "" : `<div class="row">${u.banned ? `<button class="btn" data-admin="unban" data-uid="${u.id}" data-name="${esc(u.display)}">Unban</button>` : `<button class="btn danger" data-admin="ban" data-uid="${u.id}" data-name="${esc(u.display)}">Ban from posting</button>`}</div>`}
+  </details>`;
+}
+function peopleHTML(people, joinedToday, activeToday) {
+  return `<p class="note" style="margin:0 4px">${people.length} member${people.length === 1 ? "" : "s"} · ${joinedToday} joined in the last 24 hours · ${activeToday} active in the last 24 hours. Tap someone for details.</p>
+    <div class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="admQ" type="search" placeholder="Search name or username" autocomplete="off" aria-label="Search people" value="${esc(admin.q)}"></div>
+    <div id="admPeople">${people.length ? people.map(personHTML).join("") : `<div class="card"><p class="note">Nobody has signed up yet.</p></div>`}</div>
+    <p class="note" id="admNone" hidden>Nobody matches.</p>`;
+}
+function filterPeople() {
+  const q = admin.q.trim().toLowerCase(); let n = 0;
+  document.querySelectorAll("#admPeople .person").forEach(el => { const hit = !q || el.dataset.pq.includes(q); el.hidden = !hit; n += hit; });
+  const none = $("#admNone"); if (none) none.hidden = n > 0;
+}
+document.addEventListener("input", e => { if (e.target.id === "admQ") { admin.q = e.target.value; filterPeople(); } });
 function adminAction(a, t) {
   if (a === "reload") return loadAdmin();
   if (a === "filter") { admin.filter = t.dataset.f; return renderAdmin(true); }
