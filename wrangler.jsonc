@@ -18,5 +18,6 @@
     { "tag": "v1", "new_sqlite_classes": ["ChatRoom"] },
     { "tag": "v2", "new_sqlite_classes": ["Hub"] }
   ],
+  "vars": { "GOOGLE_CLIENT_ID": "764939787770-a62d36schrfqhejhpqmiq43dqm8cr0ah.apps.googleusercontent.com" },
   "observability": { "enabled": true }
 }
