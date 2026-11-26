@@ -701,7 +701,7 @@ main:has(#v-lineup:not([hidden])) .hero3d { display: flex; }
   -webkit-mask: radial-gradient(closest-side, #000 25%, transparent 100%); mask: radial-gradient(closest-side, #000 25%, transparent 100%); opacity: .7; }
 .hero3d .kick { font-family: var(--font-hand); font-size: 16px; color: var(--muted); transform: rotate(-2deg); width: fit-content; }
 .hero3d .ht > * { text-shadow: 0 0 6px var(--bg), 0 0 2px var(--bg); }
-.hero3d b { font-family: var(--font-display); font-weight: 700; font-size: clamp(50px, 15vw, 96px); line-height: .9; }
+.hero3d b { font-family: var(--font-display); font-weight: 700; font-size: clamp(42px, 11.5vw, 88px); line-height: .9; white-space: nowrap; }
 /* Highlighter swipe sits on its own line box, so it never touches the line above or the stats below */
 .hero3d b em { font-style: normal; display: inline-block; margin-top: .06em; padding: .02em .14em .06em; line-height: 1; background: var(--grad);
   border-radius: 6px 14px 5px 12px / 12px 5px 14px 6px; transform: rotate(-1.5deg); text-shadow: none; }
@@ -2718,7 +2718,7 @@ setInterval(() => { if (state.view === "now" && festivalMoment()?.live) renderNo
   try {
     const n = new Set(RAW.split("\n").filter(l => l.includes(";")).map(l => l.split(";")[0].trim())).size;
     const h = document.createElement("section"); h.className = "hero3d"; h.setAttribute("aria-label", "Welcome");
-    h.innerHTML = `<div class="ht"><span class="kick">Unofficial line-up · Thailand 2026</span><b>Feel every<br><em>emotion!</em></b><svg class="arrow" viewBox="0 0 92 60" aria-hidden="true"><path d="M4 52C22 50 46 40 58 22c4-6 6-12 7-18M56 10l9-7 5 11"/></svg><span class="sub"><i>${n}</i> artists · <i>${STAGES.length}</i> stages · <i>${DAYS.length}</i> days</span></div>`;
+    h.innerHTML = `<div class="ht"><span class="kick">Unofficial line-up · Thailand 2026</span><b>Feel today.<br><em>Unite forever.</em></b><svg class="arrow" viewBox="0 0 92 60" aria-hidden="true"><path d="M4 52C22 50 46 40 58 22c4-6 6-12 7-18M56 10l9-7 5 11"/></svg><span class="sub"><i>${n}</i> artists · <i>${STAGES.length}</i> stages · <i>${DAYS.length}</i> days</span></div>`;
     const v = document.getElementById("v-lineup"); v.parentNode.insertBefore(h, v);
   } catch (e) {}
   // 3D sky (WebGL2), loaded once the page is idle
