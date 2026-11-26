@@ -261,17 +261,10 @@ nav.tabs { position: fixed; z-index: 25; left: 50%; transform: translateX(-50%);
 .av.lg { width: 34px; height: 34px; font-size: 12.5px; }
 .g-set .crowd, .poster .crowd { color: #fff; }
 .g-set .crowd .av, .poster .crowd .av { box-shadow: 0 0 0 2px rgb(0 0 0 / .5); }
-/* Busy slots use a cool dusk blue (--block) so they read apart from the warm terracotta booked sets in both themes.
-   The band sits behind the cards; blocked cards are desaturated with their own sparse hatch under the text. */
-.busy { position: absolute; left: 0; right: 0; z-index: 0; pointer-events: none;
-  background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--block) 30%, transparent) 0 2px, transparent 2px 11px);
-  border-top: 2px dashed var(--block); border-bottom: 2px dashed var(--block); }
-.g-set.blocked .art { filter: grayscale(1) brightness(.5); }
-.g-set.blocked .shade { background: rgb(10 14 24 / .45); }
-.g-set.blocked::after { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; border-radius: inherit; border: 2px dashed var(--block);
-  background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--block) 26%, transparent) 0 2px, transparent 2px 11px); }
-.g-set.blocked b { color: #fff; }
-.g-set.blocked small { opacity: 1; color: #E4EAF4; }
+.busy { position: absolute; left: 0; right: 0; z-index: 4; pointer-events: none;
+  background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--block) 30%, transparent) 0 6px, transparent 6px 13px);
+  border-top: 2px solid color-mix(in srgb, var(--block) 70%, transparent); border-bottom: 2px solid color-mix(in srgb, var(--block) 70%, transparent); }
+.g-set.blocked { filter: grayscale(.85) brightness(.6); }
 .g-set.is-fav { z-index: 5; box-shadow: 0 0 0 3px var(--heart), 0 8px 24px rgb(0 0 0 / .45); }
 .set.blocked { opacity: .55; }
 .busy-chip { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 700; color: var(--block); background: color-mix(in srgb, var(--block) 12%, transparent); padding: 2px 8px; border-radius: 99px; width: fit-content;
@@ -296,8 +289,8 @@ nav.tabs { position: fixed; z-index: 25; left: 50%; transform: translateX(-50%);
 .swap { display: flex; flex-direction: column; gap: 10px; }
 /* Personal blocks: dining sessions and breaks */
 .busy.plan { border-style: dashed; }
-.busy.plan span { position: absolute; left: 6px; top: 4px; font-size: 11px; font-weight: 800; color: var(--block); background: var(--surface); border: 1.5px solid var(--block); padding: 1px 7px; border-radius: 99px; white-space: nowrap; }
-.plan-ico { width: 76px; height: 76px; border-radius: 14px; display: grid; place-items: center; font-size: 30px; background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--block) 22%, var(--surface-2)) 0 6px, var(--surface-2) 6px 13px); }
+.busy.plan span { position: absolute; left: 6px; top: 4px; font-size: 11px; font-weight: 800; color: var(--block); background: var(--surface); padding: 1px 7px; border-radius: 99px; white-space: nowrap; }
+.plan-ico { width: 76px; height: 76px; border-radius: 14px; display: grid; place-items: center; font-size: 30px; background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--block) 18%, var(--surface-2)) 0 6px, var(--surface-2) 6px 13px); }
 .set.plan-row .set-main { cursor: default; }
 .plan-tools { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; margin: 4px 0 12px; }
 /* Sharing your plan */
