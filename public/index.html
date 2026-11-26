@@ -1355,9 +1355,13 @@ function renderTimeline() {
 // ---------- Your own blocks: dining sessions and breaks ----------
 // Bookable dining experiences announced for Tomorrowland Thailand 2026 (Nation Thailand, 9 Oct 2026; Brand Inside, 11 Oct 2026).
 // Session times are from the official booking list (thailand.tomorrowland.com/en/add-ons/food-experiences, read 26 Nov 2026).
-// Each session: [day, "HH:MM" start, "HH:MM" end]. Where no sessions are listed, people enter the time themselves.
+// Each session: [day, "HH:MM" start, "HH:MM" end, startOnly]. startOnly = only the start time is published: the end
+// defaults to the next session's start (the last one to 90 min) and stays editable.
+// Where no sessions are listed, people enter the time themselves.
+const BEAT_STARTS = ["14:30", "16:00", "17:45", "19:15", "20:45"];
+const beatSessions = () => ["2026-12-11", "2026-12-12", "2026-12-13"].flatMap(d => BEAT_STARTS.map((t, i) => [d, t, BEAT_STARTS[i + 1] || "22:15", true]));
 const DINING = {
-  "b-eat": { label: "B-EAT with Gaggan Anand", about: "4 tastings, a shooter and 2 cocktails with a live DJ · 2,900 THB · reservation only", sessions: [] },
+  "b-eat": { label: "B-EAT with Gaggan Anand", about: "4 tastings, a shooter and 2 cocktails with a live DJ · 2,900 THB · reservation only", sessions: beatSessions() },
   "papillon": { label: "Papillon Restaurant by Baan Tepa", about: "Seated lakeside menu by Chef Tam (Baan Tepa) · 3,800 THB · reservation only", sessions: [
     ["2026-12-11", "15:55", "17:15"], ["2026-12-11", "17:35", "18:55"], ["2026-12-11", "19:15", "20:35"], ["2026-12-11", "20:55", "22:15"],
     ["2026-12-12", "14:00", "15:20"], ["2026-12-12", "19:15", "20:35"], ["2026-12-12", "20:55", "22:15"],
@@ -1383,7 +1387,8 @@ function openPlanForm(kind = "b-eat", keep = {}) {
     </div>
     <form id="planForm" data-kind="${kind}" class="swap" novalidate>
       ${d ? `<p><b>${esc(d.label)}</b><br><span class="hint">${esc(d.about)}</span></p>
-        ${sess ? `<label>Your session<select class="field" id="plSession">${sess.map(([sd, a, b], i) => `<option value="${i}"${String(i) === pick ? " selected" : ""}>${esc(dayOf(sd).short)} ${esc(dayOf(sd).label)} · ${range(fromField(a), fromField(b))}</option>`).join("")}<option value="other"${pick === "other" ? " selected" : ""}>Another time…</option></select></label>`
+        ${sess ? `<label>Your session<select class="field" id="plSession">${sess.map(([sd, a, b], i) => `<option value="${i}"${String(i) === pick ? " selected" : ""}>${esc(dayOf(sd).short)} ${esc(dayOf(sd).label)} · ${sess[i][3] ? "starts " + fmt(fromField(a)) : range(fromField(a), fromField(b))}</option>`).join("")}<option value="other"${pick === "other" ? " selected" : ""}>Another time…</option></select></label>
+          ${!custom && sess[+pick]?.[3] ? `<label>Ends<input class="field" id="plEnd" type="time" step="300" value="${esc(keep.session === pick && keep.end ? keep.end : sess[+pick][2])}"><span class="hint">Only start times are published. Change the end to match your booking.</span></label>` : ""}`
           : `<p class="hint">Tomorrowland hasn't listed session times for this here yet. Enter the time on your booking confirmation.</p>`}`
         : `<label>Name<input class="field" id="plLabel" maxlength="40" placeholder="e.g. Dinner, rest, meet friends" value="${esc(keep.label || "")}"></label>`}
       ${custom ? `<label>Day<select class="field" id="plDay">${DAYS.map(x => `<option value="${x.id}"${x.id === day ? " selected" : ""}>${esc(x.long)}</option>`).join("")}</select></label>
@@ -1403,7 +1408,7 @@ async function submitPlan(form) {
   const kind = form.dataset.kind, v = planFormValues(), errEl = $("#plErr");
   const label = DINING[kind] ? DINING[kind].label : (v.label || "").trim();
   const ses = DINING[kind]?.sessions?.[+v.session];
-  if (ses && v.session !== "other") [v.day, v.start, v.end] = ses;
+  if (ses && v.session !== "other") { const end = ses[3] && v.end ? v.end : ses[2]; [v.day, v.start] = ses; v.end = end; }
   const start = fromField(v.start), end = fromField(v.end);
   errEl.textContent = "";
   if (!label) { errEl.textContent = "Give your break a name."; return; }
@@ -1675,7 +1680,7 @@ document.addEventListener("click", e => {
 $("#scrim").addEventListener("click", closeSheet);
 document.addEventListener("keydown", e => { if (e.key === "Escape") closeSheet(); });
 document.addEventListener("change", e => {
-  if (e.target.id === "plSession") { const f = $("#planForm"); return openPlanForm(f.dataset.kind, planFormValues()); }
+  if (e.target.id === "plSession") { const f = $("#planForm"); return openPlanForm(f.dataset.kind, { ...planFormValues(), end: "" }); }
   if (e.target.id === "pvDay" || e.target.id === "pvTime") { state.preview = { day: $("#pvDay").value, min: +$("#pvTime").value }; renderNow(); }
 });
 $("#q").addEventListener("input", e => { state.q = e.target.value; renderExplore(); });
