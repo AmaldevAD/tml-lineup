@@ -637,6 +637,32 @@ h1 { font-family: var(--font-display); font-weight: 700; font-size: 38px; letter
 .set-name { font-size: 22px; line-height: 1.05; font-weight: 700; }
 .banner .big { font-size: 44px; font-weight: 700; }
 
+/* Phones: the day / stage / layout controls slide away while scrolling down the line-up and come back on any
+   scroll up. Only a transform moves, so the page never re-lays out; a one-line summary bar stays pinned. */
+.hdr-mini { display: none; }
+@media (max-width: 719px), (max-height: 500px) and (pointer: coarse) {
+  header.top { transition: transform .3s cubic-bezier(.2,.8,.2,1); will-change: transform; }
+  header.top.compact { transform: translateY(calc(-1 * var(--hshift, 0px))); }
+  .hdr-mini { all: unset; box-sizing: border-box; position: absolute; left: 0; right: 0; bottom: 0; height: 52px; z-index: 2; display: flex; align-items: center; gap: 10px;
+    padding-inline: max(16px, env(safe-area-inset-left, 0px)) max(16px, env(safe-area-inset-right, 0px)); background: var(--bg); color: var(--fg); cursor: pointer;
+    opacity: 0; visibility: hidden; transition: opacity .18s, visibility 0s .18s; -webkit-tap-highlight-color: transparent; }
+  header.top.compact .hdr-mini { opacity: 1; visibility: visible; transition: opacity .2s .06s; }
+  header.top.compact .top-inner { opacity: 0; transition: opacity .2s; }
+  .top-inner { transition: opacity .25s .05s; }
+  .hdr-mini:focus-visible { outline: 2px solid var(--accent); outline-offset: -4px; border-radius: 12px; }
+  .hdr-mini .m-day { font-family: var(--font-display); font-weight: 700; font-size: 19px; white-space: nowrap; flex: none; }
+  .hdr-mini .m-day small { font-family: var(--font-body, inherit); font-weight: 600; font-size: 12px; color: var(--muted); margin-left: 5px; }
+  .hdr-mini .m-stage { display: inline-flex; align-items: center; gap: 6px; min-width: 0; flex: 0 1 auto; font-size: 13px; font-weight: 600; padding: 5px 11px; border-radius: 999px;
+    border: 1px solid var(--line); background: color-mix(in srgb, var(--c, var(--accent)) 14%, var(--surface)); }
+  .hdr-mini .m-stage .t { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .hdr-mini .m-fav { flex: none; color: var(--heart); display: inline-grid; }
+  .hdr-mini .m-fav svg { width: 16px; height: 16px; fill: currentColor; }
+  .hdr-mini .m-more { margin-left: auto; flex: none; display: inline-flex; align-items: center; gap: 4px; font-size: 12.5px; font-weight: 700; color: var(--muted); }
+  .hdr-mini .m-more svg { width: 18px; height: 18px; }
+  .hour-label { top: calc(env(safe-area-inset-top, 0px) + var(--hdr, 180px) - var(--hcut, 0px)); transition: top .3s cubic-bezier(.2,.8,.2,1); }
+}
+@media (prefers-reduced-motion: reduce) { header.top, .hdr-mini, .top-inner, .hour-label { transition: none !important; } }
+
 /* Header on paper */
 header.top { background: var(--bg); backdrop-filter: none; -webkit-backdrop-filter: none; box-shadow: none;
   border-bottom: 2px solid var(--ink); border-image: none; }
@@ -784,6 +810,7 @@ footer.foot { font-family: var(--font-hand); font-size: 15px; }
       </div>
     </div>
   </div>
+  <button class="hdr-mini" id="hdrMini" type="button" aria-label="Show day and stage filters"></button>
 </header>
 
 <main class="wrap gutter">
@@ -1807,6 +1834,40 @@ function rerenderKeepScroll() {
 
 // ---------- Routing ----------
 const TITLES = { lineup: "Line-up", now: "Now & next", chat: "Chats", timeline: "My timeline", explore: "Explore artists", profile: "Profile", shared: "Shared plan", admin: "Admin" };
+// Phones only: hide the line-up controls while scrolling down, show them again on any scroll up (or at the top).
+const hdrCompact = (() => {
+  const hdr = $("#hdr"), mini = $("#hdrMini"), root = document.documentElement;
+  const mq = matchMedia("(max-width: 719px), (max-height: 500px) and (pointer: coarse)");
+  let on = false, lastY = scrollY, acc = 0, queued = false;
+  const shift = () => Math.max(0, hdr.offsetHeight - mini.offsetHeight);
+  const apply = () => { const px = on ? shift() : 0; hdr.style.setProperty("--hshift", px + "px"); root.style.setProperty("--hcut", px + "px"); };
+  const set = v => {
+    if (v === on) return;
+    on = v; acc = 0; apply(); hdr.classList.toggle("compact", v);
+    window.__pinGrid?.(400); // keep the timetable's stage row glued to the header while it slides
+  };
+  const paint = () => {
+    const d = DAYS.find(x => x.id === state.day) || DAYS[0], st = state.stage !== "all" && STAGE[state.stage];
+    mini.innerHTML = `<span class="m-day">${esc(d.short.toUpperCase())}<small>${esc(d.label)}</small></span>` +
+      `<span class="m-stage"${st ? ` style="--c:var(${st.c})"` : ""}>${st ? '<span class="dot"></span>' : ""}<span class="t">${st ? esc(st.name) : "All stages"}</span></span>` +
+      (state.favOnly ? `<span class="m-fav" title="Favourites only"><svg viewBox="0 0 24 24"><path d="M12 21s-8-5.2-8-11.3A4.6 4.6 0 0 1 12 7a4.6 4.6 0 0 1 8 2.7C20 15.8 12 21 12 21z"/></svg></span>` : "") +
+      `<span class="m-more">${state.mode === "grid" ? "Timetable" : "List"}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></span>`;
+  };
+  const tick = () => {
+    queued = false;
+    const max = root.scrollHeight - innerHeight, y = Math.min(Math.max(0, scrollY), max), dy = y - lastY; lastY = y; // clamp: ignore iOS rubber-band bounce
+    if (!mq.matches || state.view !== "lineup" || !$("#sheet").hidden) return set(false);
+    if (y < 24) return set(false);
+    acc = (dy > 0) === (acc > 0) ? acc + dy : dy; // distance travelled in the current direction
+    if (acc > 10 && y > hdr.offsetHeight * 0.6) set(true);
+    else if (acc < -28) set(false);
+  };
+  addEventListener("scroll", () => { if (!queued) { queued = true; requestAnimationFrame(tick); } }, { passive: true });
+  mq.addEventListener?.("change", () => set(false));
+  mini.addEventListener("click", () => set(false));
+  hdr.addEventListener("focusin", e => { if (e.target !== mini) set(false); }); // keyboard users never land on hidden controls
+  return { refresh() { paint(); if (on) { if (state.view !== "lineup") set(false); else apply(); } } };
+})();
 function render() {
   for (const v of Object.keys(TITLES)) $("#v-" + v).hidden = v !== state.view;
   document.querySelectorAll(".tabs a").forEach((a, i) => { if (a.dataset.view === state.view) { a.setAttribute("aria-current", "page"); a.parentNode.style.setProperty("--i", i); } else a.removeAttribute("aria-current"); });
@@ -1821,6 +1882,7 @@ function render() {
   ({ lineup: renderLineup, now: renderNow, chat: renderChat, timeline: renderTimeline, explore: renderExplore, profile: renderProfile, shared: renderShared, admin: renderAdmin })[state.view]();
   if (state.view !== "chat") chatDisconnect();
   document.documentElement.style.setProperty("--hdr", $("#hdr").offsetHeight + "px");
+  hdrCompact.refresh();
 }
 function route() {
   const h = location.hash.slice(1);
@@ -2749,9 +2811,10 @@ setInterval(() => { if (state.view === "now" && festivalMoment()?.live) renderNo
 // Timetable: the page scrolls up and down, the grid only scrolls sideways. Keep the stage names pinned under the header
 // by sliding the header row down as the grid passes under it (one CSS variable write per frame, only on the timetable).
 (() => {
-  let queued = false;
+  let queued = false, until = 0;
   const pin = () => {
     queued = false;
+    if (performance.now() < until) q(); // follow the header while it slides in or out
     const g = document.getElementById("gridScroll"); if (!g || !g.offsetParent) return;
     const hdr = document.querySelector("header.top"), top = hdr ? hdr.getBoundingClientRect().bottom : 0;
     const r = g.getBoundingClientRect(), head = g.querySelector(".g-head"), hh = head ? head.offsetHeight : 46;
@@ -2760,6 +2823,7 @@ setInterval(() => { if (state.view === "now" && festivalMoment()?.live) renderNo
   };
   const q = () => { if (!queued) { queued = true; requestAnimationFrame(pin); } };
   addEventListener("scroll", q, { passive: true }); addEventListener("resize", q);
+  window.__pinGrid = ms => { until = performance.now() + ms; q(); };
   new MutationObserver(q).observe(document.body, { childList: true, subtree: true });
 })();
 </script>
