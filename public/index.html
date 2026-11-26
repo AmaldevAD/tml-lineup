@@ -295,7 +295,21 @@ nav.tabs { position: fixed; z-index: 25; left: 50%; transform: translateX(-50%);
 .busy.plan span { position: absolute; left: 6px; top: 4px; font-size: 11px; font-weight: 800; color: var(--heart); background: var(--surface); padding: 1px 7px; border-radius: 99px; white-space: nowrap; }
 .plan-ico { width: 76px; height: 76px; border-radius: 14px; display: grid; place-items: center; font-size: 30px; background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--heart) 18%, var(--surface-2)) 0 6px, var(--surface-2) 6px 13px); }
 .set.plan-row .set-main { cursor: default; }
-.plan-tools { display: flex; justify-content: flex-end; margin: 4px 0 12px; }
+.plan-tools { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; margin: 4px 0 12px; }
+/* Sharing your plan */
+.btn > svg { width: 18px; height: 18px; flex: none; }
+.btn.danger { color: var(--warn); }
+.btn:disabled { opacity: .55; }
+.card.share-hero { flex-direction: row; align-items: center; gap: 16px; margin-bottom: 12px; }
+.share-hero .note { margin: 2px 0 0; }
+.share-acts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.share-note { margin: 0 0 12px; }
+.share-on { font-size: 12px; vertical-align: 3px; margin-left: 6px; color: var(--accent); }
+.share-link { display: block; font-size: 13px; padding: 10px 12px; border-radius: 12px; background: var(--surface-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.auth label.check { flex-direction: row; align-items: center; gap: 10px; font-size: 14px; min-height: 44px; }
+.auth label.check input { width: 20px; height: 20px; accent-color: var(--accent); }
+.imp-list { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; font-size: 14px; }
+.imp-list .hint { display: block; }
 .plan-seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
 .plan-seg button { min-height: 44px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface-2); font-weight: 700; font-size: 13px; padding: 4px 6px; }
 .plan-seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
@@ -781,6 +795,7 @@ footer.foot { font-family: var(--font-hand); font-size: 15px; }
   <section class="view" id="v-timeline" aria-label="My timeline" hidden></section>
   <section class="view" id="v-chat" aria-label="Chat" hidden></section>
   <section class="view" id="v-profile" aria-label="Profile" hidden></section>
+  <section class="view" id="v-shared" aria-label="Shared plan" hidden></section>
   <section class="view" id="v-admin" aria-label="Admin" hidden></section>
   <section class="view" id="v-explore" aria-label="Explore artists" hidden>
     <div class="search">
@@ -1094,7 +1109,8 @@ const ICON = {
   play: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15a1 1 0 0 0 1.5.86l12.4-7.5a1 1 0 0 0 0-1.72L8.5 3.64A1 1 0 0 0 7 4.5z"/></svg>`,
   pause: `<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4.5" height="16" rx="1.2"/><rect x="13.5" y="4" width="4.5" height="16" rx="1.2"/></svg>`,
   close: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>`,
-  ext: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M7 17 17 7M8 7h9v9"/></svg>`
+  ext: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M7 17 17 7M8 7h9v9"/></svg>`,
+  share: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3M7 8l5-5 5 5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>`
 };
 function art(slug, name, { play = true, label } = {}) {
   const img = IMG[slug];
@@ -1164,12 +1180,14 @@ async function boot() {
     // Back from Google: restore where the person was, then finish whatever they were doing.
     const h = location.hash.slice(1), after = takeAfter();
     if (["welcome", "pick-username", "signin-error"].includes(h)) {
-      history.replaceState(null, "", location.pathname + (after?.view && after.view !== "lineup" ? "#" + after.view : ""));
-      state.view = TITLES[after?.view] ? after.view : "lineup";
+      const back = after?.hash && /^#plan\//.test(after.hash) ? after.hash : after?.view && after.view !== "lineup" && after.view !== "shared" ? "#" + after.view : "";
+      history.replaceState(null, "", location.pathname + back);
+      if (back.startsWith("#plan/")) { state.view = "shared"; loadShared(back.slice(6)); if (after.imp) pendingImport = true; }
+      else state.view = TITLES[after?.view] && after.view !== "shared" ? after.view : "lineup";
     }
     updateBadge(); renderAcct(); const y = scrollY; render(); scrollTo(0, y);
     if (me.pending) { pendingFav = after?.fav || null; openPickUsername(me.pending); }
-    else if (h === "welcome" && state.user) { toast(`Welcome back, ${state.user.display}`); if (after?.fav && !state.favs.has(after.fav)) toggleFav(after.fav); }
+    else if (h === "welcome" && state.user) { toast(`Welcome back, ${state.user.display}`); if (after?.fav && !state.favs.has(after.fav)) toggleFav(after.fav); else if (pendingImport) { pendingImport = false; whenShared(openImport); } }
     else if (h === "signin-error") toast("Google sign-in didn't go through. Try again.");
     loadSocial(); loadSummary();
     if (!bootTimers) { bootTimers = true; setInterval(loadSocial, 30000); }
@@ -1205,7 +1223,7 @@ const closeBtnHTML = `<button class="icon-btn" id="sheetClose" aria-label="Close
 const GOOGLE_G = `<svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>`;
 function takeAfter() { try { const v = JSON.parse(sessionStorage.getItem("tml_after") || "null"); sessionStorage.removeItem("tml_after"); return v; } catch { return null; } }
 function googleStart() {
-  try { sessionStorage.setItem("tml_after", JSON.stringify({ view: state.view, fav: pendingFav })); } catch {}
+  try { sessionStorage.setItem("tml_after", JSON.stringify({ view: state.view, fav: pendingFav, hash: state.view === "shared" ? location.hash : "", imp: pendingImport })); } catch {}
   location.href = "/api/auth/google/start";
 }
 function openPickUsername(p) {
@@ -1258,11 +1276,12 @@ async function submitAuth(form) {
     closeSheet(); renderAcct(); updateBadge(); render(); loadSocial(); loadSummary();
     toast(mode === "login" ? `Welcome back, ${r.user.display}` : `Welcome, ${r.user.display}!`);
     if (pendingFav) { const k = pendingFav; pendingFav = null; toggleFav(k); }
+    else if (pendingImport) { pendingImport = false; whenShared(openImport); }
   } catch (e) { errEl.textContent = e.message; btn.disabled = false; }
 }
 async function logout() {
   try { await api("/api/logout", { method: "POST" }); } catch {}
-  state.user = null; state.favs = new Set(); state.plans = []; chat.sum = {}; updateChatBadge(); closeSheet(); chatDisconnect(); renderAcct(); updateBadge(); render(); toast("Logged out");
+  state.user = null; state.favs = new Set(); state.plans = []; chat.sum = {}; myShare = undefined; updateChatBadge(); closeSheet(); chatDisconnect(); renderAcct(); updateBadge(); render(); toast("Logged out");
 }
 
 // ---------- Saving sets: one pick per time slot ----------
@@ -1439,7 +1458,7 @@ function renderTimeline() {
   const favs = SETS.filter(s => s.day === state.day && state.favs.has(s.key));
   const plans = state.plans.filter(p => p.day === state.day);
   const items = [...favs, ...plans].sort((a,b) => a.start - b.start || a.end - b.end);
-  const tools = `<div class="plan-tools"><button class="btn" data-plan-add="">+ Dining or break</button></div>`;
+  const tools = `<div class="plan-tools">${state.api ? `<button class="btn" data-share="open">${ICON.share}Share my plan</button>` : ""}<button class="btn" data-plan-add="">+ Dining or break</button></div>`;
   if (!items.length) { el.innerHTML = tools + emptyHTML(`Nothing booked on ${dayOf(state.day).short}`, "Tap the heart on a set to book it. You can be at one stage per time slot. Add dining sessions or breaks to block time too.", true); return; }
   let clashes = 0, html = "", maxEnd = null;
   items.forEach((s, i) => {
@@ -1791,31 +1810,32 @@ function refreshFavUI() {
 }
 function rerenderKeepScroll() {
   const y = scrollY, g = $("#gridScroll"), gx = g ? [g.scrollLeft, g.scrollTop] : null, rail = $(".rail"), rx = rail?.scrollLeft;
-  ({ lineup: renderLineup, timeline: renderTimeline, explore: renderExplore, now: renderNow, chat: () => {} })[state.view]();
+  ({ lineup: renderLineup, timeline: renderTimeline, explore: renderExplore, now: renderNow, shared: renderShared, chat: () => {}, profile: () => {}, admin: () => {} })[state.view]();
   scrollTo(0, y); const g2 = $("#gridScroll"); if (g2 && gx) [g2.scrollLeft, g2.scrollTop] = gx; const r2 = $(".rail"); if (r2 && rx != null) r2.scrollLeft = rx;
 }
 
 // ---------- Routing ----------
-const TITLES = { lineup: "Line-up", now: "Now & next", chat: "Chats", timeline: "My timeline", explore: "Explore artists", profile: "Profile", admin: "Admin" };
+const TITLES = { lineup: "Line-up", now: "Now & next", chat: "Chats", timeline: "My timeline", explore: "Explore artists", profile: "Profile", shared: "Shared plan", admin: "Admin" };
 function render() {
   for (const v of Object.keys(TITLES)) $("#v-" + v).hidden = v !== state.view;
   document.querySelectorAll(".tabs a").forEach((a, i) => { if (a.dataset.view === state.view) { a.setAttribute("aria-current", "page"); a.parentNode.style.setProperty("--i", i); } else a.removeAttribute("aria-current"); });
   $("#viewTitle").textContent = TITLES[state.view];
-  $("#days").hidden = !(state.view === "lineup" || state.view === "timeline");
+  $("#days").hidden = !["lineup", "timeline", "shared"].includes(state.view);
   $("#stageChips").hidden = $("#lineupTools").hidden = state.view !== "lineup";
   $("#modeList").setAttribute("aria-pressed", state.mode === "list");
   $("#modeGrid").setAttribute("aria-pressed", state.mode === "grid");
   $("#favOnly").setAttribute("aria-pressed", state.favOnly);
   renderDays(); renderStageChips();
   document.body.classList.toggle("in-convo", state.view === "chat" && !!chat.room && !wide() && !!state.user);
-  ({ lineup: renderLineup, now: renderNow, chat: renderChat, timeline: renderTimeline, explore: renderExplore, profile: renderProfile, admin: renderAdmin })[state.view]();
+  ({ lineup: renderLineup, now: renderNow, chat: renderChat, timeline: renderTimeline, explore: renderExplore, profile: renderProfile, shared: renderShared, admin: renderAdmin })[state.view]();
   if (state.view !== "chat") chatDisconnect();
   document.documentElement.style.setProperty("--hdr", $("#hdr").offsetHeight + "px");
 }
 function route() {
   const h = location.hash.slice(1);
   if (h.startsWith("chat/") && ROOM_RE.test(h.slice(5))) { state.view = "chat"; openRoom(h.slice(5)); }
-  else { state.view = TITLES[h] ? h : "lineup"; if (h === "chat") chat.room = null; }
+  else if (h.startsWith("plan/") && SHARE_RE.test(h.slice(5))) { state.view = "shared"; loadShared(h.slice(5)); }
+  else { state.view = TITLES[h] && h !== "shared" ? h : "lineup"; if (h === "chat") chat.room = null; }
   render(); window.scrollTo(0, 0);
 }
 
@@ -1824,6 +1844,7 @@ document.addEventListener("click", e => {
   const bub = e.target.closest(".bubble[data-msg]"); if (bub) return openMsgMenu(bub.dataset.msg);
   const t = e.target.closest("button, a"); if (!t) return;
   if (t.dataset.fav) return toggleFav(t.dataset.fav);
+  if (t.dataset.share) return shareAction(t.dataset.share, t);
   if (t.dataset.planAdd !== undefined) return openPlanForm(t.dataset.planAdd || "b-eat");
   if (t.dataset.planKind) { const keep = planFormValues(); return openPlanForm(t.dataset.planKind, keep); }
   if (t.dataset.planDel) return removePlan(t.dataset.planDel);
@@ -2222,10 +2243,12 @@ function renderProfile() {
         <a href="#explore"><b>${ARTISTS.size}</b><span>Artists</span></a>
       </div>
     </div>
+    <div class="card" id="shareCard">${shareCardHTML()}</div>
     ${u.admin ? `<a class="card admin-link" href="#admin"><h3>🛡️ Admin panel</h3><p class="note">Reported messages, report counts per person, and bans.</p></a>` : ""}
     ${offlineCardHTML()}
     <button class="btn" data-auth="logout">Log out</button>
   </div>`;
+  loadMyShare();
 }
 
 // ---------- Admin: reports and bans (only for the admin account; the server checks every call) ----------
@@ -2353,7 +2376,225 @@ async function uploadPhoto(file) {
 document.addEventListener("keydown", e => { const b = e.target.closest?.(".bubble[data-msg]"); if (b && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); openMsgMenu(b.dataset.msg); } });
 document.addEventListener("change", e => { if (e.target.id === "photoIn") { uploadPhoto(e.target.files[0]); e.target.value = ""; } });
 
+// ---------- Share your plan: a read-only link (/#plan/<token>) ----------
+// The link shows your booked sets (plus dining and breaks if you allow it) to anyone, no account needed, and always
+// reflects your current plan. Signed-in viewers can add those sets to their own line-up. Revoke or renew it any time.
+const SHARE_RE = /^[A-Za-z0-9_-]{24}$/;
+const shared = { token: null, data: null, error: "", loading: false };
+let pendingImport = false;
+// Run once the shared plan on screen has loaded (after a sign-in, the page may still be fetching it).
+function whenShared(fn) {
+  if (state.view !== "shared") return;
+  if (shared.data) return fn();
+  const t = setInterval(() => { if (!shared.loading) { clearInterval(t); if (shared.data && state.view === "shared") fn(); } }, 150);
+}
+const shareUrl = t => `${location.origin}/#plan/${t}`;
+const sharedMine = () => !!(state.user && shared.data && state.user.id === shared.data.owner.id);
+async function loadShared(token) {
+  if (shared.token === token && (shared.data || shared.loading)) return;
+  Object.assign(shared, { token, data: null, error: "", loading: true });
+  try {
+    const d = await api("/api/shared/" + encodeURIComponent(token));
+    if (shared.token !== token) return;
+    shared.data = d;
+    // Open on the first day they have something, if today's tab is empty for them.
+    const days = new Set([...d.favs.map(k => SETMAP.get(k)?.day), ...d.plans.map(p => p.day)].filter(Boolean));
+    if (days.size && !days.has(state.day)) state.day = DAYS.find(x => days.has(x.id)).id;
+  } catch (e) { if (shared.token === token) shared.error = e.status === 404 ? "This link doesn't work any more. They may have stopped sharing or made a new link." : e.status ? e.message : "Couldn't load this plan. Check your connection."; }
+  shared.loading = false;
+  if (state.view === "shared") render();
+}
+function sharedPlanRow(p, extra = "") {
+  return `<div class="set plan-row"><span class="plan-ico" aria-hidden="true">${PLAN_ICON[p.kind] || ""}</span>
+    <div class="set-main"><span class="set-name">${esc(p.label)}</span><span class="time tnum">${range(p.start, p.end)}</span>
+      <span class="tag" style="width:fit-content">${p.kind === "break" ? "Break" : "Dining"}</span>${extra}</div></div>`;
+}
+function renderShared() {
+  const el = $("#v-shared");
+  if (!shared.data) {
+    el.innerHTML = shared.error
+      ? `<div class="empty"><strong>Plan not available</strong><span>${esc(shared.error)}</span><a class="btn primary" href="#lineup">Browse the line-up</a></div>`
+      : `<div class="empty"><strong>Loading their plan…</strong></div>`;
+    return;
+  }
+  const d = shared.data, o = d.owner, mine = sharedMine();
+  const all = d.favs.map(k => SETMAP.get(k)).filter(Boolean);
+  const sets = all.filter(s => s.day === state.day), plans = d.plans.filter(p => p.day === state.day);
+  const items = [...sets, ...plans].sort((a, b) => a.start - b.start || a.end - b.end);
+  const fresh = all.filter(s => !state.favs.has(s.key)).length;
+  const hero = `<div class="card prof-hero share-hero" style="--c:${esc(o.color)}">
+      <div class="prof-av">${avatar(o.display, o.color, "lg", o.avatar, o.id)}</div>
+      <div style="min-width:0;flex:1">
+        <h2>${esc(o.display)}'s plan</h2>
+        <p class="note">${all.length} set${all.length === 1 ? "" : "s"} across the weekend · view only</p>
+        <div class="share-acts">${mine
+          ? `<button class="btn" data-share="open">Manage sharing</button>`
+          : `<button class="btn primary" data-share="import"${all.length && !fresh && state.user ? " disabled" : ""}>${all.length && !fresh && state.user ? "All in your line-up" : "Add to my line-up"}</button>`}</div>
+      </div>
+    </div>`;
+  const note = mine ? `<p class="note share-note">This is your shared link. It shows your plan as it is now, so it updates when you change your bookings.</p>` : "";
+  if (!items.length) { el.innerHTML = hero + note + emptyHTML(`Nothing booked on ${dayOf(state.day).short}`, all.length ? "Try another day." : `${o.display} hasn't booked any sets yet.`); return; }
+  let html = "", maxEnd = null;
+  for (const s of items) {
+    if (maxEnd != null && s.start - maxEnd >= 15) html += `<div class="gap tnum">${dur(s.start - maxEnd)} free</div>`;
+    const extra = s.artists && state.favs.has(s.key) && !mine ? `<span class="tag" style="width:fit-content">In your line-up too</span>` : "";
+    html += `<div class="tl-item"><div class="tl-time tnum">${fmt(s.start)}<small>${fmt(s.end)}</small></div><div class="rows" style="grid-template-columns:1fr">${s.artists ? setRow(s, { extra }) : sharedPlanRow(s)}</div></div>`;
+    maxEnd = Math.max(maxEnd ?? 0, s.end);
+  }
+  el.innerHTML = hero + note + `<div class="day-summary"><span class="tag">${sets.length} set${sets.length === 1 ? "" : "s"} on ${esc(dayOf(state.day).short)}</span>${plans.length ? `<span class="tag">${plans.length} dining/break${plans.length > 1 ? "s" : ""}</span>` : ""}</div><div class="tl">${html}</div>`;
+}
+
+// Import someone's plan into yours. Sets you already have are left alone; sets that clash with your own dining or
+// breaks are skipped; sets that clash with your booked sets are skipped, or swapped in if you choose.
+function importPlan() {
+  const d = shared.data; if (!d) return null;
+  const sets = d.favs.map(k => SETMAP.get(k)).filter(Boolean).sort((a, b) => a.day.localeCompare(b.day) || a.start - b.start);
+  const have = sets.filter(s => state.favs.has(s.key)), rest = sets.filter(s => !state.favs.has(s.key));
+  const free = [], swap = [], blocked = [];
+  for (const s of rest) {
+    if (planClashes(s).length) blocked.push(s);
+    else if (conflictsOf(s).length) swap.push(s);
+    else free.push(s);
+  }
+  const same = (a, b) => a.day === b.day && a.start === b.start && a.end === b.end && a.label === b.label;
+  const plans = d.plans.filter(p => !state.plans.some(m => same(m, p)));
+  return { sets, have, free, swap, blocked, plans };
+}
+function openImport() {
+  if (!shared.data) return;
+  if (state.api && offlineBlock()) return;
+  if (state.api && !state.user) { pendingImport = true; return openAuth("signup", `Sign up to add ${shared.data.owner.display}'s sets to your line-up.`); }
+  if (sharedMine()) return toast("This is your own plan");
+  const m = importPlan(), who = esc(shared.data.owner.display);
+  const when = s => `${esc(dayOf(s.day).short)} ${range(s.start, s.end)}`;
+  const li = (s, why) => `<li><b>${esc(nameText(s))}</b> <span class="hint">${when(s)} · ${why}</span></li>`;
+  const clashList = [...m.swap.map(s => li(s, "you have " + esc(conflictsOf(s).map(nameText).join(", ")))),
+    ...m.blocked.map(s => li(s, "your " + esc(planClashes(s).map(p => p.label).join(", "))))].join("");
+  const n = m.free.length;
+  openSheetHTML(`<div class="auth" style="position:relative">${closeBtnHTML}
+    <h2>Add ${who}'s sets</h2>
+    <p>${n ? `<b>${n}</b> set${n === 1 ? "" : "s"} fit${n === 1 ? "s" : ""} straight into your line-up.` : "None of their sets fit into free time in your line-up."}${m.have.length ? ` You already have ${m.have.length}.` : ""}</p>
+    ${clashList ? `<p>${m.swap.length + m.blocked.length} clash with your plan:</p><ul class="imp-list">${clashList}</ul>` : ""}
+    ${m.blocked.length ? `<p class="hint">Sets that overlap your own dining or breaks are always skipped.</p>` : ""}
+    <form id="importForm" class="swap" novalidate>
+      ${m.plans.length ? `<label class="check"><input type="checkbox" id="impPlans"> Also add their dining and breaks (${m.plans.length})</label>` : ""}
+      <span class="err" id="impErr" role="alert"></span>
+      ${n || !m.swap.length ? `<button class="btn primary" type="submit" data-mode="skip"${!n && !m.plans.length ? " disabled" : ""}>${m.swap.length ? `Add ${n} and skip clashes` : n ? `Add ${n} set${n === 1 ? "" : "s"}` : "Add"}</button>` : ""}
+      ${m.swap.length ? `<button class="btn${n ? "" : " primary"}" type="submit" data-mode="swap">Add ${n + m.swap.length}, swapping out my ${m.swap.length} clashing set${m.swap.length === 1 ? "" : "s"}</button>` : ""}
+      <button class="btn" type="button" data-auth="close">Cancel</button>
+    </form>
+  </div>`);
+}
+async function submitImport(form, mode) {
+  const m = importPlan(); if (!m) return;
+  const errEl = $("#impErr"); errEl.textContent = "";
+  const add = m.free.map(s => s.key), remove = new Set();
+  if (mode === "swap") for (const s of m.swap) { conflictsOf(s).forEach(c => remove.add(c.key)); add.push(s.key); }
+  const withPlans = !!$("#impPlans")?.checked;
+  form.querySelectorAll("button").forEach(b => b.disabled = true);
+  let planErr = "", planN = 0;
+  if (withPlans) for (const p of m.plans) {
+    try { await persistPlan({ add: { day: p.day, start: p.start, end: p.end, kind: p.kind, label: p.label } }); planN++; }
+    catch (e) { planErr = e.message; break; }
+  }
+  if (add.length || remove.size) await persistFavs(add, [...remove].filter(k => !add.includes(k)));
+  closeSheet();
+  const bits = [`Added ${add.length} set${add.length === 1 ? "" : "s"}`];
+  if (remove.size) bits.push(`swapped ${remove.size}`);
+  if (planN) bits.push(`${planN} dining/break${planN > 1 ? "s" : ""}`);
+  toast(planErr ? `${bits.join(" · ")}. ${planErr}` : bits.join(" · "));
+  if (state.view === "shared") renderShared();
+}
+
+// Your link: create, share, copy, renew, stop.
+async function openShare() {
+  if (state.api && offlineBlock()) return;
+  if (!state.api) return toast("Sharing works on the tmlunofficial website");
+  if (!state.user) return openAuth("signup", "Sign up to share your plan with friends.");
+  openSheetHTML(`<div class="auth" style="position:relative">${closeBtnHTML}<h2>Share my plan</h2><p>Loading…</p></div>`);
+  try { renderShareSheet((await api("/api/share")).share); } catch (e) { toast(e.message); closeSheet(); }
+}
+// Profile: see at a glance whether your plan is shared, copy the link, or stop sharing (two taps).
+let myShare; // undefined = not checked yet, null = not shared, { token, withPlans }
+async function loadMyShare() {
+  if (!state.user || state.offline) return;
+  try { myShare = (await api("/api/share")).share; } catch { return; }
+  const c = $("#shareCard"); if (c) c.innerHTML = shareCardHTML();
+}
+function shareCardHTML(confirm) {
+  if (myShare === undefined) return `<h3>Sharing</h3><p>Checking…</p>`;
+  if (!myShare) return `<h3>Sharing</h3><p>Your plan isn't shared. Only you can see it.</p><button class="btn" data-share="open">${ICON.share}Share my plan</button>`;
+  return `<h3>Sharing <span class="tag share-on">On</span></h3>
+    <p>Anyone with your link can view your sets${myShare.withPlans ? ", dining and breaks" : ""}. Stop sharing and the link stops working straight away.</p>
+    <code class="share-link">${esc(shareUrl(myShare.token).replace(/^https?:\/\//, ""))}</code>
+    <div class="share-acts" style="margin-top:0">
+      <button class="btn" data-share="copy-card">Copy link</button>
+      <button class="btn" data-share="open">Manage</button>
+      <button class="btn danger" data-share="${confirm ? "revoke-card-yes" : "revoke-card"}">${confirm ? "Tap again to stop" : "Stop sharing"}</button>
+    </div>`;
+}
+function renderShareSheet(share) {
+  myShare = share; { const c = $("#shareCard"); if (c) c.innerHTML = shareCardHTML(); }
+  const intro = `<p>Anyone with the link can see the sets you've booked, without signing in, and add them to their own line-up. They can't change your plan.</p>`;
+  const plansBox = on => `<label class="check"><input type="checkbox" id="shPlans"${on ? " checked" : ""}> Include my dining and breaks</label>`;
+  const body = share
+    ? `${intro}
+      <label>Your link<input class="field" id="shUrl" readonly value="${esc(shareUrl(share.token))}"></label>
+      <div class="swap">
+        ${navigator.share ? `<button class="btn primary" data-share="native">Share…</button>` : ""}
+        <button class="btn${navigator.share ? "" : " primary"}" data-share="copy">Copy link</button>
+        ${plansBox(share.withPlans)}
+        <a class="btn" href="#plan/${esc(share.token)}" data-auth="close">See what they see</a>
+        <button class="btn" data-share="regenerate">Get a new link</button>
+        <p class="hint">A new link stops the old one working. Use it if the link reached people you didn't mean to share with.</p>
+        <button class="btn danger" data-share="revoke">Stop sharing</button>
+      </div>`
+    : `${intro}<div class="swap">${plansBox(true)}<button class="btn primary" data-share="create">Create my link</button></div>`;
+  const y = $("#sheet").scrollTop;
+  $("#sheet").innerHTML = `<div class="auth" style="position:relative">${closeBtnHTML}<h2>Share my plan</h2>${body}</div>`;
+  $("#sheet").scrollTop = y;
+}
+async function shareAction(a, t) {
+  const url = $("#shUrl")?.value;
+  if (a === "open") return openShare();
+  if (a === "copy-card") {
+    const u = shareUrl(myShare.token);
+    try { await navigator.clipboard.writeText(u); toast("Link copied"); } catch { toast("Open Manage to copy the link"); }
+    return;
+  }
+  if (a === "revoke-card") { $("#shareCard").innerHTML = shareCardHTML(true); return; }
+  if (a === "revoke-card-yes") {
+    if (offlineBlock()) return;
+    try { myShare = (await api("/api/share", { method: "POST", body: { action: "revoke" } })).share; toast("Sharing stopped. The link no longer works."); }
+    catch (e) { toast(e.message); }
+    const c = $("#shareCard"); if (c) c.innerHTML = shareCardHTML();
+    return;
+  }
+  if (a === "import") return openImport();
+  if (a === "native") {
+    try { await navigator.share({ title: `${state.user.display}'s TML plan`, text: "Here's who I'm seeing at Tomorrowland Thailand. Open it to add my sets to your line-up.", url }); }
+    catch (e) { if (e?.name !== "AbortError") shareAction("copy"); }
+    return;
+  }
+  if (a === "copy") {
+    try { await navigator.clipboard.writeText(url); toast("Link copied"); }
+    catch { const i = $("#shUrl"); i?.focus(); i?.select(); try { document.execCommand("copy"); toast("Link copied"); } catch { toast("Select the link to copy it"); } }
+    return;
+  }
+  if (["create", "regenerate", "revoke", "update"].includes(a)) {
+    if (offlineBlock()) return;
+    if (t) t.disabled = true;
+    try {
+      const r = await api("/api/share", { method: "POST", body: { action: a, withPlans: $("#shPlans") ? $("#shPlans").checked : true } });
+      renderShareSheet(r.share);
+      toast({ create: "Link ready", regenerate: "New link ready. The old one no longer works.", revoke: "Sharing stopped. The link no longer works.", update: $("#shPlans")?.checked ? "Dining and breaks are shown" : "Dining and breaks are hidden" }[a]);
+    } catch (e) { toast(e.message); if (t) t.disabled = false; }
+  }
+}
+document.addEventListener("change", e => { if (e.target.id === "shPlans" && $("#shUrl")) shareAction("update"); });
+
 document.addEventListener("submit", e => {
+  if (e.target.id === "importForm") { e.preventDefault(); submitImport(e.target, e.submitter?.dataset.mode || "skip"); return; }
   if (e.target.id === "authForm") { e.preventDefault(); submitAuth(e.target); return; }
   if (e.target.id === "planForm") { e.preventDefault(); submitPlan(e.target); return; }
   if (e.target.id === "reportForm") { e.preventDefault(); sendReport(e.target); return; }

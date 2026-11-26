@@ -15,6 +15,8 @@ const DAY_RE = /^2026-12-1[123]$/;
 // festival day, like the line-up (so 00:30 the next morning is 24*60+30).
 const PLAN_KINDS = ["b-eat", "papillon", "break"];
 const MAX_PLANS = 30;
+// Read-only share links: /#plan/<token>. 18 random bytes, base64url (144 bits), so links can't be guessed.
+const SHARE_RE = /^[A-Za-z0-9_-]{24}$/;
 const COLORS = ["#F5A524", "#FF6370", "#4CC9DE", "#9D83FF", "#5BC26E", "#FF5F9E", "#C49A86", "#3B82F6", "#14B8A6", "#EAB308"];
 
 const json = (data, init = {}) => new Response(JSON.stringify(data), { ...init, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store", ...(init.headers || {}) } });
@@ -131,6 +133,21 @@ export default {
         if (!r) return err(401, "Sign in to block time");
         if (r.error) return err(400, r.error);
         return json(r);
+      }
+      // ----- Share your plan as a read-only link -----
+      if (p === "/api/share" && (req.method === "GET" || req.method === "POST")) {
+        const b = req.method === "POST" ? await body() : {};
+        const r = token ? await hub.myShare(token, req.method === "POST" ? String(b.action || "") : "", b) : null;
+        if (!r) return err(401, "Sign in to share your plan");
+        if (r.error) return err(400, r.error);
+        return json(r);
+      }
+      const sh = p.match(/^\/api\/shared\/([^/]+)$/);
+      if (sh && req.method === "GET") {
+        if (!SHARE_RE.test(sh[1])) return err(404, "This link doesn't work any more.");
+        const r = await hub.shared(sh[1], token);
+        if (!r) return err(404, "This link doesn't work any more.");
+        return json(r, { headers: { "x-robots-tag": "noindex" } });
       }
       if (p === "/api/profile" && req.method === "POST") {
         const b = await body();
@@ -276,6 +293,7 @@ export class Hub extends DurableObject {
       UNIQUE (reporter_id, room, msg_id))`);
     this.sql.exec("CREATE INDEX IF NOT EXISTS reports_by_target ON reports (target_id, ts)");
     this.sql.exec("CREATE TABLE IF NOT EXISTS photos (user_id INTEGER PRIMARY KEY, type TEXT NOT NULL, data TEXT NOT NULL)");
+    this.sql.exec("CREATE TABLE IF NOT EXISTS shares (user_id INTEGER PRIMARY KEY, token TEXT UNIQUE NOT NULL, with_plans INTEGER NOT NULL DEFAULT 1, created INTEGER NOT NULL)");
     this.sql.exec("CREATE UNIQUE INDEX IF NOT EXISTS users_by_google ON users (google_sub) WHERE google_sub IS NOT NULL");
     this.socialCache = null;
   }
@@ -503,6 +521,32 @@ export class Hub extends DurableObject {
     const data = { sets, users: this.sql.exec("SELECT COUNT(*) AS n FROM users").one().n };
     this.socialCache = { at: Date.now(), data };
     return data;
+  }
+
+  // Your share link. action: "" (read), "create", "regenerate" (old link stops working), "revoke", "update" ({ withPlans }).
+  async myShare(token, action, b = {}) {
+    const u = await this.userFor(token);
+    if (!u) return null;
+    const row = () => this.sql.exec("SELECT token, with_plans FROM shares WHERE user_id = ?", u.id).toArray()[0];
+    const newToken = () => btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(18)))).replace(/\+/g, "-").replace(/\//g, "_");
+    const withPlans = b.withPlans === undefined ? null : b.withPlans ? 1 : 0;
+    if (action === "create" || action === "regenerate") {
+      const cur = row();
+      if (cur && action === "create") { if (withPlans != null) this.sql.exec("UPDATE shares SET with_plans = ? WHERE user_id = ?", withPlans, u.id); }
+      else this.sql.exec("INSERT OR REPLACE INTO shares (user_id, token, with_plans, created) VALUES (?, ?, ?, ?)", u.id, newToken(), withPlans ?? cur?.with_plans ?? 1, Date.now());
+    } else if (action === "revoke") this.sql.exec("DELETE FROM shares WHERE user_id = ?", u.id);
+    else if (action === "update") { if (withPlans != null) this.sql.exec("UPDATE shares SET with_plans = ? WHERE user_id = ?", withPlans, u.id); }
+    else if (action) return { error: "Unknown action." };
+    const r = row();
+    return { share: r ? { token: r.token, withPlans: !!r.with_plans } : null };
+  }
+  // What anyone with the link sees: name, avatar, booked sets and (if the owner allows) dining and breaks. Always live.
+  async shared(shareToken, viewerToken) {
+    const s = this.sql.exec("SELECT s.with_plans, u.id, u.display, u.color, u.avatar FROM shares s JOIN users u ON u.id = s.user_id WHERE s.token = ?", shareToken).toArray()[0];
+    if (!s) return null;
+    const viewer = viewerToken ? await this.userFor(viewerToken) : null;
+    const plans = s.with_plans ? this.plansOf(s.id).map(({ day, start, end, kind, label }) => ({ day, start, end, kind, label })) : [];
+    return { owner: { id: s.id, display: s.display, color: s.color, avatar: s.avatar || "" }, mine: viewer?.id === s.id, favs: this.favsOf(s.id), plans };
   }
 
   going(key) {
