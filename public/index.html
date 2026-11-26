@@ -139,10 +139,11 @@ main { padding-block: 6px calc(var(--tab-h) + var(--player-h) + env(safe-area-in
 .set.is-fav { border-color: color-mix(in srgb, var(--heart) 45%, var(--line)); }
 
 /* Timetable grid */
-.grid-scroll { overflow: auto; border: 1px solid var(--line); border-radius: var(--r); background: var(--surface); max-height: calc(100dvh - 250px - var(--player-h)); min-height: 420px; position: relative; margin-top: 4px; }
+.grid-scroll { overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; border: 1px solid var(--line); border-radius: var(--r); background: var(--surface); position: relative; margin-top: 4px; }
 .grid { display: grid; grid-template-columns: 58px repeat(var(--cols), minmax(158px, 1fr)); min-width: min-content; position: relative; }
-.g-head { position: sticky; top: 0; z-index: 8; background: var(--surface); border-bottom: 1px solid var(--line); padding: 10px 8px; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; display: flex; gap: 6px; align-items: center; min-height: 46px; }
-.g-head.corner { left: 0; z-index: 9; }
+.g-head { position: relative; z-index: 8; will-change: transform; background: var(--surface); border-bottom: 1px solid var(--line); padding: 10px 8px; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; display: flex; gap: 6px; align-items: center; min-height: 46px; }
+.g-head.corner { position: sticky; left: 0; z-index: 9; }
+.grid-scroll .g-head { transform: translateY(var(--hy, 0px)); box-shadow: 0 -24px 0 var(--surface); }
 .g-times { position: sticky; left: 0; z-index: 7; background: var(--surface); border-right: 1px solid var(--line); }
 .g-times span { position: absolute; left: 0; right: 0; text-align: center; font-size: 11px; font-weight: 600; color: var(--muted); transform: translateY(-50%); }
 .g-col { position: relative; border-right: 1px solid var(--line); background-image: repeating-linear-gradient(to bottom, var(--line) 0 1px, transparent 1px calc(var(--ppm) * 60px)); background-position: 0 8px; }
@@ -493,8 +494,8 @@ footer.foot { margin-top: 32px; font-size: 12.5px; color: var(--muted); text-ali
    All motion is transform/opacity only; paused when hidden; static with reduced motion. */
 :root {
   --bg: #FBF7EE; --surface: #FFFDF8; --surface-2: #F3EDDF; --line: #1D1B19; --fg: #1D1B19; --muted: #6B655B;
-  --accent: #2F5BEA; --accent-soft: #FFF1A8; --accent-ink: #FFFFFF; --heart: #E8475F;
-  --ink: #1D1B19; --paper-dot: #D9D1BF; --hi: #FFE45C; --pink: #FF9EBB; --mint: #8EE3BF; --sky: #9CC8FF;
+  --accent: #2F5BEA; --accent-soft: #ECE5FF; --accent-ink: #FFFFFF; --heart: #E8475F;
+  --ink: #1D1B19; --paper-dot: #D9D1BF; --hi: #CDBDFF; --pink: #FF9EBB; --mint: #8EE3BF; --sky: #9CC8FF;
   --glass: #FFFDF8;
   --font-display: "Caveat", "Patrick Hand", "Chalkboard SE", "Segoe Print", "Comic Sans MS", cursive;
   --font-hand: "Patrick Hand", "Chalkboard SE", "Segoe Print", "Comic Sans MS", system-ui, sans-serif;
@@ -506,18 +507,18 @@ footer.foot { margin-top: 32px; font-size: 12.5px; color: var(--muted); text-ali
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
   --bg: #121214; --surface: #1C1C20; --surface-2: #26262B; --line: #F1EDE3; --fg: #F6F3EA; --muted: #BDB8AD;
-  --accent: #FFD84D; --accent-soft: #3A3216; --accent-ink: #121214; --heart: #FF8FA3;
-  --ink: #F1EDE3; --paper-dot: #2A2A30; --hi: #FFD84D; --pink: #F48FB1; --mint: #5ED3B5; --sky: #7FB2FF;
+  --accent: #B9A6FF; --accent-soft: #2C2640; --accent-ink: #121214; --heart: #FF8FA3;
+  --ink: #F1EDE3; --paper-dot: #2A2A30; --hi: #B9A6FF; --pink: #F48FB1; --mint: #5ED3B5; --sky: #7FB2FF;
   --glass: #1C1C20; --pop: 3px 4px 0 #000;
-  --grad: linear-gradient(transparent 30%, #FFD84D 30% 94%, transparent 94%); --hi-ink: #1D1B19;
+  --grad: linear-gradient(transparent 30%, #B9A6FF 30% 94%, transparent 94%); --hi-ink: #1D1B19;
   color-scheme: dark;
 } }
 :root[data-theme="dark"] {
   --bg: #121214; --surface: #1C1C20; --surface-2: #26262B; --line: #F1EDE3; --fg: #F6F3EA; --muted: #BDB8AD;
-  --accent: #FFD84D; --accent-soft: #3A3216; --accent-ink: #121214; --heart: #FF8FA3;
-  --ink: #F1EDE3; --paper-dot: #2A2A30; --hi: #FFD84D; --pink: #F48FB1; --mint: #5ED3B5; --sky: #7FB2FF;
+  --accent: #B9A6FF; --accent-soft: #2C2640; --accent-ink: #121214; --heart: #FF8FA3;
+  --ink: #F1EDE3; --paper-dot: #2A2A30; --hi: #B9A6FF; --pink: #F48FB1; --mint: #5ED3B5; --sky: #7FB2FF;
   --glass: #1C1C20; --pop: 3px 4px 0 #000;
-  --grad: linear-gradient(transparent 30%, #FFD84D 30% 94%, transparent 94%); --hi-ink: #1D1B19;
+  --grad: linear-gradient(transparent 30%, #B9A6FF 30% 94%, transparent 94%); --hi-ink: #1D1B19;
   color-scheme: dark;
 }
 
@@ -2140,6 +2141,24 @@ setInterval(() => { if (state.view === "now" && festivalMoment()?.live) renderNo
     if (el.getBoundingClientRect().top < innerHeight) el.classList.add("in"); else io.observe(el); }); ask(); };
   new MutationObserver(scan).observe(document.querySelector("main"), { childList: true, subtree: true });
   scan();
+})();
+</script>
+<script>
+// Timetable: the page scrolls up and down, the grid only scrolls sideways. Keep the stage names pinned under the header
+// by sliding the header row down as the grid passes under it (one CSS variable write per frame, only on the timetable).
+(() => {
+  let queued = false;
+  const pin = () => {
+    queued = false;
+    const g = document.getElementById("gridScroll"); if (!g || !g.offsetParent) return;
+    const hdr = document.querySelector("header.top"), top = hdr ? hdr.getBoundingClientRect().bottom : 0;
+    const r = g.getBoundingClientRect(), head = g.querySelector(".g-head"), hh = head ? head.offsetHeight : 46;
+    const y = Math.max(0, Math.min(top - r.top, r.height - hh - 60));
+    g.style.setProperty("--hy", y + "px");
+  };
+  const q = () => { if (!queued) { queued = true; requestAnimationFrame(pin); } };
+  addEventListener("scroll", q, { passive: true }); addEventListener("resize", q);
+  new MutationObserver(q).observe(document.body, { childList: true, subtree: true });
 })();
 </script>
 </body>
