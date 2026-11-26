@@ -210,6 +210,8 @@ export class ChatRoom extends DurableObject {
     super(ctx, env);
     this.sql = ctx.storage.sql;
     this.sql.exec(`CREATE TABLE IF NOT EXISTS msgs (id INTEGER PRIMARY KEY AUTOINCREMENT, ts INTEGER NOT NULL, uid TEXT NOT NULL, name TEXT NOT NULL, color TEXT NOT NULL DEFAULT '', text TEXT NOT NULL)`);
+    // Rooms created by the first version have no color column yet.
+    if (!this.sql.exec("PRAGMA table_info(msgs)").toArray().some(c => c.name === "color")) this.sql.exec("ALTER TABLE msgs ADD COLUMN color TEXT NOT NULL DEFAULT ''");
   }
   open() { return this.ctx.getWebSockets().filter(ws => ws.readyState === WebSocket.OPEN); }
   broadcast(obj, except) { const d = JSON.stringify(obj); for (const ws of this.open()) if (ws !== except) { try { ws.send(d); } catch {} } }
