@@ -6,9 +6,16 @@
 <meta name="theme-color" content="#0D0B14">
 <meta name="description" content="Unofficial Tomorrowland Thailand 2026 line-up: timetable, book your sets, see who is going, live chat.">
 <title>TML Unofficial · Tomorrowland Thailand 2026 Line-up</title>
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="TML">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;800&family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" crossorigin="anonymous" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;800&family=Inter:wght@400;500;600;700&display=swap">
 <style>
 /* Layout: app shell for one-handed use. Compact sticky header, headliner carousel, artwork-led set cards, mini player + tab bar pinned to the bottom. */
 :root {
@@ -441,6 +448,17 @@ body.in-convo .convo { position: fixed; z-index: 20; left: 0; right: 0; top: 0; 
 .toast.show { opacity: 1; transform: translate(-50%, 0); }
 .toast.up { bottom: auto; top: calc(env(safe-area-inset-top, 0px) + 16px); }
 
+.off-pill { display: inline-flex; align-items: center; gap: 5px; margin-left: 8px; padding: 2px 8px; border-radius: 99px; background: var(--surface-2); color: var(--muted); font: 600 11px/1.5 var(--font-body); vertical-align: middle; letter-spacing: 0; }
+.off-pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--muted); }
+.install { position: fixed; z-index: 45; left: 12px; right: 12px; max-width: 460px; margin: 0 auto; bottom: calc(var(--tab-h) + var(--player-h) + env(safe-area-inset-bottom, 0px) + 12px); display: flex; align-items: center; gap: 12px; padding: 12px 12px 12px 14px; border-radius: 18px; background: var(--surface); color: var(--fg); box-shadow: var(--shadow), 0 0 0 1px var(--line); font-size: 13.5px; line-height: 1.4; }
+.install img { width: 40px; height: 40px; border-radius: 10px; flex: none; }
+.install p { margin: 0; flex: 1; min-width: 0; }
+.install b { font-weight: 700; }
+.install .share { display: inline-block; width: 16px; height: 16px; vertical-align: -3px; color: var(--accent); }
+.install .x { flex: none; width: 30px; height: 30px; border-radius: 50%; border: 0; background: var(--surface-2); color: var(--muted); display: grid; place-items: center; cursor: pointer; }
+.install .x svg { width: 14px; height: 14px; }
+.install .btn { flex: none; }
+.offline-list { margin: 8px 0 0; padding-left: 18px; color: var(--muted); font-size: 13.5px; }
 footer.foot { margin-top: 32px; font-size: 12.5px; color: var(--muted); text-align: center; display: flex; flex-direction: column; gap: 4px; }
 
 @media (min-width: 720px) {
@@ -469,7 +487,7 @@ footer.foot { margin-top: 32px; font-size: 12.5px; color: var(--muted); text-ali
     <div class="brand-row">
       <div>
         <div class="eyebrow">Tomorrowland Thailand · 11–13 Dec</div>
-        <h1 id="viewTitle">Line-up</h1>
+        <h1><span id="viewTitle">Line-up</span><span class="off-pill" id="offPill" hidden>Offline</span></h1>
       </div>
       <div class="hdr-actions">
         <span id="acctSlot"></span>
@@ -514,6 +532,7 @@ footer.foot { margin-top: 32px; font-size: 12.5px; color: var(--muted); text-ali
 
 <div class="player" id="player" hidden></div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div class="install" id="install" role="region" aria-label="Install the app" hidden></div>
 
 <nav class="tabs" aria-label="Sections">
   <div class="tabs-inner">
@@ -774,7 +793,7 @@ const state = {
   mode: store.get("mode", window.matchMedia("(min-width: 900px)").matches ? "grid" : "list"),
   favOnly: false,
   favs: new Set(store.get("favs", [])),
-  user: null, api: false, social: { sets: {} },
+  user: null, api: false, offline: false, social: { sets: {} },
   q: "", genre: "all",
   preview: null,
   playing: null, // artist slug in the mini player
@@ -842,14 +861,32 @@ async function loadSocial() {
   if (!state.api) return;
   try { state.social = await api("/api/social"); if (["lineup", "timeline"].includes(state.view)) rerenderKeepScroll(); } catch {}
 }
+// Last known account + bookings, so the home-screen app still shows your sets with no network.
+function saveMe() {
+  if (!state.api || state.offline) return;
+  store.set("me", { user: state.user, favs: state.user ? [...state.favs] : [], google: !!state.google, at: Date.now() });
+}
+function setOffline(on) {
+  state.offline = on;
+  const p = $("#offPill"); if (p) p.hidden = !on;
+  document.documentElement.classList.toggle("is-offline", on);
+}
+function offlineBlock() {
+  if (!state.offline && navigator.onLine !== false) return false;
+  toast("You're offline. Booking needs a connection.");
+  return true;
+}
+let bootTimers = false;
 async function boot() {
   if (!/^https?:$/.test(location.protocol)) return;
   try {
     const me = await api("/api/me");
+    setOffline(false);
     state.api = true;
     state.google = !!me.google;
     if (me.user) { state.user = me.user; state.favs = new Set(me.favs); }
-    else state.favs = new Set();
+    else { state.user = null; state.favs = new Set(); }
+    saveMe(); store.set("syncedAt", Date.now());
     // Back from Google: restore where the person was, then finish whatever they were doing.
     const h = location.hash.slice(1), after = takeAfter();
     if (["welcome", "pick-username", "signin-error"].includes(h)) {
@@ -860,10 +897,21 @@ async function boot() {
     if (me.pending) { pendingFav = after?.fav || null; openPickUsername(me.pending); }
     else if (h === "welcome" && state.user) { toast(`Welcome back, ${state.user.display}`); if (after?.fav && !state.favs.has(after.fav)) toggleFav(after.fav); }
     else if (h === "signin-error") toast("Google sign-in didn't go through. Try again.");
-    loadSocial(); setInterval(loadSocial, 30000); loadSummary();
-  } catch { /* no server here: favourites stay on this device */ }
+    loadSocial(); loadSummary();
+    if (!bootTimers) { bootTimers = true; setInterval(loadSocial, 30000); }
+  } catch (e) {
+    if (e.status) return; /* server answered with an error: favourites stay on this device */
+    // No network: use the copy saved on the last online visit.
+    const me = store.get("me", null);
+    setOffline(true);
+    if (me) { state.api = true; state.google = me.google; state.user = me.user; state.favs = new Set(me.user ? me.favs : []); }
+    updateBadge(); renderAcct(); const y = scrollY; render(); scrollTo(0, y);
+  }
 }
+addEventListener("online", () => { if (state.offline || !state.api) boot(); else setOffline(false); if (!PLAYERS_LOADED) loadRemote(); });
+addEventListener("offline", () => { setOffline(true); if (["chat", "profile"].includes(state.view)) render(); });
 function renderAcct() {
+  saveMe();
   const slot = $("#acctSlot"); if (!slot) return;
   if (!state.api) { slot.innerHTML = ""; return; }
   slot.innerHTML = state.user
@@ -959,6 +1007,7 @@ async function persistFavs(add, remove) {
 }
 function toggleFav(key) {
   const s = SETMAP.get(key); if (!s) return;
+  if (state.api && offlineBlock()) return;
   if (state.api && !state.user) { pendingFav = key; return openAuth("signup", `Sign up to save ${nameText(s)} and see who else is going.`); }
   if (state.favs.has(key)) { persistFavs([], [key]); toast("Removed from your timeline"); return; }
   const clash = conflictsOf(s);
@@ -984,7 +1033,7 @@ function renderStageChips() {
   $("#stageChips").innerHTML = `<button class="chip" data-stage="all" aria-pressed="${state.stage === "all"}">All stages</button>` +
     STAGES.map(([id,name,c]) => `<button class="chip" style="--c:var(${c})" data-stage="${id}" aria-pressed="${state.stage === id}"><span class="dot"></span>${esc(name)}</button>`).join("");
 }
-function updateBadge() { const b = $("#favBadge"); b.hidden = !state.favs.size; b.textContent = state.favs.size; }
+function updateBadge() { const b = $("#favBadge"); b.hidden = !state.favs.size; b.textContent = state.favs.size; saveMe(); }
 
 // ---------- Line-up ----------
 function setRow(set, opts = {}) {
@@ -1242,6 +1291,7 @@ function syncPlayButtons() {
   });
 }
 function play(slug) {
+  if (state.playing !== slug && navigator.onLine === false) return toast("Previews need an internet connection");
   state.minimized = false;
   state.playing = state.playing === slug ? null : slug;
   renderPlayer(); syncPlayButtons();
@@ -1297,6 +1347,7 @@ function route() {
 document.addEventListener("click", e => {
   const t = e.target.closest("button, a"); if (!t) return;
   if (t.dataset.fav) return toggleFav(t.dataset.fav);
+  if ((t.dataset.swap || t.dataset.favArtist) && state.api && offlineBlock()) return;
   if (t.dataset.swap) { const s = SETMAP.get(t.dataset.swap); const clash = conflictsOf(s).map(c => c.key); closeSheet(); persistFavs([s.key], clash); toast(`Swapped to ${nameText(s)}`); return; }
   if (t.dataset.auth) {
     const a = t.dataset.auth;
@@ -1531,6 +1582,7 @@ function convoHTML() {
 }
 function renderChat() {
   const el = $("#v-chat");
+  if (state.offline && state.api) { el.innerHTML = `<div class="card"><h3>You're offline</h3><p>Chats come back as soon as you reconnect. Your line-up, saved sets and Now &amp; next all work without a connection.</p></div>`; chatDisconnect(); return; }
   if (!chatSupported()) { el.innerHTML = `<div class="card"><h3>Chat lives on the website</h3><p>Open the tmlunofficial site to chat with everyone and with fans of each artist.</p></div>`; return; }
   if (!state.user) { el.innerHTML = `<div class="card"><h3>Sign up to chat</h3><p>Talk with everyone at the festival, or join the room for each artist you're seeing. Browsing the line-up stays free without an account.</p><button class="btn primary" data-auth="signup">Create an account</button><button class="btn" data-auth="login">Log in</button></div>`; return; }
   if (!chat.room && wide()) chat.room = "general";
@@ -1566,9 +1618,10 @@ const AV_EMOJI = ["🎧", "🪩", "🔊", "🔥", "⚡", "🌈", "🦄", "🌙",
 const CAM = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>`;
 function renderProfile() {
   const el = $("#v-profile");
+  if (state.offline && state.api) { el.innerHTML = `<div class="profile">${state.user ? `<div class="card prof-hero" style="--c:${esc(state.user.color)}"><div class="prof-av">${meAvatar("xl")}</div><div style="min-width:0"><h2>${esc(state.user.display)}</h2><p class="note">@${esc(state.user.username)}</p></div></div>` : ""}<div class="card"><h3>You're offline</h3><p>You can edit your profile when you're back online.</p></div>${offlineCardHTML()}</div>`; return; }
   if (!state.api) { el.innerHTML = `<div class="card"><h3>Profiles live on the website</h3><p>Open the tmlunofficial site to set up your profile.</p></div>`; return; }
   if (!state.user) {
-    el.innerHTML = `<div class="profile"><div class="card"><h3>Make it yours</h3><p>Create a profile to save your sets, pick an avatar or photo, see who else is going and chat with other ravers.</p><button class="btn primary" data-auth="signup">Create an account</button><button class="btn" data-auth="login">Log in</button></div></div>`;
+    el.innerHTML = `<div class="profile"><div class="card"><h3>Make it yours</h3><p>Create a profile to save your sets, pick an avatar or photo, see who else is going and chat with other ravers.</p><button class="btn primary" data-auth="signup">Create an account</button><button class="btn" data-auth="login">Log in</button></div>${offlineCardHTML()}</div>`;
     return;
   }
   const u = state.user, av = u.avatar || "", rooms = myRooms();
@@ -1603,6 +1656,7 @@ function renderProfile() {
         <a href="#explore"><b>${ARTISTS.size}</b><span>Artists</span></a>
       </div>
     </div>
+    ${offlineCardHTML()}
     <button class="btn" data-auth="logout">Log out</button>
   </div>`;
 }
@@ -1671,11 +1725,82 @@ async function loadRemote() {
       }
     }
     PLAYERS_LOADED = true;
+    warmPhotos();
     // Solo-set photos win; artists only seen in b2b sets keep the shared photo.
     const y = scrollY; render(); scrollTo(0, y); if (state.sheet) openArtist(state.sheet); if (state.playing) renderPlayer();
   } catch { /* offline or blocked: generated artwork stays */ }
 }
 loadRemote();
+
+// ---------- Home-screen app & offline ----------
+// The service worker keeps the page (with the whole line-up inside it), artist photos and fonts on the device.
+// Your bookings are saved locally by saveMe(). persist() asks the browser not to clear any of it when space runs low.
+function isStandalone() { return matchMedia("(display-mode: standalone)").matches || navigator.standalone === true; }
+function isIOS() { return /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1); }
+state.persisted = null;
+function warmPhotos() {
+  const urls = Object.values(IMG);
+  if (urls.length && navigator.serviceWorker?.controller) navigator.serviceWorker.controller.postMessage({ type: "warm-photos", urls });
+}
+async function askPersist() {
+  try {
+    if (!navigator.storage?.persist) return;
+    state.persisted = (await navigator.storage.persisted()) || (await navigator.storage.persist());
+  } catch {}
+}
+if ("serviceWorker" in navigator && /^https?:$/.test(location.protocol)) {
+  addEventListener("load", () => {
+    navigator.serviceWorker.register("/sw.js").then(reg => {
+      // Check for a new version each time the app comes back to the foreground.
+      document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && navigator.onLine !== false) reg.update().catch(() => {}); });
+    }).catch(() => {});
+    navigator.serviceWorker.ready.then(() => { if (PLAYERS_LOADED) warmPhotos(); });
+    navigator.serviceWorker.addEventListener("controllerchange", () => { if (PLAYERS_LOADED) warmPhotos(); });
+    // Home-screen apps are granted persistent storage on iOS and Android; in a browser tab this may be declined quietly.
+    if (isStandalone()) askPersist(); else navigator.storage?.persisted?.().then(v => { state.persisted = v; }).catch(() => {});
+  });
+}
+function offlineCardHTML() {
+  const at = store.get("syncedAt", 0);
+  const when = at ? new Date(at).toLocaleString([], { weekday: "short", hour: "numeric", minute: "2-digit", hour12: true }) : "";
+  const n = state.favs.size;
+  const how = isStandalone() ? "" : isIOS()
+    ? `<p class="note" style="margin-top:10px">To use it offline, open this site in Safari, tap <b>Share</b>, then <b>Add to Home Screen</b>, and open it from your home screen once while online.</p>`
+    : installEvt ? `<button class="btn" data-install="go" style="margin-top:10px">Install the app</button>` : `<p class="note" style="margin-top:10px">Add this site to your home screen from the browser menu to use it offline.</p>`;
+  return `<div class="card"><h3>Works offline</h3>
+    <p>Saved on this phone, ready with no signal:</p>
+    <ul class="offline-list"><li>The full line-up and timetable</li><li>${n ? `Your ${n} saved set${n === 1 ? "" : "s"}` : "Your saved sets"}</li><li>Now &amp; next</li><li>Artist photos</li></ul>
+    <p class="note" style="margin-top:8px">${when ? `Last updated ${esc(when)}. ` : ""}It refreshes every time you open the app online.${state.persisted ? " Storage is kept on this device." : ""}</p>${how}
+  </div>`;
+}
+
+// Install hint: iOS has no install prompt, so explain Share → Add to Home Screen. Others get the browser's own prompt.
+var installEvt = null; // var: read by offlineCardHTML() before this line runs
+addEventListener("beforeinstallprompt", e => { e.preventDefault(); installEvt = e; showInstall(); });
+addEventListener("appinstalled", () => { installEvt = null; hideInstall(true); });
+const SHARE_ICO = `<svg class="share" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-label="Share"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M6 11H5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1h-1"/></svg>`;
+function showInstall() {
+  if (isStandalone() || store.get("installHint", 0) > Date.now()) return;
+  const el = $("#install"); if (!el || !el.hidden) return;
+  if (installEvt) el.innerHTML = `<img src="/icons/icon-192.png" alt=""><p><b>Install TML</b><br>Line-up and your sets, even with no signal.</p><button class="btn primary" data-install="go">Install</button><button class="x" data-install="no" aria-label="Not now">${ICON.close}</button>`;
+  else if (isIOS()) el.innerHTML = `<img src="/icons/icon-192.png" alt=""><p><b>Use it offline at the festival</b><br>Tap ${SHARE_ICO} then <b>Add to Home Screen</b>.</p><button class="x" data-install="no" aria-label="Not now">${ICON.close}</button>`;
+  else return;
+  el.hidden = false;
+}
+function hideInstall(forever) {
+  const el = $("#install"); if (el) el.hidden = true;
+  store.set("installHint", Date.now() + (forever ? 3650 : 5) * 864e5);
+}
+document.addEventListener("click", async e => {
+  const b = e.target.closest("[data-install]"); if (!b) return;
+  if (b.dataset.install === "no") return hideInstall(false);
+  if (!installEvt) return;
+  installEvt.prompt();
+  try { const r = await installEvt.userChoice; if (r.outcome === "accepted") hideInstall(true); } catch {}
+  installEvt = null;
+});
+if (isIOS() && !isStandalone()) setTimeout(showInstall, 4000);
+
 setInterval(() => { if (state.view === "now" && festivalMoment()?.live) renderNow(); }, 60000);
 </script>
 
