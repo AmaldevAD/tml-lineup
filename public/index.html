@@ -4,7 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0D0B14">
-<title>Tomorrowland Thailand Line-up</title>
+<meta name="description" content="Unofficial Tomorrowland Thailand 2026 line-up: timetable, favourites, live stage chat.">
+<title>TML Unofficial · Tomorrowland Thailand 2026 Line-up</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;800&family=Inter:wght@400;500;600;700&display=swap">
@@ -266,7 +267,39 @@ main { padding-block: 6px calc(var(--tab-h) + var(--player-h) + env(safe-area-in
 
 /* Tab bar */
 nav.tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 25; background: color-mix(in srgb, var(--surface) 92%, transparent); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom, 0px); padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px); }
-.tabs-inner { display: grid; grid-template-columns: repeat(4, 1fr); max-width: 560px; margin: 0 auto; }
+.tabs-inner { display: grid; grid-template-columns: repeat(5, 1fr); max-width: 620px; margin: 0 auto; }
+.tabs a { font-size: 11px; }
+
+/* Chat */
+.chat { display: flex; flex-direction: column; gap: 12px; }
+.chat-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.chat-head h2 { font-family: var(--font-display); font-size: 17px; margin: 0; display: flex; align-items: center; gap: 8px; }
+.online { font-size: 12.5px; font-weight: 600; color: var(--muted); display: inline-flex; align-items: center; gap: 6px; }
+.online::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--st-core); }
+.online.off::before { background: var(--muted); }
+.msgs { display: flex; flex-direction: column; gap: 6px; min-height: 240px; padding-bottom: 8px; }
+.msg { display: flex; flex-direction: column; gap: 2px; max-width: 82%; align-self: flex-start; }
+.msg.me { align-self: flex-end; align-items: flex-end; }
+.msg .by { font-size: 11.5px; color: var(--muted); display: flex; gap: 6px; align-items: baseline; padding: 0 6px; }
+.msg .by button { all: unset; cursor: pointer; font-weight: 700; color: var(--hue, var(--fg)); }
+.msg .bubble { background: var(--surface); border: 1px solid var(--line); padding: 8px 12px; border-radius: 18px 18px 18px 6px; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 15px; }
+.msg.me .bubble { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); border-radius: 18px 18px 6px 18px; }
+.msg.same .by { display: none; }
+.day-sep { align-self: center; font-size: 11.5px; font-weight: 600; color: var(--muted); padding: 6px 0; }
+.composer { position: sticky; bottom: calc(var(--tab-h) + var(--player-h) + env(safe-area-inset-bottom, 0px) + 8px); display: grid; grid-template-columns: 1fr 48px; gap: 8px; padding: 8px; background: color-mix(in srgb, var(--surface) 94%, transparent); backdrop-filter: blur(12px); border: 1px solid var(--line); border-radius: 22px; box-shadow: var(--shadow); z-index: 6; }
+.composer textarea { resize: none; border: 0; background: transparent; padding: 11px 10px; min-height: 46px; max-height: 120px; font: inherit; font-size: 16px; color: var(--fg); outline: none; }
+.composer button { width: 48px; height: 48px; border-radius: 50%; border: 0; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; align-self: end; }
+.composer button:disabled { opacity: .4; }
+.composer button svg { width: 20px; height: 20px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 18px; display: flex; flex-direction: column; gap: 10px; box-shadow: var(--shadow); }
+.card h3 { margin: 0; font-family: var(--font-display); font-size: 17px; }
+.card p { margin: 0; color: var(--muted); }
+.field { min-height: 48px; border-radius: 14px; border: 1px solid var(--line); background: var(--surface-2); padding: 0 14px; font-size: 16px; width: 100%; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; }
+.row > .field { flex: 1 1 160px; }
+.crew-code { font-family: var(--font-display); letter-spacing: .12em; font-size: 20px; }
+.note { font-size: 13px; color: var(--muted); }
+.now-card h3 .chat-link { margin-left: auto; font-size: 11px; letter-spacing: .04em; text-transform: none; font-weight: 700; color: var(--accent); text-decoration: none; padding: 6px 10px; border-radius: 99px; background: var(--accent-soft); }
 .tabs a { height: var(--tab-h); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; text-decoration: none; font-size: 11.5px; font-weight: 600; color: var(--muted); position: relative; }
 .tabs a svg { width: 23px; height: 23px; }
 .tabs a .ico { display: grid; place-items: center; width: 56px; height: 30px; border-radius: 99px; transition: background .2s; }
@@ -330,6 +363,7 @@ footer.foot { margin-top: 32px; font-size: 12.5px; color: var(--muted); text-ali
   <section class="view" id="v-lineup" aria-label="Line-up"></section>
   <section class="view" id="v-now" aria-label="Now and next" hidden></section>
   <section class="view" id="v-timeline" aria-label="My timeline" hidden></section>
+  <section class="view" id="v-chat" aria-label="Chat" hidden></section>
   <section class="view" id="v-explore" aria-label="Explore artists" hidden>
     <div class="search">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
@@ -352,7 +386,8 @@ footer.foot { margin-top: 32px; font-size: 12.5px; color: var(--muted); text-ali
   <div class="tabs-inner">
     <a href="#lineup" data-view="lineup"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M3 9h18M8 2v4M16 2v4"/></svg></span>Line-up</a>
     <a href="#now" data-view="now"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>Now</a>
-    <a href="#timeline" data-view="timeline"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 20.5s-8-4.7-8-10.6A4.4 4.4 0 0 1 12 7a4.4 4.4 0 0 1 8 2.9c0 5.9-8 10.6-8 10.6z"/></svg></span>My timeline<span class="badge" id="favBadge" hidden></span></a>
+    <a href="#chat" data-view="chat"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.9A8 8 0 1 1 21 12z"/></svg></span>Chat</a>
+    <a href="#timeline" data-view="timeline"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 20.5s-8-4.7-8-10.6A4.4 4.4 0 0 1 12 7a4.4 4.4 0 0 1 8 2.9c0 5.9-8 10.6-8 10.6z"/></svg></span>Saved<span class="badge" id="favBadge" hidden></span></a>
     <a href="#explore" data-view="explore"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></span>Explore</a>
   </div>
 </nav>
@@ -755,7 +790,7 @@ function renderNow() {
         <div class="bar-meta tnum"><span>${fmt(cur.start)}</span><span>${dur(cur.end - m.min)} left</span><span>${fmt(cur.end)}</span></div>`;
     } else body = `<div class="idle">${list.length && m.min < list[0].start ? "Not started yet" : "Nothing playing"}</div>`;
     const next = nxt ? `<button class="next" data-open="${esc(nxt.artists[0].slug)}"><span><em>NEXT</em><b>${nameHTML(nxt)}</b></span><span class="tnum" style="color:var(--muted)">${fmt(nxt.start)}</span></button>` : "";
-    return `<article class="now-card"><h3><span class="dot" style="--c:var(${c})"></span>${esc(name)}</h3>${body}${next}</article>`;
+    return `<article class="now-card"><h3><span class="dot" style="--c:var(${c})"></span>${esc(name)}<a class="chat-link" href="#chat" data-room="${id}">Chat</a></h3>${body}${next}</article>`;
   }).join("");
   el.innerHTML = banner + `<div class="now-grid">${cards}</div>`;
 }
@@ -918,11 +953,11 @@ function refreshFavUI() {
   if (state.view === "timeline" || (state.view === "lineup" && state.favOnly)) rerenderKeepScroll();
 }
 function rerenderKeepScroll() {
-  const y = scrollY; ({ lineup: renderLineup, timeline: renderTimeline, explore: renderExplore, now: renderNow })[state.view](); scrollTo(0, y);
+  const y = scrollY; ({ lineup: renderLineup, timeline: renderTimeline, explore: renderExplore, now: renderNow, chat: () => {} })[state.view](); scrollTo(0, y);
 }
 
 // ---------- Routing ----------
-const TITLES = { lineup: "Line-up", now: "Now & next", timeline: "My timeline", explore: "Explore artists" };
+const TITLES = { lineup: "Line-up", now: "Now & next", chat: "Chat", timeline: "My timeline", explore: "Explore artists" };
 function render() {
   for (const v of Object.keys(TITLES)) $("#v-" + v).hidden = v !== state.view;
   document.querySelectorAll(".tabs a").forEach(a => { if (a.dataset.view === state.view) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
@@ -933,7 +968,8 @@ function render() {
   $("#modeGrid").setAttribute("aria-pressed", state.mode === "grid");
   $("#favOnly").setAttribute("aria-pressed", state.favOnly);
   renderDays(); renderStageChips();
-  ({ lineup: renderLineup, now: renderNow, timeline: renderTimeline, explore: renderExplore })[state.view]();
+  ({ lineup: renderLineup, now: renderNow, chat: renderChat, timeline: renderTimeline, explore: renderExplore })[state.view]();
+  if (state.view !== "chat") chatDisconnect();
   document.documentElement.style.setProperty("--hdr", $("#hdr").offsetHeight + "px");
 }
 function route() { const h = location.hash.slice(1); state.view = TITLES[h] ? h : "lineup"; render(); window.scrollTo(0, 0); }
@@ -953,6 +989,8 @@ document.addEventListener("click", e => {
     saveFavs(); refreshFavUI(); return;
   }
   if (t.dataset.play) { e.stopPropagation(); return play(t.dataset.play); }
+  if (t.dataset.room) { chat.room = t.dataset.room; store.set("room", chat.room); if (state.view === "chat") { e.preventDefault(); renderChat(); } return; }
+  if (t.dataset.chat) return chatAction(t.dataset.chat, t);
   if (t.dataset.open) return openArtist(t.dataset.open);
   if (t.dataset.day) { state.day = t.dataset.day; store.set("day", state.day); render(); return; }
   if (t.dataset.stage) { state.stage = t.dataset.stage; render(); return; }
@@ -984,6 +1022,142 @@ window.addEventListener("resize", () => document.documentElement.style.setProper
 }
 
 const savedTheme = store.get("theme", null); if (savedTheme) document.documentElement.dataset.theme = savedTheme;
+// ---------- Chat ----------
+// Live rooms run on the site's own server (/api/rooms/<room>/ws). One room per stage, a general room, and private crew rooms.
+const chat = {
+  room: store.get("room", "general"),
+  name: store.get("nick", ""),
+  uid: store.get("uid", null) || (() => { const u = Math.random().toString(36).slice(2, 12) + Date.now().toString(36); store.set("uid", u); return u; })(),
+  crew: store.get("crew", ""),
+  muted: new Set(store.get("muted", [])),
+  ws: null, wsRoom: null, online: 0, status: "idle", msgs: [], retry: 0, timer: null, draft: ""
+};
+const roomName = r => r === "general" ? "Everyone" : r.startsWith("crew-") ? "My crew" : STAGE[r]?.name || r;
+const nameHue = uid => `hsl(${hash(uid) % 360} 70% ${document.documentElement.dataset.theme === "light" || (!document.documentElement.dataset.theme && !matchMedia("(prefers-color-scheme: dark)").matches) ? 38 : 70}%)`;
+const SEND = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>`;
+const chatSupported = () => /^https?:$/.test(location.protocol) && "WebSocket" in window;
+const clock = ts => new Date(ts).toLocaleTimeString([], { hour: "numeric", minute: "2-digit", hour12: true });
+
+function chatConnect() {
+  if (!chatSupported() || !chat.name) return;
+  if (chat.ws && chat.wsRoom === chat.room && chat.ws.readyState <= 1) return;
+  chatDisconnect();
+  chat.status = "connecting"; chat.msgs = []; chat.wsRoom = chat.room;
+  let ws;
+  try { ws = new WebSocket(`${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/api/rooms/${chat.room}/ws`); }
+  catch { chat.status = "unavailable"; return renderChatBody(); }
+  chat.ws = ws;
+  ws.onopen = () => { chat.status = "live"; chat.retry = 0; renderChatStatus(); };
+  ws.onmessage = ev => {
+    let d; try { d = JSON.parse(ev.data); } catch { return; }
+    if (d.type === "history") { chat.msgs = d.messages; chat.online = d.online; renderChatBody(true); }
+    else if (d.type === "msg") { chat.msgs.push(d.message); if (chat.msgs.length > 300) chat.msgs.shift(); appendMsg(d.message); }
+    else if (d.type === "presence") { chat.online = d.online; renderChatStatus(); }
+    else if (d.type === "error") toast(d.error);
+  };
+  ws.onclose = () => {
+    if (chat.ws !== ws) return;
+    chat.ws = null;
+    if (chat.status === "connecting" && chat.retry >= 2) { chat.status = "unavailable"; return renderChatBody(); }
+    chat.status = "reconnecting"; renderChatStatus();
+    if (state.view === "chat") chat.timer = setTimeout(chatConnect, Math.min(15000, 1000 * 2 ** chat.retry++));
+  };
+}
+function chatDisconnect() {
+  clearTimeout(chat.timer);
+  if (chat.ws) { const w = chat.ws; chat.ws = null; try { w.close(1000); } catch {} }
+  chat.status = "idle";
+}
+function msgHTML(m, prev) {
+  if (chat.muted.has(m.uid)) return "";
+  const me = m.uid === chat.uid, same = prev && prev.uid === m.uid && m.ts - prev.ts < 120000;
+  return `<div class="msg${me ? " me" : ""}${same ? " same" : ""}" data-id="${m.id}"><span class="by">${me ? "You" : `<button data-chat="mute" data-uid="${esc(m.uid)}" data-name="${esc(m.name)}" style="--hue:${nameHue(m.uid)}" title="Hide messages from ${esc(m.name)}">${esc(m.name)}</button>`}<span class="tnum">${clock(m.ts)}</span></span><span class="bubble">${esc(m.text)}</span></div>`;
+}
+function renderChatStatus() {
+  const el = $("#chatOnline"); if (!el) return;
+  const map = { live: `${chat.online} online`, connecting: "Connecting…", reconnecting: "Reconnecting…", idle: "Offline", unavailable: "Offline" };
+  el.textContent = map[chat.status] || "";
+  el.classList.toggle("off", chat.status !== "live");
+  const b = $("#chatSend"); if (b) b.disabled = chat.status !== "live";
+}
+function renderChatBody(scroll) {
+  const box = $("#chatMsgs"); if (!box) return;
+  if (chat.status === "unavailable") { box.innerHTML = `<div class="card"><h3>Chat is offline here</h3><p>Live chat works on the tmlunofficial website. This copy of the page can't reach the chat server.</p></div>`; renderChatStatus(); return; }
+  box.innerHTML = chat.msgs.length ? chat.msgs.map((m, i) => msgHTML(m, chat.msgs[i - 1])).join("") : `<p class="note" style="text-align:center;padding:30px 0">No messages yet in ${esc(roomName(chat.room))}. Say hi 👋</p>`;
+  renderChatStatus();
+  if (scroll) requestAnimationFrame(() => window.scrollTo(0, document.body.scrollHeight));
+}
+function appendMsg(m) {
+  const box = $("#chatMsgs"); if (!box) return;
+  const nearBottom = innerHeight + scrollY > document.body.scrollHeight - 220;
+  if (chat.msgs.length === 1) box.innerHTML = "";
+  box.insertAdjacentHTML("beforeend", msgHTML(m, chat.msgs[chat.msgs.length - 2]));
+  if (nearBottom || m.uid === chat.uid) window.scrollTo(0, document.body.scrollHeight);
+}
+function renderChat() {
+  const el = $("#v-chat");
+  if (!chatSupported()) {
+    el.innerHTML = `<div class="card"><h3>Chat lives on the website</h3><p>Open the tmlunofficial site to chat with other ravers by stage or with your crew.</p></div>`;
+    return;
+  }
+  if (!chat.name) {
+    el.innerHTML = `<form class="card" id="nickForm"><h3>Pick a nickname</h3><p>Shown next to your messages. No account needed.</p>
+      <input class="field" id="nick" maxlength="24" autocomplete="nickname" placeholder="e.g. Raver Rahul" required>
+      <button class="btn primary" type="submit">Start chatting</button></form>`;
+    return;
+  }
+  if (chat.room.startsWith("crew-") && chat.room !== "crew-" + chat.crew) chat.room = "general";
+  const rooms = ["general", ...STAGES.map(s => s[0])];
+  const crewChip = chat.crew ? `<button class="chip" data-room="crew-${chat.crew}" aria-pressed="${chat.room === "crew-" + chat.crew}" style="--c:var(--heart)"><span class="dot"></span>My crew</button>` : "";
+  el.innerHTML = `<div class="chat">
+    <div class="chips" role="group" aria-label="Chat rooms">${crewChip}${rooms.map(r => `<button class="chip" data-room="${r}" aria-pressed="${chat.room === r}" ${STAGE[r] ? `style="--c:var(${STAGE[r].c})"` : ""}>${STAGE[r] ? `<span class="dot"></span>` : ""}${esc(roomName(r))}</button>`).join("")}<button class="chip" data-chat="crew-panel">${chat.crew ? "Crew code" : "+ Crew room"}</button></div>
+    <div id="crewPanel" hidden></div>
+    <div class="chat-head"><h2>${chat.room.startsWith("crew-") ? "My crew" : esc(roomName(chat.room))}</h2><span class="online off" id="chatOnline"></span></div>
+    <div class="msgs" id="chatMsgs" aria-live="polite"></div>
+    <form class="composer" id="composer"><label for="chatText" class="sr">Message</label><textarea id="chatText" rows="1" maxlength="500" placeholder="Message as ${esc(chat.name)}">${esc(chat.draft)}</textarea><button id="chatSend" type="submit" aria-label="Send" disabled>${SEND}</button></form>
+    <p class="note">Be kind. Tap a name to hide that person's messages. <button class="toggle" style="display:inline;min-height:0;padding:0;text-decoration:underline" data-chat="rename">Change nickname</button></p>
+  </div>`;
+  if (chat.wsRoom === chat.room && chat.ws) renderChatBody(true); else renderChatBody();
+  chatConnect();
+}
+function crewPanel() {
+  const p = $("#crewPanel"); if (!p) return;
+  p.hidden = !p.hidden; if (p.hidden) return;
+  p.innerHTML = `<div class="card">
+    ${chat.crew ? `<h3>Your crew code</h3><p>Share this code with your friends so they can join your private room.</p><div class="row"><span class="crew-code">${chat.crew}</span><button class="btn" data-chat="copy">Copy code</button><button class="btn" data-chat="leave">Leave crew</button></div>`
+      : `<h3>Crew room</h3><p>A private room for your friends. Create one and share the code, or enter a friend's code.</p><button class="btn primary" data-chat="create">Create a crew room</button>`}
+    <form class="row" id="joinForm"><label for="crewCode" class="sr">Crew code</label><input class="field" id="crewCode" maxlength="6" placeholder="Friend's code" autocapitalize="characters" autocomplete="off"><button class="btn" type="submit">Join</button></form>
+  </div>`;
+}
+function setCrew(code) {
+  chat.crew = code; store.set("crew", code);
+  chat.room = code ? "crew-" + code : "general"; store.set("room", chat.room);
+  renderChat();
+}
+function chatAction(a, t) {
+  if (a === "crew-panel") return crewPanel();
+  if (a === "create") { const abc = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; let c = ""; const r = crypto.getRandomValues(new Uint8Array(6)); r.forEach(x => c += abc[x % abc.length]); setCrew(c); toast("Crew room created. Share the code!"); return; }
+  if (a === "leave") { setCrew(""); toast("Left the crew room"); return; }
+  if (a === "copy") { navigator.clipboard?.writeText(chat.crew).then(() => toast("Code copied"), () => toast(`Your code is ${chat.crew}`)); return; }
+  if (a === "rename") { chat.name = ""; store.set("nick", ""); chatDisconnect(); renderChat(); return; }
+  if (a === "mute") { chat.muted.add(t.dataset.uid); store.set("muted", [...chat.muted]); toast(`Hidden messages from ${t.dataset.name}`); renderChatBody(); return; }
+}
+document.addEventListener("submit", e => {
+  if (e.target.id === "nickForm") { e.preventDefault(); const n = $("#nick").value.replace(/\s+/g, " ").trim().slice(0, 24); if (!n) return; chat.name = n; store.set("nick", n); renderChat(); }
+  if (e.target.id === "joinForm") { e.preventDefault(); const c = $("#crewCode").value.toUpperCase().replace(/[^A-Z0-9]/g, ""); if (c.length !== 6) return toast("Crew codes have 6 letters or numbers"); setCrew(c); toast("Joined crew " + c); }
+  if (e.target.id === "composer") {
+    e.preventDefault();
+    const ta = $("#chatText"), text = ta.value.trim();
+    if (!text || !chat.ws || chat.ws.readyState !== 1) return;
+    chat.ws.send(JSON.stringify({ type: "msg", name: chat.name, uid: chat.uid, text }));
+    ta.value = ""; chat.draft = ""; ta.style.height = "";
+  }
+});
+document.addEventListener("input", e => { if (e.target.id === "chatText") { chat.draft = e.target.value; e.target.style.height = "auto"; e.target.style.height = Math.min(120, e.target.scrollHeight) + "px"; } });
+document.addEventListener("keydown", e => { if (e.target.id === "chatText" && e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); $("#composer").requestSubmit(); } });
+setInterval(() => { if (chat.ws?.readyState === 1) chat.ws.send('{"type":"ping"}'); }, 30000);
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && state.view === "chat") chatConnect(); });
+
 renderGenreChips(); updateBadge(); route();
 
 // ---------- Live photos & players from the original site ----------
