@@ -12,7 +12,6 @@ A mobile-first guide for Tomorrowland Thailand 2026 (11–13 Dec), with live cha
 - Live chat: an "Everyone" room, a fan room per artist, and private crew rooms joined with a 6-character code
 - Artist explorer with search and genre filters
 
-Artist photos and videos are loaded live from [tomorrowland.aiko.dev](https://tomorrowland.aiko.dev/).
 Unofficial fan site. Not affiliated with Tomorrowland.
 
 ## How it runs
