@@ -5,6 +5,8 @@
 import { DurableObject } from "cloudflare:workers";
 
 const COOKIE = "tml_session";
+const STATE_COOKIE = "tml_oauth";   // CSRF state for the Google round trip
+const PENDING_COOKIE = "tml_new";   // Google account that still has to pick a username
 const SESSION_DAYS = 60;
 const ROOM_RE = /^(general|artist-[a-z0-9-]{1,60}|crew-[A-Z0-9]{6})$/;
 const SET_KEY_RE = /^2026-12-1[123]\/[a-z0-9+-]{1,120}$/;
@@ -20,6 +22,20 @@ function getCookie(req, name) {
 function sessionCookie(token, url, maxAge) {
   const secure = url.protocol === "https:" ? "; Secure" : "";
   return `${COOKIE}=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAge}${secure}`;
+}
+function tempCookie(name, value, url, maxAge) {
+  const secure = url.protocol === "https:" ? "; Secure" : "";
+  return `${name}=${value}; Path=/api/; HttpOnly; SameSite=Lax; Max-Age=${maxAge}${secure}`;
+}
+const redirect = (to, cookies = []) => {
+  const h = new Headers({ location: to, "cache-control": "no-store" });
+  for (const c of cookies) h.append("set-cookie", c);
+  return new Response(null, { status: 302, headers: h });
+};
+const googleReady = env => !!(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET);
+function b64urlJson(part) {
+  const b = atob(part.replace(/-/g, "+").replace(/_/g, "/").padEnd(Math.ceil(part.length / 4) * 4, "="));
+  return JSON.parse(new TextDecoder().decode(Uint8Array.from(b, c => c.charCodeAt(0))));
 }
 function sameOrigin(req, url) {
   const origin = req.headers.get("Origin");
@@ -37,8 +53,39 @@ export default {
     const hub = env.HUB.get(env.HUB.idFromName("hub"));
     const token = getCookie(req, COOKIE);
     const body = async () => { try { return await req.json(); } catch { return {}; } };
+    const cb = url.origin + "/api/auth/google/callback";
 
     try {
+      // ----- Sign in with Google -----
+      if (p === "/api/auth/google/start" && req.method === "GET") {
+        if (!googleReady(env)) return redirect("/#signin-error");
+        const state = randHex(16);
+        const q = new URLSearchParams({ client_id: env.GOOGLE_CLIENT_ID, redirect_uri: cb, response_type: "code", scope: "openid profile", state, prompt: "select_account" });
+        return redirect("https://accounts.google.com/o/oauth2/v2/auth?" + q, [tempCookie(STATE_COOKIE, state, url, 600)]);
+      }
+      if (p === "/api/auth/google/callback" && req.method === "GET") {
+        const clear = tempCookie(STATE_COOKIE, "", url, 0);
+        const state = getCookie(req, STATE_COOKIE), code = url.searchParams.get("code");
+        if (!googleReady(env) || !code || !state || !safeEqual(state, url.searchParams.get("state") || "")) return redirect("/#signin-error", [clear]);
+        const tr = await fetch(env.GOOGLE_TOKEN_URL_DEV || "https://oauth2.googleapis.com/token", { method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({ code, client_id: env.GOOGLE_CLIENT_ID, client_secret: env.GOOGLE_CLIENT_SECRET, redirect_uri: cb, grant_type: "authorization_code" }) });
+        const tok = await tr.json().catch(() => ({}));
+        if (!tr.ok || !tok.id_token) { console.error("google token", tr.status, tok.error); return redirect("/#signin-error", [clear]); }
+        // The ID token came straight from Google's token endpoint over TLS, so its claims can be read without re-checking the signature.
+        const c = b64urlJson(tok.id_token.split(".")[1]);
+        if (c.aud !== env.GOOGLE_CLIENT_ID || !["accounts.google.com", "https://accounts.google.com"].includes(c.iss) || !c.sub || c.exp * 1000 < Date.now()) return redirect("/#signin-error", [clear]);
+        const r = await hub.googleSignin(String(c.sub), String(c.name || c.given_name || ""));
+        if (r.token) return redirect("/#welcome", [clear, sessionCookie(r.token, url, SESSION_DAYS * 86400)]);
+        return redirect("/#pick-username", [clear, tempCookie(PENDING_COOKIE, r.pending, url, 1800)]);
+      }
+      if (p === "/api/auth/google/finish" && req.method === "POST") {
+        const b = await body();
+        const r = await hub.googleFinish(getCookie(req, PENDING_COOKIE) || "", String(b.username || ""), String(b.display || ""));
+        if (r.error) return err(400, r.error);
+        const h = new Headers({ "content-type": "application/json; charset=utf-8", "cache-control": "no-store" });
+        h.append("set-cookie", sessionCookie(r.token, url, SESSION_DAYS * 86400)); h.append("set-cookie", tempCookie(PENDING_COOKIE, "", url, 0));
+        return new Response(JSON.stringify({ user: r.user, favs: r.favs }), { headers: h });
+      }
       if (p === "/api/signup" && req.method === "POST") {
         const b = await body();
         const r = await hub.signup(String(b.username || ""), String(b.password || ""), String(b.display || ""), Array.isArray(b.favs) ? b.favs : []);
@@ -57,7 +104,8 @@ export default {
       }
       if (p === "/api/me" && req.method === "GET") {
         const r = token ? await hub.me(token) : null;
-        return json(r || { user: null, favs: [] });
+        const pending = r ? null : await hub.pendingFor(getCookie(req, PENDING_COOKIE) || "");
+        return json({ ...(r || { user: null, favs: [] }), google: googleReady(env), pending });
       }
       if (p === "/api/favs" && req.method === "POST") {
         const b = await body();
@@ -114,7 +162,10 @@ export class Hub extends DurableObject {
       CREATE TABLE IF NOT EXISTS favs (user_id INTEGER NOT NULL, set_key TEXT NOT NULL, created INTEGER NOT NULL, PRIMARY KEY (user_id, set_key));
       CREATE INDEX IF NOT EXISTS favs_by_set ON favs (set_key, created);
       CREATE TABLE IF NOT EXISTS fails (username TEXT NOT NULL, ts INTEGER NOT NULL);
+      CREATE TABLE IF NOT EXISTS pending (token TEXT PRIMARY KEY, sub TEXT NOT NULL, name TEXT NOT NULL, expires INTEGER NOT NULL);
     `);
+    if (!this.sql.exec("PRAGMA table_info(users)").toArray().some(c => c.name === "google_sub")) this.sql.exec("ALTER TABLE users ADD COLUMN google_sub TEXT");
+    this.sql.exec("CREATE UNIQUE INDEX IF NOT EXISTS users_by_google ON users (google_sub) WHERE google_sub IS NOT NULL");
     this.socialCache = null;
   }
 
@@ -131,12 +182,56 @@ export class Hub extends DurableObject {
     return token;
   }
 
+  checkUsername(username) {
+    if (!/^[a-z0-9_.]{3,20}$/.test(username)) return "Usernames are 3–20 letters, numbers, dots or underscores.";
+    if (this.sql.exec("SELECT 1 FROM users WHERE username = ?", username).toArray().length) return "That username is taken. Try another.";
+    return null;
+  }
+
+  // Google: existing account -> session; new account -> a short-lived "pick a username" ticket.
+  async googleSignin(sub, name) {
+    const u = this.sql.exec("SELECT * FROM users WHERE google_sub = ?", sub).toArray()[0];
+    if (u) return { token: await this.newSession(u.id) };
+    const now = Date.now();
+    this.sql.exec("DELETE FROM pending WHERE expires < ?", now);
+    const t = randHex(32);
+    this.sql.exec("INSERT INTO pending (token, sub, name, expires) VALUES (?, ?, ?, ?)", await sha256(t), sub, name.slice(0, 60), now + 30 * 60e3);
+    return { pending: t };
+  }
+  async pendingFor(t) {
+    if (!t || t.length > 100) return null;
+    const row = this.sql.exec("SELECT name FROM pending WHERE token = ? AND expires > ?", await sha256(t), Date.now()).toArray()[0];
+    if (!row) return null;
+    const first = row.name.split(" ")[0] || "";
+    let base = first.toLowerCase().normalize("NFKD").replace(/[^a-z0-9_.]/g, "").slice(0, 14);
+    if (base.length < 3) base = "raver";
+    let suggest = base;
+    for (let i = 0; i < 20 && this.checkUsername(suggest); i++) suggest = base + Math.floor(10 + Math.random() * 990);
+    return { name: row.name.slice(0, 24), suggest };
+  }
+  async googleFinish(t, username, display) {
+    if (!t || t.length > 100) return { error: "Your Google sign-in expired. Try again." };
+    const h = await sha256(t);
+    const row = this.sql.exec("SELECT * FROM pending WHERE token = ? AND expires > ?", h, Date.now()).toArray()[0];
+    if (!row) return { error: "Your Google sign-in expired. Try again." };
+    username = username.trim().toLowerCase();
+    display = display.replace(/\s+/g, " ").trim().slice(0, 24) || row.name.slice(0, 24) || username;
+    const bad = this.checkUsername(username); if (bad) return { error: bad };
+    let u = this.sql.exec("SELECT * FROM users WHERE google_sub = ?", row.sub).toArray()[0];
+    if (!u) {
+      const color = COLORS[Math.floor(Math.random() * COLORS.length)];
+      // No password: pass/salt stay empty so password login can never match this account.
+      u = this.sql.exec("INSERT INTO users (username, display, color, pass, salt, created, google_sub) VALUES (?, ?, ?, '', '', ?, ?) RETURNING *", username, display, color, Date.now(), row.sub).one();
+    }
+    this.sql.exec("DELETE FROM pending WHERE token = ?", h);
+    return { user: this.publicUser(u), favs: this.favsOf(u.id), token: await this.newSession(u.id) };
+  }
+
   async signup(username, password, display, favs) {
     username = username.trim().toLowerCase();
     display = display.replace(/\s+/g, " ").trim().slice(0, 24) || username;
-    if (!/^[a-z0-9_.]{3,20}$/.test(username)) return { error: "Usernames are 3–20 letters, numbers, dots or underscores." };
+    const bad = this.checkUsername(username); if (bad) return { error: bad };
     if (password.length < 8 || password.length > 200) return { error: "Use a password of at least 8 characters." };
-    if (this.sql.exec("SELECT 1 FROM users WHERE username = ?", username).toArray().length) return { error: "That username is taken. Try another." };
     const salt = randHex(16);
     const pass = await hashPassword(password, salt);
     const color = COLORS[Math.floor(Math.random() * COLORS.length)];
@@ -152,7 +247,7 @@ export class Hub extends DurableObject {
     const fails = this.sql.exec("SELECT COUNT(*) AS n FROM fails WHERE username = ?", username).one().n;
     if (fails >= 10) return { error: "Too many attempts. Wait 15 minutes and try again." };
     const u = this.sql.exec("SELECT * FROM users WHERE username = ?", username).toArray()[0];
-    const ok = u && safeEqual(await hashPassword(password, u.salt), u.pass);
+    const ok = u && u.salt && safeEqual(await hashPassword(password, u.salt), u.pass);
     if (!ok) { this.sql.exec("INSERT INTO fails (username, ts) VALUES (?, ?)", username, now); return { error: "Wrong username or password." }; }
     this.addFavs(u.id, favs);
     return { user: this.publicUser(u), favs: this.favsOf(u.id), token: await this.newSession(u.id) };

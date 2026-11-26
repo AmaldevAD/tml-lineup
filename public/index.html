@@ -294,6 +294,11 @@ nav.tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 25; backgroun
 .auth p { margin: 0; color: var(--muted); }
 .auth label { font-size: 13px; font-weight: 600; display: flex; flex-direction: column; gap: 6px; }
 .auth .err { color: var(--warn); font-size: 13.5px; font-weight: 600; min-height: 1em; }
+.gbtn { min-height: 48px; border-radius: 14px; border: 1px solid var(--line); background: #fff; color: #1f1f1f; font-weight: 700; font-size: 14.5px; display: inline-flex; align-items: center; justify-content: center; gap: 10px; text-decoration: none; }
+.gbtn svg { width: 18px; height: 18px; }
+.or { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 12px; font-weight: 600; }
+.or::before, .or::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.auth .hint { font-size: 12.5px; color: var(--muted); font-weight: 500; }
 .auth .switch { background: none; border: 0; color: var(--accent); font-weight: 700; padding: 8px 0; text-align: left; }
 .going { display: flex; flex-wrap: wrap; gap: 8px; }
 .going > span { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; padding: 3px 10px 3px 3px; border-radius: 99px; background: var(--surface-2); }
@@ -738,9 +743,19 @@ async function boot() {
   try {
     const me = await api("/api/me");
     state.api = true;
+    state.google = !!me.google;
     if (me.user) { state.user = me.user; state.favs = new Set(me.favs); }
     else state.favs = new Set();
+    // Back from Google: restore where the person was, then finish whatever they were doing.
+    const h = location.hash.slice(1), after = takeAfter();
+    if (["welcome", "pick-username", "signin-error"].includes(h)) {
+      history.replaceState(null, "", location.pathname + (after?.view && after.view !== "lineup" ? "#" + after.view : ""));
+      state.view = TITLES[after?.view] ? after.view : "lineup";
+    }
     updateBadge(); renderAcct(); const y = scrollY; render(); scrollTo(0, y);
+    if (me.pending) { pendingFav = after?.fav || null; openPickUsername(me.pending); }
+    else if (h === "welcome" && state.user) { toast(`Welcome back, ${state.user.display}`); if (after?.fav && !state.favs.has(after.fav)) toggleFav(after.fav); }
+    else if (h === "signin-error") toast("Google sign-in didn't go through. Try again.");
     loadSocial(); setInterval(loadSocial, 30000);
   } catch { /* no server here: favourites stay on this device */ }
 }
@@ -761,11 +776,30 @@ function openSheetHTML(html, focusSel) {
   document.body.style.overflow = "hidden";
 }
 const closeBtnHTML = `<button class="icon-btn" id="sheetClose" aria-label="Close" style="position:absolute;top:14px;right:max(14px, env(safe-area-inset-right, 0px))">${ICON.close}</button>`;
+const GOOGLE_G = `<svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>`;
+function takeAfter() { try { const v = JSON.parse(sessionStorage.getItem("tml_after") || "null"); sessionStorage.removeItem("tml_after"); return v; } catch { return null; } }
+function googleStart() {
+  try { sessionStorage.setItem("tml_after", JSON.stringify({ view: state.view, fav: pendingFav })); } catch {}
+  location.href = "/api/auth/google/start";
+}
+function openPickUsername(p) {
+  openSheetHTML(`<div class="auth" style="position:relative">${closeBtnHTML}
+    <h2>Pick your username</h2>
+    <p>One last step. This is how other ravers find you in chat and on the who's-going lists.</p>
+    <form id="authForm" data-mode="google" class="swap" novalidate>
+      <label>Your name<input class="field" id="aDisplay" maxlength="24" autocomplete="nickname" value="${esc(p.name || "")}"></label>
+      <label>Username<input class="field" id="aUser" maxlength="20" autocapitalize="none" spellcheck="false" value="${esc(p.suggest || "")}"><span class="hint">3–20 letters, numbers, . or _</span></label>
+      <span class="err" id="aErr" role="alert"></span>
+      <button class="btn primary" type="submit">Let's go</button>
+    </form>
+  </div>`, "#aUser");
+}
 function openAuth(mode = "signup", reason = "") {
   const up = mode === "signup";
   openSheetHTML(`<div class="auth" style="position:relative">${closeBtnHTML}
     <h2>${up ? "Join the crew" : "Welcome back"}</h2>
     <p>${esc(reason || (up ? "Save your sets, see who's going to each artist and chat with other ravers. Browsing stays free without an account." : "Log in to your saved sets and chats."))}</p>
+    ${state.google ? `<button class="gbtn" data-auth="google">${GOOGLE_G}Continue with Google</button><div class="or">or with a username</div>` : ""}
     <form id="authForm" data-mode="${mode}" class="swap" novalidate>
       ${up ? `<label>Your name<input class="field" id="aDisplay" maxlength="24" autocomplete="nickname" placeholder="e.g. Amal"></label>` : ""}
       <label>Username<input class="field" id="aUser" maxlength="20" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="letters, numbers, . or _"></label>
@@ -787,15 +821,16 @@ function openAccount() {
 }
 async function submitAuth(form) {
   const mode = form.dataset.mode, errEl = $("#aErr");
-  const body = { username: $("#aUser").value.trim(), password: $("#aPass").value, favs: store.get("favs", []) };
-  if (mode === "signup") body.display = $("#aDisplay").value.trim();
+  const body = { username: $("#aUser").value.trim(), favs: store.get("favs", []) };
+  if (mode !== "google") body.password = $("#aPass").value;
+  if (mode !== "login") body.display = $("#aDisplay").value.trim();
   errEl.textContent = "";
   const btn = form.querySelector("button[type=submit]"); btn.disabled = true;
   try {
-    const r = await api(mode === "signup" ? "/api/signup" : "/api/login", { method: "POST", body });
+    const r = await api({ signup: "/api/signup", login: "/api/login", google: "/api/auth/google/finish" }[mode], { method: "POST", body });
     state.user = r.user; state.favs = new Set(r.favs); store.set("favs", []);
     closeSheet(); renderAcct(); updateBadge(); render(); loadSocial();
-    toast(mode === "signup" ? `Welcome, ${r.user.display}!` : `Welcome back, ${r.user.display}`);
+    toast(mode === "login" ? `Welcome back, ${r.user.display}` : `Welcome, ${r.user.display}!`);
     if (pendingFav) { const k = pendingFav; pendingFav = null; toggleFav(k); }
   } catch (e) { errEl.textContent = e.message; btn.disabled = false; }
 }
@@ -1156,6 +1191,7 @@ document.addEventListener("click", e => {
   if (t.dataset.auth) {
     const a = t.dataset.auth;
     if (a === "signup" || a === "login") return openAuth(a);
+    if (a === "google") return googleStart();
     if (a === "account") return openAccount();
     if (a === "logout") return logout();
     if (a === "close") { closeSheet(); return; }
@@ -1367,6 +1403,7 @@ async function loadRemote() {
 loadRemote();
 setInterval(() => { if (state.view === "now" && festivalMoment()?.live) renderNow(); }, 60000);
 </script>
+
 
 </body>
 </html>
