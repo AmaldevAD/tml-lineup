@@ -19,6 +19,11 @@ const COLORS = ["#F5A524", "#FF6370", "#4CC9DE", "#9D83FF", "#5BC26E", "#FF5F9E"
 
 const json = (data, init = {}) => new Response(JSON.stringify(data), { ...init, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store", ...(init.headers || {}) } });
 const err = (status, error) => json({ error }, { status });
+const REPORT_REASONS = { spam: "Spam or scam", abuse: "Harassment or hate", sexual: "Sexual content", other: "Something else" };
+// The admin is whoever signs in with Google using an address in the ADMIN_EMAIL secret (comma separated), so no
+// address sits in the repo. Only that match is checked at sign-in; nobody's email is stored.
+const isAdminEmail = (env, c) => !!(c.email && c.email_verified) && String(env.ADMIN_EMAIL || "").toLowerCase().split(/[\s,]+/).filter(Boolean).includes(String(c.email).toLowerCase());
+const isAdmin = u => !!u?.admin;
 
 function getCookie(req, name) {
   const m = (req.headers.get("cookie") || "").match(new RegExp("(?:^|;\\s*)" + name + "=([^;]+)"));
@@ -48,6 +53,7 @@ function sameOrigin(req, url) {
   try { const o = new URL(origin); return o.host === url.host || o.hostname === "localhost" || o.hostname === "127.0.0.1"; } catch { return false; }
 }
 
+
 export default {
   async fetch(req, env) {
     const url = new URL(req.url);
@@ -65,7 +71,7 @@ export default {
       if (p === "/api/auth/google/start" && req.method === "GET") {
         if (!googleReady(env)) return redirect("/#signin-error");
         const state = randHex(16);
-        const q = new URLSearchParams({ client_id: env.GOOGLE_CLIENT_ID, redirect_uri: cb, response_type: "code", scope: "openid profile", state, prompt: "select_account" });
+        const q = new URLSearchParams({ client_id: env.GOOGLE_CLIENT_ID, redirect_uri: cb, response_type: "code", scope: "openid profile email", state, prompt: "select_account" });
         return redirect("https://accounts.google.com/o/oauth2/v2/auth?" + q, [tempCookie(STATE_COOKIE, state, url, 600)]);
       }
       if (p === "/api/auth/google/callback" && req.method === "GET") {
@@ -79,7 +85,7 @@ export default {
         // The ID token came straight from Google's token endpoint over TLS, so its claims can be read without re-checking the signature.
         const c = b64urlJson(tok.id_token.split(".")[1]);
         if (c.aud !== env.GOOGLE_CLIENT_ID || !["accounts.google.com", "https://accounts.google.com"].includes(c.iss) || !c.sub || c.exp * 1000 < Date.now()) return redirect("/#signin-error", [clear]);
-        const r = await hub.googleSignin(String(c.sub), String(c.name || c.given_name || ""));
+        const r = await hub.googleSignin(String(c.sub), String(c.name || c.given_name || ""), isAdminEmail(env, c));
         if (r.token) return redirect("/#welcome", [clear, sessionCookie(r.token, url, SESSION_DAYS * 86400)]);
         return redirect("/#pick-username", [clear, tempCookie(PENDING_COOKIE, r.pending, url, 1800)]);
       }
@@ -157,6 +163,49 @@ export default {
         await Promise.all(list.map(async r => { try { out[r.room] = await env.ROOMS.get(env.ROOMS.idFromName(r.room)).summary(Math.max(0, +r.since || 0)); } catch (e) { console.error(e); } }));
         return json({ rooms: out });
       }
+      // ----- Reporting and moderation -----
+      if (p === "/api/report" && req.method === "POST") {
+        const me = token ? await hub.me(token) : null;
+        if (!me?.user) return err(401, "Sign in to report messages");
+        const b = await body();
+        const room = String(b.room || ""), id = Math.floor(+b.id || 0), reason = String(b.reason || "other");
+        const note = String(b.note || "").replace(/\s+/g, " ").trim().slice(0, 200);
+        if (!ROOM_RE.test(room) || !(id > 0)) return err(400, "Unknown message");
+        if (!REPORT_REASONS[reason]) return err(400, "Pick a reason");
+        // Read the message from the room itself, so a report always carries what was really sent.
+        const msg = await env.ROOMS.get(env.ROOMS.idFromName(room)).getMsg(id);
+        if (!msg) return err(404, "That message is gone already.");
+        if (msg.uid === String(me.user.id)) return err(400, "You can't report your own message.");
+        const r = await hub.report(token, { room, id, uid: msg.uid, text: msg.text, ts: msg.ts, reason, note });
+        if (r.error) return err(400, r.error);
+        return json({ ok: true });
+      }
+      if (p.startsWith("/api/admin/")) {
+        const me = token ? await hub.me(token) : null;
+        if (!me?.user || !isAdmin(me.user)) return err(403, "Admins only");
+        if (p === "/api/admin/reports" && req.method === "GET") return json({ ...(await hub.moderation())});
+        if (p === "/api/admin/ban" && req.method === "POST") {
+          const b = await body();
+          const r = await hub.setBanned(Math.floor(+b.uid || 0), !!b.banned, me.user.id);
+          if (r.error) return err(400, r.error);
+          return json({ ...(await hub.moderation())});
+        }
+        if (p === "/api/admin/remove" && req.method === "POST") {
+          const b = await body();
+          const room = String(b.room || ""), id = Math.floor(+b.id || 0);
+          if (!ROOM_RE.test(room) || !(id > 0)) return err(400, "Unknown message");
+          await env.ROOMS.get(env.ROOMS.idFromName(room)).remove(id);
+          await hub.markRemoved(room, id);
+          return json({ ...(await hub.moderation())});
+        }
+        if (p === "/api/admin/dismiss" && req.method === "POST") {
+          const b = await body();
+          await hub.dismissReports(Math.floor(+b.uid || 0));
+          return json({ ...(await hub.moderation())});
+        }
+        if (p === "/api/admin/clear-chats" && req.method === "POST") { await hub.clearChats(); return json(await hub.moderation()); }
+        return err(404, "Not found");
+      }
       if (p === "/api/social" && req.method === "GET") {
         return json(await hub.social(), { headers: { "cache-control": "public, max-age=10" } });
       }
@@ -172,7 +221,7 @@ export default {
         const me = token ? await hub.me(token) : null;
         if (!me?.user) return err(401, "Sign in to chat");
         const fwd = new Request(req, { headers: new Headers(req.headers) });
-        fwd.headers.set("x-tml-user", JSON.stringify({ id: me.user.id, name: me.user.display, color: me.user.color, av: me.user.avatar || "" }));
+        fwd.headers.set("x-tml-user", JSON.stringify({ id: me.user.id, name: me.user.display, color: me.user.color, av: me.user.avatar || "", banned: !!me.user.banned }));
         return env.ROOMS.get(env.ROOMS.idFromName(m[1])).fetch(fwd);
       }
       return err(404, "Not found");
@@ -212,12 +261,64 @@ export class Hub extends DurableObject {
     const cols = this.sql.exec("PRAGMA table_info(users)").toArray().map(c => c.name);
     if (!cols.includes("google_sub")) this.sql.exec("ALTER TABLE users ADD COLUMN google_sub TEXT");
     if (!cols.includes("avatar")) this.sql.exec("ALTER TABLE users ADD COLUMN avatar TEXT NOT NULL DEFAULT ''");
+    if (!cols.includes("admin")) this.sql.exec("ALTER TABLE users ADD COLUMN admin INTEGER NOT NULL DEFAULT 0");
+    const pcols = this.sql.exec("PRAGMA table_info(pending)").toArray().map(c => c.name);
+    if (!pcols.includes("admin")) this.sql.exec("ALTER TABLE pending ADD COLUMN admin INTEGER NOT NULL DEFAULT 0");
+    // Chat wipe: every room drops messages sent before this time (rooms apply it the next time they're used).
+    // The first run of this version sets it, which clears all chat history once, as asked on 2026-11-26.
+    this.sql.exec("CREATE TABLE IF NOT EXISTS settings (k TEXT PRIMARY KEY, v TEXT NOT NULL)");
+    this.sql.exec("INSERT OR IGNORE INTO settings (k, v) VALUES ('chat_cutoff', ?)", String(Date.now()));
+    if (!cols.includes("banned")) this.sql.exec("ALTER TABLE users ADD COLUMN banned INTEGER NOT NULL DEFAULT 0");
+    // One row per (reporter, message): reporting the same message twice does nothing. status: open | removed | dismissed
+    this.sql.exec(`CREATE TABLE IF NOT EXISTS reports (id INTEGER PRIMARY KEY AUTOINCREMENT, ts INTEGER NOT NULL, reporter_id INTEGER NOT NULL, target_id INTEGER NOT NULL,
+      room TEXT NOT NULL, msg_id INTEGER NOT NULL, text TEXT NOT NULL, msg_ts INTEGER NOT NULL, reason TEXT NOT NULL, note TEXT NOT NULL DEFAULT '', status TEXT NOT NULL DEFAULT 'open',
+      UNIQUE (reporter_id, room, msg_id))`);
+    this.sql.exec("CREATE INDEX IF NOT EXISTS reports_by_target ON reports (target_id, ts)");
     this.sql.exec("CREATE TABLE IF NOT EXISTS photos (user_id INTEGER PRIMARY KEY, type TEXT NOT NULL, data TEXT NOT NULL)");
     this.sql.exec("CREATE UNIQUE INDEX IF NOT EXISTS users_by_google ON users (google_sub) WHERE google_sub IS NOT NULL");
     this.socialCache = null;
   }
 
-  publicUser(u) { return { id: u.id, username: u.username, display: u.display, color: u.color, avatar: u.avatar || "" }; }
+  publicUser(u) { return { id: u.id, username: u.username, display: u.display, color: u.color, avatar: u.avatar || "", ...(u.banned ? { banned: true } : {}), ...(u.admin ? { admin: true } : {}) }; }
+  chatCutoff() { return +(this.sql.exec("SELECT v FROM settings WHERE k = 'chat_cutoff'").toArray()[0]?.v || 0); }
+  clearChats() { this.sql.exec("INSERT OR REPLACE INTO settings (k, v) VALUES ('chat_cutoff', ?)", String(Date.now())); return true; }
+
+  // ----- Reports and bans -----
+  async report(token, m) {
+    const u = await this.userFor(token);
+    if (!u) return { error: "Sign in to report messages" };
+    const target = this.sql.exec("SELECT * FROM users WHERE id = ?", +m.uid || 0).toArray()[0];
+    if (!target) return { error: "That person's account is gone." };
+    const since = Date.now() - 86400e3;
+    if (this.sql.exec("SELECT COUNT(*) AS n FROM reports WHERE reporter_id = ? AND ts > ?", u.id, since).one().n >= 30) return { error: "You've sent a lot of reports today. Try again tomorrow." };
+    this.sql.exec("INSERT OR IGNORE INTO reports (ts, reporter_id, target_id, room, msg_id, text, msg_ts, reason, note) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      Date.now(), u.id, target.id, m.room, m.id, String(m.text).slice(0, 600), +m.ts || 0, m.reason, m.note);
+    const dup = this.sql.exec("SELECT changes() AS n").one().n === 0;
+    const c = this.sql.exec("SELECT COUNT(*) AS n, COUNT(DISTINCT reporter_id) AS people FROM reports WHERE target_id = ?", target.id).one();
+    return { dup, count: c.n, reporters: c.people, reporter: this.publicUser(u), target: { ...this.publicUser(target), banned: !!target.banned },
+      room: m.room, text: m.text, ts: +m.ts || Date.now(), reason: m.reason, note: m.note };
+  }
+  isBanned(uid) { return !!this.sql.exec("SELECT banned FROM users WHERE id = ?", +uid || 0).toArray()[0]?.banned; }
+  setBanned(uid, banned, by) {
+    if (uid === by) return { error: "You can't ban yourself." };
+    const u = this.sql.exec("SELECT id FROM users WHERE id = ?", uid).toArray()[0];
+    if (!u) return { error: "No such user." };
+    this.sql.exec("UPDATE users SET banned = ? WHERE id = ?", banned ? 1 : 0, uid);
+    return { ok: true };
+  }
+  markRemoved(room, id) { this.sql.exec("UPDATE reports SET status = 'removed' WHERE room = ? AND msg_id = ?", room, id); }
+  dismissReports(uid) { this.sql.exec("UPDATE reports SET status = 'dismissed' WHERE target_id = ? AND status = 'open'", uid); }
+  // For the admin panel: everyone who has been reported (most open reports first), their recent reports, and banned accounts.
+  moderation() {
+    const users = this.sql.exec(`SELECT u.id, u.username, u.display, u.color, u.avatar, u.banned,
+        COUNT(r.id) AS total, SUM(r.status = 'open') AS open, COUNT(DISTINCT r.reporter_id) AS people, MAX(r.ts) AS last
+      FROM users u JOIN reports r ON r.target_id = u.id GROUP BY u.id ORDER BY open DESC, last DESC LIMIT 100`).toArray();
+    const recent = this.sql.exec(`SELECT r.id, r.ts, r.target_id, r.room, r.msg_id, r.text, r.reason, r.note, r.status, ru.display AS reporter, ru.username AS reporter_username
+      FROM reports r JOIN users ru ON ru.id = r.reporter_id WHERE r.target_id IN (SELECT target_id FROM reports GROUP BY target_id ORDER BY MAX(ts) DESC LIMIT 100)
+      ORDER BY r.ts DESC LIMIT 400`).toArray();
+    const banned = this.sql.exec("SELECT id, username, display, color, avatar FROM users WHERE banned = 1 AND id NOT IN (SELECT target_id FROM reports) LIMIT 100").toArray();
+    return { users: users.map(u => ({ ...u, banned: !!u.banned, reports: recent.filter(r => r.target_id === u.id).slice(0, 10) })), banned, cleared: this.chatCutoff() };
+  }
 
   // Profile: display name, colour, and avatar ("" = initials, "e:<emoji>", "p:<version>" = uploaded photo).
   async setProfile(token, b) {
@@ -270,13 +371,13 @@ export class Hub extends DurableObject {
   }
 
   // Google: existing account -> session; new account -> a short-lived "pick a username" ticket.
-  async googleSignin(sub, name) {
+  async googleSignin(sub, name, admin) {
     const u = this.sql.exec("SELECT * FROM users WHERE google_sub = ?", sub).toArray()[0];
-    if (u) return { token: await this.newSession(u.id) };
+    if (u) { this.sql.exec("UPDATE users SET admin = ? WHERE id = ?", admin ? 1 : 0, u.id); return { token: await this.newSession(u.id) }; }
     const now = Date.now();
     this.sql.exec("DELETE FROM pending WHERE expires < ?", now);
     const t = randHex(32);
-    this.sql.exec("INSERT INTO pending (token, sub, name, expires) VALUES (?, ?, ?, ?)", await sha256(t), sub, name.slice(0, 60), now + 30 * 60e3);
+    this.sql.exec("INSERT INTO pending (token, sub, name, expires, admin) VALUES (?, ?, ?, ?, ?)", await sha256(t), sub, name.slice(0, 60), now + 30 * 60e3, admin ? 1 : 0);
     return { pending: t };
   }
   async pendingFor(t) {
@@ -302,7 +403,7 @@ export class Hub extends DurableObject {
     if (!u) {
       const color = COLORS[Math.floor(Math.random() * COLORS.length)];
       // No password: pass/salt stay empty so password login can never match this account.
-      u = this.sql.exec("INSERT INTO users (username, display, color, pass, salt, created, google_sub) VALUES (?, ?, ?, '', '', ?, ?) RETURNING *", username, display, color, Date.now(), row.sub).one();
+      u = this.sql.exec("INSERT INTO users (username, display, color, pass, salt, created, google_sub, admin) VALUES (?, ?, ?, '', '', ?, ?, ?) RETURNING *", username, display, color, Date.now(), row.sub, row.admin ? 1 : 0).one();
     }
     this.sql.exec("DELETE FROM pending WHERE token = ?", h);
     return { user: this.publicUser(u), favs: this.favsOf(u.id), plans: this.plansOf(u.id), token: await this.newSession(u.id) };
@@ -410,12 +511,29 @@ export class ChatRoom extends DurableObject {
     if (!cols.includes("color")) this.sql.exec("ALTER TABLE msgs ADD COLUMN color TEXT NOT NULL DEFAULT ''");
     if (!cols.includes("av")) this.sql.exec("ALTER TABLE msgs ADD COLUMN av TEXT NOT NULL DEFAULT ''");
   }
+  // Apply the site-wide "clear all chats" time from the Hub: always when someone opens the room or posts,
+  // at most every 30s for the inbox summaries.
+  async applyCutoff(fresh = true) {
+    if (!fresh && this.cut && Date.now() - this.cut.at < 30_000) return;
+    const v = await this.env.HUB.get(this.env.HUB.idFromName("hub")).chatCutoff();
+    if (v && v !== this.cut?.v) {
+      this.sql.exec("DELETE FROM msgs WHERE ts < ?", v);
+      if (this.cut) this.broadcast({ type: "cleared" });
+    }
+    this.cut = { v, at: Date.now() };
+  }
   // For the chat list: last message, unread count after `since`, and who's online.
-  summary(since) {
+  async summary(since) {
+    await this.applyCutoff(false);
     const last = this.sql.exec("SELECT id, ts, uid, name, text FROM msgs ORDER BY id DESC LIMIT 1").toArray()[0] || null;
     const unread = last ? this.sql.exec("SELECT COUNT(*) AS n FROM msgs WHERE id > ?", since).one().n : 0;
     return { last, unread, online: this.open().length };
   }
+  async getMsg(id) {
+    await this.applyCutoff(); return this.sql.exec("SELECT id, ts, uid, name, text FROM msgs WHERE id = ?", id).toArray()[0] || null; }
+  remove(id) { this.sql.exec("DELETE FROM msgs WHERE id = ?", id); this.broadcast({ type: "del", id }); return true; }
+  // Bans are checked against the Hub on every message (sending is rate limited), so a ban takes effect in open chats at once.
+  banned(uid) { return this.env.HUB.get(this.env.HUB.idFromName("hub")).isBanned(uid); }
   open() { return this.ctx.getWebSockets().filter(ws => ws.readyState === WebSocket.OPEN); }
   broadcast(obj, except) { const d = JSON.stringify(obj); for (const ws of this.open()) if (ws !== except) { try { ws.send(d); } catch {} } }
 
@@ -425,6 +543,7 @@ export class ChatRoom extends DurableObject {
     const [client, server] = Object.values(new WebSocketPair());
     this.ctx.acceptWebSocket(server);
     server.serializeAttachment({ user, sent: [] });
+    await this.applyCutoff();
     const messages = this.sql.exec(`SELECT id, ts, uid, name, color, av, text FROM msgs ORDER BY id DESC LIMIT ${HISTORY}`).toArray().reverse();
     server.send(JSON.stringify({ type: "history", messages, online: this.open().length }));
     this.broadcast({ type: "presence", online: this.open().length }, server);
@@ -444,6 +563,8 @@ export class ChatRoom extends DurableObject {
     if (att.sent.length >= RATE.count) return ws.send(JSON.stringify({ type: "error", error: "You're sending messages too fast. Wait a few seconds." }));
     att.sent.push(now); ws.serializeAttachment(att);
     const { user } = att;
+    await this.applyCutoff();
+    if (await this.banned(String(user.id))) return ws.send(JSON.stringify({ type: "error", error: "Your account can't post in chats. It was blocked after reports from other ravers.", banned: true }));
     const row = this.sql.exec("INSERT INTO msgs (ts, uid, name, color, av, text) VALUES (?, ?, ?, ?, ?, ?) RETURNING id", now, String(user.id), user.name, user.color || "", user.av || "", text).one();
     this.sql.exec("DELETE FROM msgs WHERE id <= ?", row.id - KEEP);
     this.broadcast({ type: "msg", message: { id: row.id, ts: now, uid: String(user.id), name: user.name, color: user.color, av: user.av || "", text } });

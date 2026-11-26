@@ -361,6 +361,38 @@ nav.tabs { position: fixed; z-index: 25; left: 50%; transform: translateX(-50%);
 .convo .msgs { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 14px 12px 8px; background: radial-gradient(circle at 1px 1px, color-mix(in srgb, var(--fg) 6%, transparent) 1px, transparent 0) 0 0 / 18px 18px, var(--bg); }
 .convo .composer { position: static; margin: 0; border: 0; border-top: 1px solid var(--line); border-radius: 0; box-shadow: none; padding: 8px 10px; }
 .convo .composer textarea { background: var(--surface-2); border-radius: 22px; padding: 11px 16px; }
+.leave-btn { border: 0; background: transparent; color: var(--muted); }
+.leave-btn svg { width: 22px; height: 22px; }
+.msg .bubble[data-msg] { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.msg .bubble[data-msg]:active { filter: brightness(.94); }
+.banned-note { margin: 0; padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px)); border-top: 1px solid var(--line); text-align: center; }
+.quote { margin: 0; padding: 10px 14px; border-left: 4px solid var(--heart); background: var(--surface-2); border-radius: 0 12px 12px 0; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 15px; }
+.btn.danger { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 45%, var(--line)); }
+.btn.sm { min-height: 36px; padding: 0 12px; font-size: 13px; align-self: flex-start; }
+.chip.reason { cursor: pointer; position: relative; }
+.chip.reason input { position: absolute; opacity: 0; pointer-events: none; }
+.chip.reason:has(input:checked) { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.chip.reason:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
+.left-rooms summary { cursor: pointer; list-style: none; }
+.left-rooms summary::-webkit-details-marker { display: none; }
+.left-rooms summary::after { content: " ▸"; }
+.left-rooms[open] summary::after { content: " ▾"; }
+.left-rooms .room-row { opacity: .75; }
+.admin-link { text-decoration: none; color: inherit; }
+.admin .stats { display: grid; grid-template-columns: repeat(3, 1fr); text-align: center; }
+.admin .stats div { display: flex; flex-direction: column; }
+.admin .stats b { font-size: 24px; font-family: var(--font-display); }
+.admin .stats span { font-size: 12px; color: var(--muted); }
+.adm-head { display: flex; gap: 12px; align-items: center; }
+.adm-head .av { width: 40px; height: 40px; flex: none; }
+.adm-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.tag { font-size: 12px; font-weight: 700; padding: 3px 9px; border-radius: 999px; background: var(--surface-2); }
+.tag.hot { background: var(--accent-soft); }
+.tag.ban { background: var(--warn-bg); color: var(--warn); }
+.adm-rep { display: flex; flex-direction: column; gap: 6px; padding-top: 10px; border-top: 1px solid var(--line); }
+.adm-rep.done { opacity: .6; }
+.adm-rep .note { margin: 0; }
+.adm-user.is-banned { border-color: color-mix(in srgb, var(--warn) 40%, var(--line)); }
 .convo-empty { flex: 1; display: grid; place-items: center; color: var(--muted); padding: 40px; text-align: center; }
 body.in-convo { --tab-h: 0px; }
 body.in-convo #hdr, body.in-convo nav.tabs { display: none; }
@@ -725,6 +757,7 @@ footer.foot { font-family: var(--font-hand); font-size: 15px; }
   <section class="view" id="v-timeline" aria-label="My timeline" hidden></section>
   <section class="view" id="v-chat" aria-label="Chat" hidden></section>
   <section class="view" id="v-profile" aria-label="Profile" hidden></section>
+  <section class="view" id="v-admin" aria-label="Admin" hidden></section>
   <section class="view" id="v-explore" aria-label="Explore artists" hidden>
     <div class="search">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
@@ -1006,7 +1039,7 @@ const state = {
   view: "lineup",
   day: store.get("day", DAYS[0].id),
   stage: "all",
-  mode: store.get("mode", window.matchMedia("(min-width: 900px)").matches ? "grid" : "list"),
+  mode: store.get("lineupMode", "grid"), // Timetable first on every screen; the list is one tap away and the choice is remembered
   favOnly: false,
   favs: new Set(store.get("favs", [])),
   plans: store.get("plans", []), // your own blocks: dining sessions and breaks ({ id, day, start, end, kind, label })
@@ -1739,7 +1772,7 @@ function rerenderKeepScroll() {
 }
 
 // ---------- Routing ----------
-const TITLES = { lineup: "Line-up", now: "Now & next", chat: "Chats", timeline: "My timeline", explore: "Explore artists", profile: "Profile" };
+const TITLES = { lineup: "Line-up", now: "Now & next", chat: "Chats", timeline: "My timeline", explore: "Explore artists", profile: "Profile", admin: "Admin" };
 function render() {
   for (const v of Object.keys(TITLES)) $("#v-" + v).hidden = v !== state.view;
   document.querySelectorAll(".tabs a").forEach((a, i) => { if (a.dataset.view === state.view) { a.setAttribute("aria-current", "page"); a.parentNode.style.setProperty("--i", i); } else a.removeAttribute("aria-current"); });
@@ -1751,7 +1784,7 @@ function render() {
   $("#favOnly").setAttribute("aria-pressed", state.favOnly);
   renderDays(); renderStageChips();
   document.body.classList.toggle("in-convo", state.view === "chat" && !!chat.room && !wide() && !!state.user);
-  ({ lineup: renderLineup, now: renderNow, chat: renderChat, timeline: renderTimeline, explore: renderExplore, profile: renderProfile })[state.view]();
+  ({ lineup: renderLineup, now: renderNow, chat: renderChat, timeline: renderTimeline, explore: renderExplore, profile: renderProfile, admin: renderAdmin })[state.view]();
   if (state.view !== "chat") chatDisconnect();
   document.documentElement.style.setProperty("--hdr", $("#hdr").offsetHeight + "px");
 }
@@ -1764,6 +1797,7 @@ function route() {
 
 // ---------- Events ----------
 document.addEventListener("click", e => {
+  const bub = e.target.closest(".bubble[data-msg]"); if (bub) return openMsgMenu(bub.dataset.msg);
   const t = e.target.closest("button, a"); if (!t) return;
   if (t.dataset.fav) return toggleFav(t.dataset.fav);
   if (t.dataset.planAdd !== undefined) return openPlanForm(t.dataset.planAdd || "b-eat");
@@ -1791,6 +1825,7 @@ document.addEventListener("click", e => {
     return;
   }
   if (t.dataset.play) { e.stopPropagation(); return play(t.dataset.play); }
+  if (t.dataset.admin) return adminAction(t.dataset.admin, t);
   if (t.dataset.room) { e.preventDefault(); if (!$("#sheet").hidden) closeSheet(); location.hash = "#chat/" + t.dataset.room; return; }
   if (t.dataset.av !== undefined) return pickAvatar(t.dataset.av);
   if (t.dataset.color) return saveProfile({ color: t.dataset.color });
@@ -1799,7 +1834,7 @@ document.addEventListener("click", e => {
   if (t.dataset.day) { state.day = t.dataset.day; store.set("day", state.day); render(); return; }
   if (t.dataset.stage) { state.stage = t.dataset.stage; render(); return; }
   if (t.dataset.genre) { state.genre = t.dataset.genre; renderGenreChips(); renderExplore(); return; }
-  if (t.id === "modeList" || t.id === "modeGrid") { state.mode = t.id === "modeGrid" ? "grid" : "list"; store.set("mode", state.mode); render(); return; }
+  if (t.id === "modeList" || t.id === "modeGrid") { state.mode = t.id === "modeGrid" ? "grid" : "list"; store.set("lineupMode", state.mode); render(); return; }
   if (t.id === "favOnly") { state.favOnly = !state.favOnly; render(); return; }
   if (t.id === "sheetClose") return closeSheet();
   if (t.id === "pPrev") return step(-1);
@@ -1846,6 +1881,7 @@ const chat = {
   muted: new Set(store.get("muted", [])),
   seen: store.get("seen", {}),          // room -> id of the last message read
   recent: store.get("recentRooms", []),  // artist rooms opened without booking that artist
+  left: new Set(store.get("leftRooms", [])), // rooms you left: hidden from the inbox until you open them again
   sum: {}, q: "", crewOpen: false,
   ws: null, wsRoom: null, online: 0, status: "idle", msgs: [], retry: 0, timer: null, draft: ""
 };
@@ -1865,6 +1901,8 @@ function roomSub(r) {
   return st ? `Fan room · ${dayOf(st.day).short} ${range(st.start, st.end)} · ${stageName(st.stage)}` : "Fan room";
 }
 const SEND = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>`;
+const LEAVE = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l-5-5 5-5M5 12h11"/></svg>`;
+const FLAG = `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></svg>`;
 const BACK = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>`;
 const chatSupported = () => state.api && "WebSocket" in window;
 const clock = ts => new Date(ts).toLocaleTimeString([], { hour: "numeric", minute: "2-digit", hour12: true });
@@ -1877,9 +1915,23 @@ function ago(ts) {
 function myRooms() {
   const booked = [...new Set([...state.favs].map(k => SETMAP.get(k)).filter(Boolean).sort((a, b) => a.day.localeCompare(b.day) || a.start - b.start).flatMap(s => s.artists.map(x => x.slug)))];
   const extra = chat.recent.filter(sl => ARTISTS.has(sl) && !booked.includes(sl));
-  return { fest: ["general", ...(chat.crew ? ["crew-" + chat.crew] : [])], artists: [...booked, ...extra].map(sl => "artist-" + sl) };
+  const keep = r => !chat.left.has(r);
+  return { fest: ["general", ...(chat.crew ? ["crew-" + chat.crew] : [])].filter(keep), artists: [...booked, ...extra].map(sl => "artist-" + sl).filter(keep) };
+}
+// Rooms you left that you could come back to (crew rooms are gone for good once you leave: you need the code again).
+const leftRooms = () => [...chat.left].filter(r => ROOM_RE.test(r) && !r.startsWith("crew-") && (r === "general" || ARTISTS.has(r.slice(7))));
+function leaveRoom(r) {
+  if (r.startsWith("crew-")) { chat.crew = ""; store.set("crew", ""); }
+  else { chat.left.add(r); store.set("leftRooms", [...chat.left]); }
+  if (r.startsWith("artist-")) { chat.recent = chat.recent.filter(sl => sl !== r.slice(7)); store.set("recentRooms", chat.recent); }
+  delete chat.sum[r]; updateChatBadge();
+  if (chat.room === r) { chatDisconnect(); chat.room = null; }
+  closeSheet();
+  toast(r.startsWith("crew-") ? "Left the crew room" : `Left ${roomName(r)}`);
+  if (location.hash !== "#chat") location.hash = "#chat"; else renderChat();
 }
 function openRoom(r) {
+  if (chat.left.delete(r)) store.set("leftRooms", [...chat.left]);
   if (r.startsWith("artist-") && !chat.recent.includes(r.slice(7))) { chat.recent = [r.slice(7), ...chat.recent].slice(0, 12); store.set("recentRooms", chat.recent); }
   if (r.startsWith("crew-") && r !== "crew-" + chat.crew) { chat.crew = r.slice(5); store.set("crew", chat.crew); }
   chat.room = r;
@@ -1935,7 +1987,12 @@ function chatConnect() {
       const x = chat.sum[chat.wsRoom] || (chat.sum[chat.wsRoom] = { unread: 0, online: chat.online }); x.last = d.message; renderRoomRows();
     }
     else if (d.type === "presence") { chat.online = d.online; renderChatStatus(); }
-    else if (d.type === "error") toast(d.error);
+    else if (d.type === "cleared") { chat.msgs = []; renderChatBody(); }
+    else if (d.type === "del") {
+      chat.msgs = chat.msgs.filter(m => m.id !== d.id);
+      document.querySelector(`#chatMsgs .msg[data-id="${+d.id}"]`)?.remove();
+    }
+    else if (d.type === "error") { toast(d.error); if (d.banned && state.user && !state.user.banned) { state.user.banned = true; renderChat(); } }
   };
   ws.onclose = () => {
     if (chat.ws !== ws) return;
@@ -1953,8 +2010,55 @@ function chatDisconnect() {
 function msgHTML(m, prev) {
   if (chat.muted.has(m.uid)) return "";
   const me = state.user && m.uid === String(state.user.id), same = prev && prev.uid === m.uid && m.ts - prev.ts < 120000 && !chat.muted.has(prev.uid);
-  const who = `<button data-chat="mute" data-uid="${esc(m.uid)}" data-name="${esc(m.name)}" title="Hide messages from ${esc(m.name)}">${esc(m.name)}</button>`;
-  return `<div class="msg${me ? " me" : ""}${same ? " same" : ""}" data-id="${m.id}"><span class="who">${me ? "" : avatar(m.name, m.color, "", m.av, m.uid)}</span><span class="col"><span class="by">${me ? "" : who}<span class="tnum">${clock(m.ts)}</span></span><span class="bubble">${esc(m.text)}</span></span></div>`;
+  const who = `<button data-chat="msg" data-id="${m.id}" title="Report or hide ${esc(m.name)}">${esc(m.name)}</button>`;
+  return `<div class="msg${me ? " me" : ""}${same ? " same" : ""}" data-id="${m.id}"><span class="who">${me ? "" : avatar(m.name, m.color, "", m.av, m.uid)}</span><span class="col"><span class="by">${me ? "" : who}<span class="tnum">${clock(m.ts)}</span></span><span class="bubble"${me ? "" : ` role="button" tabindex="0" data-msg="${m.id}" aria-label="Message from ${esc(m.name)}. Tap for options"`}>${esc(m.text)}</span></span></div>`;
+}
+// Tap someone else's message (or their name) for: report it, hide that person, and for admins remove/ban.
+function openMsgMenu(id) {
+  const m = chat.msgs.find(x => x.id === +id); if (!m || !state.user) return;
+  const admin = !!state.user.admin;
+  openSheetHTML(`<div class="auth" style="position:relative">${closeBtnHTML}
+    <h2>${esc(m.name)}</h2>
+    <blockquote class="quote">${esc(m.text)}</blockquote>
+    <button class="btn" data-chat="report" data-id="${m.id}">${FLAG} Report this message</button>
+    <button class="btn" data-chat="mute" data-uid="${esc(m.uid)}" data-name="${esc(m.name)}">Hide messages from ${esc(m.name)}</button>
+    ${admin ? `<p class="note" style="margin:6px 0 0">Admin</p>
+      <button class="btn danger" data-chat="aremove" data-id="${m.id}">Remove this message for everyone</button>
+      <button class="btn danger" data-chat="aban" data-uid="${esc(m.uid)}" data-name="${esc(m.name)}">Ban ${esc(m.name)} from posting</button>` : ""}
+  </div>`);
+}
+const REASONS = [["spam", "Spam or scam"], ["abuse", "Harassment or hate"], ["sexual", "Sexual content"], ["other", "Something else"]];
+function openReport(id) {
+  const m = chat.msgs.find(x => x.id === +id); if (!m) return;
+  openSheetHTML(`<div class="auth" style="position:relative">${closeBtnHTML}
+    <h2>Report message</h2>
+    <p>The admin sees this message, who sent it and which room it was in. ${esc(m.name)} won't know who reported them.</p>
+    <blockquote class="quote">${esc(m.text)}</blockquote>
+    <form id="reportForm" data-id="${m.id}" class="swap">
+      <div class="row" role="radiogroup" aria-label="Reason">${REASONS.map(([v, l], i) => `<label class="chip reason"><input type="radio" name="reason" value="${v}"${i ? "" : " checked"}> ${l}</label>`).join("")}</div>
+      <label>Anything to add? (optional)<input class="field" id="reportNote" maxlength="200" autocomplete="off"></label>
+      <button class="btn primary" type="submit">Send report</button>
+    </form>
+  </div>`);
+}
+async function sendReport(form) {
+  const id = +form.dataset.id, reason = form.querySelector("input[name=reason]:checked")?.value || "other";
+  const btn = form.querySelector("button[type=submit]"); btn.disabled = true;
+  try {
+    await api("/api/report", { method: "POST", body: { room: chat.room, id, reason, note: $("#reportNote").value } });
+    closeSheet(); toast("Thanks. The admin will take a look.");
+  } catch (e) { btn.disabled = false; toast(e.message); }
+}
+function openLeave() {
+  const r = chat.room; if (!r) return;
+  const crew = r.startsWith("crew-");
+  openSheetHTML(`<div class="auth" style="position:relative">${closeBtnHTML}
+    <h2>${crew ? "Leave your crew room?" : `Leave ${esc(roomName(r))}${r.startsWith("artist-") ? " fans" : ""}?`}</h2>
+    <p>${crew ? `It disappears from your chats. To come back you'll need the code <b class="crew-code">${esc(r.slice(5))}</b> again.`
+      : `It disappears from your chats and you stop getting unread counts. You can rejoin any time${r === "general" ? " from the bottom of your chats" : " from the artist's page"}.`}</p>
+    ${crew ? `<button class="btn" data-chat="copy">Copy code first</button>` : ""}
+    <button class="btn danger" data-chat="leave-room" data-leave="${esc(r)}">Leave chat</button>
+  </div>`);
 }
 function renderChatStatus() {
   const el = $("#chatOnline"); if (!el) return;
@@ -1990,7 +2094,8 @@ function renderRoomRows() {
   const byLast = (a, b) => (chat.sum[b]?.last?.ts || 0) - (chat.sum[a]?.last?.ts || 0);
   const fs = fest.filter(match), as = artists.filter(match).sort(byLast);
   el.innerHTML = (fs.length ? `<div class="room-sec">Festival</div>${fs.map(rowHTML).join("")}` : "") +
-    `<div class="room-sec">Artist rooms</div>` + (as.length ? as.map(rowHTML).join("") : `<p class="note" style="padding:4px 8px">${q ? "No chats match." : "Book artists in the line-up and their fan rooms show up here."}</p>`);
+    `<div class="room-sec">Artist rooms</div>` + (as.length ? as.map(rowHTML).join("") : `<p class="note" style="padding:4px 8px">${q ? "No chats match." : "Book artists in the line-up and their fan rooms show up here."}</p>`) +
+    (leftRooms().length && !q ? `<details class="left-rooms"><summary class="room-sec">Chats you left (${leftRooms().length})</summary>${leftRooms().map(r => `<a class="room-row" href="#chat/${r}">${roomIcon(r)}<span class="rr-main"><span class="rr-top"><b>${esc(roomName(r))}</b><span class="rr-time">Rejoin</span></span><span class="rr-bot"><span class="rr-prev">${esc(roomSub(r))}</span></span></span></a>`).join("")}</details>` : "");
 }
 function crewBoxHTML() {
   return `<div class="card crew-box">
@@ -2005,9 +2110,11 @@ function convoHTML() {
       <a class="icon-btn back" href="#chat" aria-label="Back to chats">${BACK}</a>
       ${roomIcon(r, "sm")}
       <button class="ch-title" ${artist ? `data-open="${esc(artist)}" title="About ${esc(roomName(r))}"` : r.startsWith("crew-") ? `data-chat="copy" title="Copy crew code"` : ""}><b>${esc(roomName(r))}${artist ? " fans" : ""}</b><span class="online off" id="chatOnline"></span></button>
+      <button class="icon-btn leave-btn" data-chat="leave-menu" aria-label="Leave this chat" title="Leave chat">${LEAVE}</button>
     </div>
     <div class="msgs" id="chatMsgs" aria-live="polite"></div>
-    <form class="composer" id="composer"><label for="chatText" class="sr">Message</label><textarea id="chatText" rows="1" maxlength="500" placeholder="Message">${esc(chat.draft)}</textarea><button id="chatSend" type="submit" aria-label="Send" disabled>${SEND}</button></form>`;
+    ${state.user?.banned ? `<p class="note banned-note">Your account can't post in chats. It was blocked after reports from other ravers. You can still read along.</p>`
+      : `<form class="composer" id="composer"><label for="chatText" class="sr">Message</label><textarea id="chatText" rows="1" maxlength="500" placeholder="Message">${esc(chat.draft)}</textarea><button id="chatSend" type="submit" aria-label="Send" disabled>${SEND}</button></form>`}`;
 }
 function renderChat() {
   const el = $("#v-chat");
@@ -2020,7 +2127,7 @@ function renderChat() {
       <div class="search inbox-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="roomQ" type="search" placeholder="Search chats" autocomplete="off" aria-label="Search chats" value="${esc(chat.q)}"></div>
       <div id="roomRows"></div>
       ${crewBoxHTML()}
-      <p class="note" style="padding:10px 8px">Be kind. Tap a name in a chat to hide that person's messages.</p>
+      <p class="note" style="padding:10px 8px">Be kind. Tap someone's message to report it or hide that person.</p>
     </div>
     <div class="convo">${chat.room ? convoHTML() : ""}</div>
   </div>`;
@@ -2039,7 +2146,13 @@ function chatAction(a, t) {
   if (a === "create") { const abc = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; let c = ""; crypto.getRandomValues(new Uint8Array(6)).forEach(x => c += abc[x % abc.length]); setCrew(c); toast("Crew room created. Share the code!"); return; }
   if (a === "leave") { setCrew(""); toast("Left the crew room"); return; }
   if (a === "copy") { navigator.clipboard?.writeText(chat.crew).then(() => toast("Crew code copied"), () => toast(`Your code is ${chat.crew}`)); return; }
-  if (a === "mute") { chat.muted.add(t.dataset.uid); store.set("muted", [...chat.muted]); toast(`Hidden messages from ${t.dataset.name}`); renderChatBody(); return; }
+  if (a === "mute") { chat.muted.add(t.dataset.uid); store.set("muted", [...chat.muted]); closeSheet(); toast(`Hidden messages from ${t.dataset.name}`); renderChatBody(); return; }
+  if (a === "msg") return openMsgMenu(t.dataset.id);
+  if (a === "report") return openReport(t.dataset.id);
+  if (a === "leave-menu") return openLeave();
+  if (a === "leave-room") return leaveRoom(t.dataset.leave);
+  if (a === "aremove") return adminAct("/api/admin/remove", { room: chat.room, id: +t.dataset.id }, "Message removed");
+  if (a === "aban") return adminAct("/api/admin/ban", { uid: +t.dataset.uid, banned: true }, `${t.dataset.name} can't post any more`);
 }
 
 // ---------- Profile ----------
@@ -2085,9 +2198,69 @@ function renderProfile() {
         <a href="#explore"><b>${ARTISTS.size}</b><span>Artists</span></a>
       </div>
     </div>
+    ${u.admin ? `<a class="card admin-link" href="#admin"><h3>🛡️ Admin panel</h3><p class="note">Reported messages, report counts per person, and bans.</p></a>` : ""}
     ${offlineCardHTML()}
     <button class="btn" data-auth="logout">Log out</button>
   </div>`;
+}
+
+// ---------- Admin: reports and bans (only for the admin account; the server checks every call) ----------
+const admin = { data: null, filter: "open", busy: false };
+const REASON_LABEL = Object.fromEntries(REASONS);
+async function loadAdmin() {
+  if (admin.busy) return; admin.busy = true;
+  try { admin.data = await api("/api/admin/reports"); } catch (e) { admin.data = { error: e.message }; } finally { admin.busy = false; }
+  if (state.view === "admin") renderAdmin(true);
+}
+async function adminAct(path, body, msg) {
+  try {
+    admin.data = await api(path, { method: "POST", body });
+    closeSheet(); toast(msg);
+    if (state.view === "admin") renderAdmin(true);
+  } catch (e) { toast(e.message); }
+}
+function renderAdmin(fresh) {
+  const el = $("#v-admin");
+  if (!state.user?.admin) { el.innerHTML = `<div class="card"><h3>Admins only</h3><p>This page is for the site's moderators.</p></div>`; return; }
+  if (!fresh) loadAdmin();
+  const d = admin.data;
+  if (!d) { el.innerHTML = `<p class="note" style="text-align:center;padding:40px 0">Loading reports…</p>`; return; }
+  if (d.error) { el.innerHTML = `<div class="card"><h3>Couldn't load reports</h3><p>${esc(d.error)}</p><button class="btn" data-admin="reload">Try again</button></div>`; return; }
+  const users = d.users || [], open = users.reduce((n, u) => n + (u.open || 0), 0);
+  const bannedAll = [...users.filter(u => u.banned), ...(d.banned || []).map(u => ({ ...u, banned: true, total: 0, open: 0, people: 0, reports: [] }))];
+  const list = admin.filter === "open" ? users.filter(u => u.open > 0) : admin.filter === "banned" ? bannedAll : users;
+  const f = (k, l, n) => `<button class="chip" data-admin="filter" data-f="${k}" aria-pressed="${admin.filter === k}">${l} <b>${n}</b></button>`;
+  const roomLabel = r => r === "general" ? "Everyone" : r.startsWith("crew-") ? "Crew " + r.slice(5) : (ARTISTS.get(r.slice(7))?.name || r.slice(7)) + " fans";
+  const card = u => `<div class="card adm-user${u.banned ? " is-banned" : ""}">
+      <div class="adm-head">${avatar(u.display, u.color, "", u.avatar, u.id)}<div style="min-width:0;flex:1"><b>${esc(u.display)}</b> <span class="note">@${esc(u.username)}</span>
+        <div class="adm-tags">${u.total ? `<span class="tag">${u.total} report${u.total === 1 ? "" : "s"} · ${u.people} ${u.people === 1 ? "person" : "people"}</span>` : ""}${u.open ? `<span class="tag hot">${u.open} to review</span>` : ""}${u.banned ? `<span class="tag ban">Banned</span>` : ""}</div></div></div>
+      ${(u.reports || []).map(r => `<div class="adm-rep${r.status !== "open" ? " done" : ""}">
+        <blockquote class="quote">${esc(r.text)}</blockquote>
+        <p class="note">${esc(REASON_LABEL[r.reason] || r.reason)}${r.note ? ` · “${esc(r.note)}”` : ""} · ${esc(roomLabel(r.room))} · by ${esc(r.reporter)} (@${esc(r.reporter_username)}) · ${ago(r.ts)}${r.status === "removed" ? " · <b>removed</b>" : r.status === "dismissed" ? " · dismissed" : ""}</p>
+        ${r.status !== "removed" ? `<button class="btn sm" data-admin="remove" data-room="${esc(r.room)}" data-id="${r.msg_id}">Remove message</button>` : ""}
+      </div>`).join("")}
+      <div class="row">
+        ${u.banned ? `<button class="btn" data-admin="unban" data-uid="${u.id}" data-name="${esc(u.display)}">Unban</button>` : `<button class="btn danger" data-admin="ban" data-uid="${u.id}" data-name="${esc(u.display)}">Ban from posting</button>`}
+        ${u.open ? `<button class="btn" data-admin="dismiss" data-uid="${u.id}">Dismiss reports</button>` : ""}
+      </div>
+    </div>`;
+  el.innerHTML = `<div class="profile admin">
+    <div class="stats card"><div><b>${open}</b><span>To review</span></div><div><b>${users.length}</b><span>People reported</span></div><div><b>${bannedAll.length}</b><span>Banned</span></div></div>
+    <div class="chips" role="group" aria-label="Show">${f("open", "To review", users.filter(u => u.open > 0).length)}${f("all", "All reported", users.length)}${f("banned", "Banned", bannedAll.length)}</div>
+    ${list.length ? list.map(card).join("") : `<div class="card"><p class="note">${admin.filter === "banned" ? "Nobody is banned." : admin.filter === "open" ? "Nothing to review. 🎉" : "Nobody has been reported yet."}</p></div>`}
+    <p class="note">Banned people can still sign in and read chats, but can't post. Most reported people are at the top.</p>
+    <div class="card"><h3>Clear all chats</h3><p class="note">Deletes every message in every room (Everyone, artist rooms and crew rooms). Reports stay here.${d.cleared ? ` Last cleared ${ago(d.cleared)}.` : ""}</p><button class="btn danger" data-admin="clear-ask">Clear all chats…</button></div>
+  </div>`;
+}
+function adminAction(a, t) {
+  if (a === "reload") return loadAdmin();
+  if (a === "filter") { admin.filter = t.dataset.f; return renderAdmin(true); }
+  if (a === "ban") return adminAct("/api/admin/ban", { uid: +t.dataset.uid, banned: true }, `${t.dataset.name} can't post any more`);
+  if (a === "unban") return adminAct("/api/admin/ban", { uid: +t.dataset.uid, banned: false }, `${t.dataset.name} can post again`);
+  if (a === "dismiss") return adminAct("/api/admin/dismiss", { uid: +t.dataset.uid }, "Reports dismissed");
+  if (a === "remove") return adminAct("/api/admin/remove", { room: t.dataset.room, id: +t.dataset.id }, "Message removed");
+  if (a === "clear-ask") return openSheetHTML(`<div class="auth" style="position:relative">${closeBtnHTML}<h2>Clear every chat?</h2><p>All messages in every room are deleted for everyone. This can't be undone.</p><button class="btn danger" data-admin="clear">Yes, clear all chats</button></div>`);
+  if (a === "clear") { chat.msgs = []; chat.sum = {}; updateChatBadge(); return adminAct("/api/admin/clear-chats", {}, "All chats cleared"); }
 }
 async function saveProfile(body, msg) {
   if (!state.user) return;
@@ -2113,11 +2286,13 @@ async function uploadPhoto(file) {
     state.user = r.user; renderAcct(); renderProfile(); loadSocial(); toast("Photo updated");
   } catch (e) { toast(e?.message || "Couldn't read that image"); }
 }
+document.addEventListener("keydown", e => { const b = e.target.closest?.(".bubble[data-msg]"); if (b && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); openMsgMenu(b.dataset.msg); } });
 document.addEventListener("change", e => { if (e.target.id === "photoIn") { uploadPhoto(e.target.files[0]); e.target.value = ""; } });
 
 document.addEventListener("submit", e => {
   if (e.target.id === "authForm") { e.preventDefault(); submitAuth(e.target); return; }
   if (e.target.id === "planForm") { e.preventDefault(); submitPlan(e.target); return; }
+  if (e.target.id === "reportForm") { e.preventDefault(); sendReport(e.target); return; }
   if (e.target.id === "nameForm") { e.preventDefault(); const v = $("#pName").value.trim(); if (!v) return toast("Your name can't be empty"); saveProfile({ display: v }, "Name saved"); return; }
   if (e.target.id === "joinForm") { e.preventDefault(); const c = $("#crewCode").value.toUpperCase().replace(/[^A-Z0-9]/g, ""); if (c.length !== 6) return toast("Crew codes have 6 letters or numbers"); setCrew(c); toast("Joined crew " + c); return; }
   if (e.target.id === "composer") {
