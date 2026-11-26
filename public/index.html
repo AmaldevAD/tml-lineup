@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0D0B14">
-<meta name="description" content="Unofficial Tomorrowland Thailand 2026 line-up: timetable, favourites, live stage chat.">
+<meta name="description" content="Unofficial Tomorrowland Thailand 2026 line-up: timetable, book your sets, see who is going, live chat.">
 <title>TML Unofficial · Tomorrowland Thailand 2026 Line-up</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -134,9 +134,9 @@ main { padding-block: 6px calc(var(--tab-h) + var(--player-h) + env(safe-area-in
 /* Timetable grid */
 .grid-scroll { overflow: auto; border: 1px solid var(--line); border-radius: var(--r); background: var(--surface); max-height: calc(100dvh - 250px - var(--player-h)); min-height: 420px; position: relative; margin-top: 4px; }
 .grid { display: grid; grid-template-columns: 58px repeat(var(--cols), minmax(158px, 1fr)); min-width: min-content; position: relative; }
-.g-head { position: sticky; top: 0; z-index: 3; background: var(--surface); border-bottom: 1px solid var(--line); padding: 10px 8px; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; display: flex; gap: 6px; align-items: center; min-height: 46px; }
-.g-head.corner { left: 0; z-index: 4; }
-.g-times { position: sticky; left: 0; z-index: 2; background: var(--surface); border-right: 1px solid var(--line); }
+.g-head { position: sticky; top: 0; z-index: 8; background: var(--surface); border-bottom: 1px solid var(--line); padding: 10px 8px; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; display: flex; gap: 6px; align-items: center; min-height: 46px; }
+.g-head.corner { left: 0; z-index: 9; }
+.g-times { position: sticky; left: 0; z-index: 7; background: var(--surface); border-right: 1px solid var(--line); }
 .g-times span { position: absolute; left: 0; right: 0; text-align: center; font-size: 11px; font-weight: 600; color: var(--muted); transform: translateY(-50%); }
 .g-col { position: relative; border-right: 1px solid var(--line); background-image: repeating-linear-gradient(to bottom, var(--line) 0 1px, transparent 1px calc(var(--ppm) * 60px)); background-position: 0 8px; }
 .g-set { position: absolute; left: 4px; right: 4px; border-radius: 12px; overflow: hidden; color: #fff; }
@@ -270,6 +270,36 @@ nav.tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 25; backgroun
 .tabs-inner { display: grid; grid-template-columns: repeat(5, 1fr); max-width: 620px; margin: 0 auto; }
 .tabs a { font-size: 11px; }
 
+/* Social: crowd avatars, busy slots, account */
+.crowd { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: var(--muted); }
+.crowd .av { margin-left: -7px; }
+.crowd .av:first-child { margin-left: 0; }
+.av { width: 22px; height: 22px; border-radius: 50%; display: inline-grid; place-items: center; font-size: 9.5px; font-weight: 800; color: #120E1E; background: var(--c, var(--accent)); box-shadow: 0 0 0 2px var(--surface); flex: none; letter-spacing: -.02em; }
+.av.lg { width: 34px; height: 34px; font-size: 12.5px; }
+.g-set .crowd, .poster .crowd { color: #fff; }
+.g-set .crowd .av, .poster .crowd .av { box-shadow: 0 0 0 2px rgb(0 0 0 / .5); }
+.busy { position: absolute; left: 0; right: 0; z-index: 4; pointer-events: none;
+  background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--heart) 30%, transparent) 0 6px, transparent 6px 13px);
+  border-top: 2px solid color-mix(in srgb, var(--heart) 70%, transparent); border-bottom: 2px solid color-mix(in srgb, var(--heart) 70%, transparent); }
+.g-set.blocked { filter: grayscale(.85) brightness(.6); }
+.g-set.is-fav { z-index: 5; box-shadow: 0 0 0 3px var(--heart), 0 8px 24px rgb(0 0 0 / .45); }
+.set.blocked { opacity: .55; }
+.busy-chip { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 700; color: var(--heart); background: color-mix(in srgb, var(--heart) 12%, transparent); padding: 2px 8px; border-radius: 99px; width: fit-content;
+  background-image: repeating-linear-gradient(135deg, color-mix(in srgb, var(--heart) 16%, transparent) 0 4px, transparent 4px 8px); }
+.acct { white-space: nowrap; display: inline-flex; align-items: center; gap: 8px; height: 44px; padding: 0 14px 0 6px; border-radius: 14px; border: 1px solid var(--line); background: var(--surface); font-weight: 700; font-size: 13.5px; }
+@media (max-width: 420px) { .acct .nm { display: none; } .acct { padding: 0 6px; } .eyebrow { font-size: 10px; letter-spacing: .1em; } }
+.acct.signin { padding: 0 14px; background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.auth { padding: 22px max(18px, env(safe-area-inset-right, 0px)) 8px max(18px, env(safe-area-inset-left, 0px)); display: flex; flex-direction: column; gap: 12px; }
+.auth h2 { font-family: var(--font-display); font-size: 22px; margin: 0; }
+.auth p { margin: 0; color: var(--muted); }
+.auth label { font-size: 13px; font-weight: 600; display: flex; flex-direction: column; gap: 6px; }
+.auth .err { color: var(--warn); font-size: 13.5px; font-weight: 600; min-height: 1em; }
+.auth .switch { background: none; border: 0; color: var(--accent); font-weight: 700; padding: 8px 0; text-align: left; }
+.going { display: flex; flex-wrap: wrap; gap: 8px; }
+.going > span { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; padding: 3px 10px 3px 3px; border-radius: 99px; background: var(--surface-2); }
+.going .av { box-shadow: none; }
+.swap { display: flex; flex-direction: column; gap: 10px; }
+
 /* Chat */
 .chat { display: flex; flex-direction: column; gap: 12px; }
 .chat-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
@@ -281,7 +311,8 @@ nav.tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 25; backgroun
 .msg { display: flex; flex-direction: column; gap: 2px; max-width: 82%; align-self: flex-start; }
 .msg.me { align-self: flex-end; align-items: flex-end; }
 .msg .by { font-size: 11.5px; color: var(--muted); display: flex; gap: 6px; align-items: baseline; padding: 0 6px; }
-.msg .by button { all: unset; cursor: pointer; font-weight: 700; color: var(--hue, var(--fg)); }
+.msg .by button { all: unset; cursor: pointer; font-weight: 700; color: var(--fg); display: inline-flex; align-items: center; gap: 5px; }
+.msg .by .av { width: 18px; height: 18px; font-size: 8px; box-shadow: none; }
 .msg .bubble { background: var(--surface); border: 1px solid var(--line); padding: 8px 12px; border-radius: 18px 18px 18px 6px; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 15px; }
 .msg.me .bubble { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); border-radius: 18px 18px 6px 18px; }
 .msg.same .by { display: none; }
@@ -342,6 +373,7 @@ footer.foot { margin-top: 32px; font-size: 12.5px; color: var(--muted); text-ali
         <h1 id="viewTitle">Line-up</h1>
       </div>
       <div class="hdr-actions">
+        <span id="acctSlot"></span>
         <button class="icon-btn" id="themeBtn" aria-label="Switch light or dark theme" title="Theme">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
         </button>
@@ -641,6 +673,7 @@ const state = {
   mode: store.get("mode", window.matchMedia("(min-width: 900px)").matches ? "grid" : "list"),
   favOnly: false,
   favs: new Set(store.get("favs", [])),
+  user: null, api: false, social: { sets: {} },
   q: "", genre: "all",
   preview: null,
   playing: null, // artist slug in the mini player
@@ -674,7 +707,7 @@ function art(slug, name, { play = true, label } = {}) {
   return `<span class="art${img ? " has-img" : ""}" style="--g:${gradient(slug)}">${img ? `<img src="${esc(img)}" alt="" loading="lazy" decoding="async">` : ""}<span class="ini" aria-hidden="true">${esc(initials(name))}</span>${play ? playBtn(slug, label || name) : ""}</span>`;
 }
 const playBtn = (slug, name) => (PLAYERS_LOADED && !ytFor(slug)) ? "" : `<button class="play${state.playing === slug ? " is-playing" : ""}" data-play="${esc(slug)}" data-name="${esc(name)}" aria-label="${state.playing === slug ? "Stop preview of" : "Play a preview of"} ${esc(name)}">${state.playing === slug ? ICON.pause : ICON.play}</button>`;
-const favBtn = set => { const on = state.favs.has(set.key); return `<button class="fav" data-fav="${esc(set.key)}" aria-pressed="${on}" aria-label="${on ? "Remove" : "Save"} ${esc(nameText(set))} ${on ? "from" : "to"} favourites">${ICON.heart}</button>`; };
+const favBtn = set => { const on = state.favs.has(set.key); return `<button class="fav" data-fav="${esc(set.key)}" aria-pressed="${on}" aria-label="${on ? "Remove" : "Book"} ${esc(nameText(set))} ${on ? "from" : "in"} your timeline">${ICON.heart}</button>`; };
 const pill = st => `<span class="pill" style="--c:var(${st.c})"><span class="dot"></span>${esc(st.name)}</span>`;
 
 let toastT;
@@ -682,6 +715,127 @@ function toast(msg) { const t = $("#toast"); t.textContent = msg; t.classList.to
 
 // Bangkok time
 const epochOf = (day, min) => { const [y,mo,d] = day.split("-").map(Number); return Date.UTC(y, mo-1, d, 0, min) - 7*3600e3; };
+
+// ---------- Accounts & crowd (needs the site's server; without it the page works on this device only) ----------
+async function api(path, opts = {}) {
+  const r = await fetch(path, { credentials: "same-origin", headers: { "content-type": "application/json" }, ...opts, body: opts.body ? JSON.stringify(opts.body) : undefined });
+  let d = {}; try { d = await r.json(); } catch {}
+  if (!r.ok) throw Object.assign(new Error(d.error || "Something went wrong. Try again."), { status: r.status });
+  return d;
+}
+const avatar = (name, color, cls = "") => `<span class="av ${cls}" style="--c:${esc(color || "#F5A524")}" title="${esc(name)}">${esc(initials(name || "?"))}</span>`;
+function crowdHTML(key) {
+  const c = state.social.sets?.[key]; if (!c || !c.n) return "";
+  const shown = c.top.slice(0, 3), more = c.n - shown.length;
+  return `<span class="crowd" title="${c.n} going">${shown.map(u => avatar(u.name, u.color)).join("")}${more > 0 ? `+${more}` : c.n === 1 ? "1 going" : ""}</span>`;
+}
+async function loadSocial() {
+  if (!state.api) return;
+  try { state.social = await api("/api/social"); if (["lineup", "timeline"].includes(state.view)) rerenderKeepScroll(); } catch {}
+}
+async function boot() {
+  if (!/^https?:$/.test(location.protocol)) return;
+  try {
+    const me = await api("/api/me");
+    state.api = true;
+    if (me.user) { state.user = me.user; state.favs = new Set(me.favs); }
+    else state.favs = new Set();
+    updateBadge(); renderAcct(); const y = scrollY; render(); scrollTo(0, y);
+    loadSocial(); setInterval(loadSocial, 30000);
+  } catch { /* no server here: favourites stay on this device */ }
+}
+function renderAcct() {
+  const slot = $("#acctSlot"); if (!slot) return;
+  if (!state.api) { slot.innerHTML = ""; return; }
+  slot.innerHTML = state.user
+    ? `<button class="acct" data-auth="account" aria-label="Your account">${avatar(state.user.display, state.user.color)}<span class="nm">${esc(state.user.display.split(" ")[0])}</span></button>`
+    : `<button class="acct signin" data-auth="signup">Sign up</button>`;
+}
+function openSheetHTML(html, focusSel) {
+  if ($("#sheet").hidden) lastFocus = document.activeElement;
+  state.sheet = null;
+  $("#sheet").innerHTML = html; $("#sheet").scrollTop = 0;
+  const sheet = $("#sheet"), scrim = $("#scrim");
+  sheet.hidden = scrim.hidden = false;
+  requestAnimationFrame(() => { sheet.classList.add("open"); scrim.classList.add("open"); (focusSel && $(focusSel) || $("#sheetClose"))?.focus({ preventScroll: true }); });
+  document.body.style.overflow = "hidden";
+}
+const closeBtnHTML = `<button class="icon-btn" id="sheetClose" aria-label="Close" style="position:absolute;top:14px;right:max(14px, env(safe-area-inset-right, 0px))">${ICON.close}</button>`;
+function openAuth(mode = "signup", reason = "") {
+  const up = mode === "signup";
+  openSheetHTML(`<div class="auth" style="position:relative">${closeBtnHTML}
+    <h2>${up ? "Join the crew" : "Welcome back"}</h2>
+    <p>${esc(reason || (up ? "Save your sets, see who's going to each artist and chat with other ravers. Browsing stays free without an account." : "Log in to your saved sets and chats."))}</p>
+    <form id="authForm" data-mode="${mode}" class="swap" novalidate>
+      ${up ? `<label>Your name<input class="field" id="aDisplay" maxlength="24" autocomplete="nickname" placeholder="e.g. Amal"></label>` : ""}
+      <label>Username<input class="field" id="aUser" maxlength="20" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="letters, numbers, . or _"></label>
+      <label>Password<input class="field" id="aPass" type="password" minlength="8" autocomplete="${up ? "new-password" : "current-password"}" placeholder="${up ? "At least 8 characters" : ""}"></label>
+      <span class="err" id="aErr" role="alert"></span>
+      <button class="btn primary" type="submit">${up ? "Create account" : "Log in"}</button>
+    </form>
+    <button class="switch" data-auth="${up ? "login" : "signup"}">${up ? "Already have an account? Log in" : "New here? Create an account"}</button>
+  </div>`, up ? "#aDisplay" : "#aUser");
+}
+function openAccount() {
+  const n = state.favs.size;
+  openSheetHTML(`<div class="auth" style="position:relative">${closeBtnHTML}
+    <div style="display:flex;align-items:center;gap:12px">${avatar(state.user.display, state.user.color, "lg")}<div><h2>${esc(state.user.display)}</h2><p>@${esc(state.user.username)}</p></div></div>
+    <p>${n} saved set${n === 1 ? "" : "s"} across the weekend.</p>
+    <a class="btn" href="#timeline" data-auth="close">See my timeline</a>
+    <button class="btn" data-auth="logout">Log out</button>
+  </div>`);
+}
+async function submitAuth(form) {
+  const mode = form.dataset.mode, errEl = $("#aErr");
+  const body = { username: $("#aUser").value.trim(), password: $("#aPass").value, favs: store.get("favs", []) };
+  if (mode === "signup") body.display = $("#aDisplay").value.trim();
+  errEl.textContent = "";
+  const btn = form.querySelector("button[type=submit]"); btn.disabled = true;
+  try {
+    const r = await api(mode === "signup" ? "/api/signup" : "/api/login", { method: "POST", body });
+    state.user = r.user; state.favs = new Set(r.favs); store.set("favs", []);
+    closeSheet(); renderAcct(); updateBadge(); render(); loadSocial();
+    toast(mode === "signup" ? `Welcome, ${r.user.display}!` : `Welcome back, ${r.user.display}`);
+    if (pendingFav) { const k = pendingFav; pendingFav = null; toggleFav(k); }
+  } catch (e) { errEl.textContent = e.message; btn.disabled = false; }
+}
+async function logout() {
+  try { await api("/api/logout", { method: "POST" }); } catch {}
+  state.user = null; state.favs = new Set(); closeSheet(); chatDisconnect(); renderAcct(); updateBadge(); render(); toast("Logged out");
+}
+
+// ---------- Saving sets: one pick per time slot ----------
+let pendingFav = null;
+const overlaps = (a, b) => a.day === b.day && a.start < b.end && b.start < a.end;
+const conflictsOf = set => [...state.favs].map(k => SETMAP.get(k)).filter(o => o && o.key !== set.key && overlaps(o, set));
+const blockerOf = set => state.favs.has(set.key) ? null : conflictsOf(set)[0] || null;
+async function persistFavs(add, remove) {
+  add.forEach(k => state.favs.add(k)); remove.forEach(k => state.favs.delete(k));
+  if (!state.api) store.set("favs", [...state.favs]);
+  updateBadge(); afterFavChange();
+  if (state.api) {
+    try { const r = await api("/api/favs", { method: "POST", body: { add, remove } }); state.favs = new Set(r.favs); updateBadge(); loadSocial(); }
+    catch (e) { add.forEach(k => state.favs.delete(k)); remove.forEach(k => state.favs.add(k)); updateBadge(); afterFavChange(); toast(e.status === 401 ? "Log in again to save sets" : "Couldn't save. Check your connection."); }
+  }
+}
+function toggleFav(key) {
+  const s = SETMAP.get(key); if (!s) return;
+  if (state.api && !state.user) { pendingFav = key; return openAuth("signup", `Sign up to save ${nameText(s)} and see who else is going.`); }
+  if (state.favs.has(key)) { persistFavs([], [key]); toast("Removed from your timeline"); return; }
+  const clash = conflictsOf(s);
+  if (!clash.length) { persistFavs([key], []); toast(`Booked ${nameText(s)} · ${dayOf(s.day).short} ${fmt(s.start)}`); return; }
+  openSheetHTML(`<div class="auth" style="position:relative">${closeBtnHTML}
+    <h2>That slot is taken</h2>
+    <p>You're already booked for ${clash.map(c => `<b>${esc(nameText(c))}</b> (${range(c.start, c.end)}, ${esc(STAGE[c.stage].name)})`).join(" and ")}. You can only be at one stage at a time.</p>
+    <div class="swap">
+      <button class="btn primary" data-swap="${esc(key)}">Swap to ${esc(nameText(s))}</button>
+      <button class="btn" data-auth="close">Keep ${esc(nameText(clash[0]))}</button>
+    </div></div>`);
+}
+function afterFavChange() {
+  if (state.sheet) { const y = $("#sheet").scrollTop; $("#sheet").innerHTML = sheetHTML(ARTISTS.get(state.sheet)); $("#sheet").scrollTop = y; loadGoing(state.sheet); }
+  if (state.view !== "chat") rerenderKeepScroll();
+}
 
 // ---------- Header ----------
 function renderDays() {
@@ -696,14 +850,17 @@ function updateBadge() { const b = $("#favBadge"); b.hidden = !state.favs.size; 
 // ---------- Line-up ----------
 function setRow(set, opts = {}) {
   const st = STAGE[set.stage], lead = set.artists[0];
-  return `<div class="set${state.favs.has(set.key) ? " is-fav" : ""}">
+  const blk = blockerOf(set);
+  return `<div class="set${state.favs.has(set.key) ? " is-fav" : ""}${blk ? " blocked" : ""}">
     ${art(lead.slug, lead.name, { label: nameText(set) })}
     <button class="set-main" data-open="${esc(lead.slug)}">
       <span class="set-name">${nameHTML(set)}</span>
       <span class="time tnum">${range(set.start, set.end)}${opts.dayLabel ? ` · ${dayOf(set.day).short} ${dayOf(set.day).label}` : ""}</span>
       ${opts.hideStage ? "" : pill(st)}
       ${opts.extra || ""}
-      ${set.genres.length ? `<span class="genre">${esc(set.genres.join(" · "))}</span>` : ""}
+      ${blk ? `<span class="busy-chip">Busy · ${esc(nameText(blk))}</span>` : ""}
+      ${crowdHTML(set.key)}
+      ${set.genres.length && !blk ? `<span class="genre">${esc(set.genres.join(" · "))}</span>` : ""}
     </button>
     ${favBtn(set)}
   </div>`;
@@ -714,7 +871,7 @@ function headliners(day) {
 function posterHTML(s) {
   const lead = s.artists[0], st = STAGE[s.stage];
   return `<div class="poster">${art(lead.slug, lead.name, { label: nameText(s) })}<span class="shade"></span>${favBtn(s)}
-    <div class="info"><button data-open="${esc(lead.slug)}">${s.artists.map(a => esc(a.name)).join(" b2b ")}</button><small class="tnum">${range(s.start, s.end)}</small><small><span class="dot" style="--c:var(${st.c})"></span>${esc(st.name)}</small></div></div>`;
+    <div class="info"><button data-open="${esc(lead.slug)}">${s.artists.map(a => esc(a.name)).join(" b2b ")}</button><small class="tnum">${range(s.start, s.end)}</small><small><span class="dot" style="--c:var(${st.c})"></span>${esc(st.name)}</small>${crowdHTML(s.key)}</div></div>`;
 }
 function renderLineup() {
   const el = $("#v-lineup");
@@ -738,12 +895,14 @@ function renderGrid(el, sets) {
   const cols = stages.map(id => {
     const items = sets.filter(s => s.stage === id).map(s => {
       const top = (s.start - FIRST) * ppm + 10, height = Math.max(30, (s.end - s.start) * ppm - 4), lead = s.artists[0];
-      return `<div class="g-set${state.favs.has(s.key) ? " is-fav" : ""}${height < 90 ? " short" : ""}" style="top:${top}px;height:${height}px">
+      return `<div class="g-set${state.favs.has(s.key) ? " is-fav" : ""}${blockerOf(s) ? " blocked" : ""}${height < 90 ? " short" : ""}" style="top:${top}px;height:${height}px">
         ${art(lead.slug, lead.name, { play: false })}<span class="shade"></span>
-        <button class="g-open" data-open="${esc(lead.slug)}"><b>${s.artists.map(a => esc(a.name)).join(" b2b ")}</b><small class="tnum">${range(s.start, s.end)}</small>${height > 110 && s.genres.length ? `<small>${esc(s.genres.slice(0,2).join(", "))}</small>` : ""}</button>
+        <button class="g-open" data-open="${esc(lead.slug)}"><b>${s.artists.map(a => esc(a.name)).join(" b2b ")}</b><small class="tnum">${range(s.start, s.end)}</small>${height > 110 && s.genres.length ? `<small>${esc(s.genres.slice(0,2).join(", "))}</small>` : ""}${height >= 76 ? crowdHTML(s.key) : ""}</button>
         ${favBtn(s)}${playBtn(lead.slug, nameText(s))}</div>`;
     }).join("");
-    return `<div class="g-col" style="height:${h}px;--ppm:${ppm}">${items}</div>`;
+    // Booked sets block the whole row: a hatched band across every stage, like a busy slot in a calendar.
+    const bands = SETS.filter(f => f.day === state.day && state.favs.has(f.key)).map(f => `<div class="busy" style="top:${(f.start - FIRST) * ppm + 10}px;height:${(f.end - f.start) * ppm - 4}px" aria-hidden="true"></div>`).join("");
+    return `<div class="g-col" style="height:${h}px;--ppm:${ppm}">${bands}${items}</div>`;
   }).join("");
   const heads = `<div class="g-head corner"></div>` + stages.map(id => `<div class="g-head"><span class="dot" style="--c:var(${STAGE[id].c})"></span>${esc(STAGE[id].name)}</div>`).join("");
   el.innerHTML = `<div class="grid-scroll" id="gridScroll"><div class="grid" style="--cols:${stages.length}">${heads}<div class="g-times" style="height:${h}px">${times}</div>${cols}</div></div>`;
@@ -790,7 +949,7 @@ function renderNow() {
         <div class="bar-meta tnum"><span>${fmt(cur.start)}</span><span>${dur(cur.end - m.min)} left</span><span>${fmt(cur.end)}</span></div>`;
     } else body = `<div class="idle">${list.length && m.min < list[0].start ? "Not started yet" : "Nothing playing"}</div>`;
     const next = nxt ? `<button class="next" data-open="${esc(nxt.artists[0].slug)}"><span><em>NEXT</em><b>${nameHTML(nxt)}</b></span><span class="tnum" style="color:var(--muted)">${fmt(nxt.start)}</span></button>` : "";
-    return `<article class="now-card"><h3><span class="dot" style="--c:var(${c})"></span>${esc(name)}<a class="chat-link" href="#chat" data-room="${id}">Chat</a></h3>${body}${next}</article>`;
+    return `<article class="now-card"><h3><span class="dot" style="--c:var(${c})"></span>${esc(name)}${cur ? `<a class="chat-link" href="#chat" data-room="artist-${cur.artists[0].slug}">Chat</a>` : ""}</h3>${body}${next}</article>`;
   }).join("");
   el.innerHTML = banner + `<div class="now-grid">${cards}</div>`;
 }
@@ -799,7 +958,7 @@ function renderNow() {
 function renderTimeline() {
   const el = $("#v-timeline");
   const favs = SETS.filter(s => s.day === state.day && state.favs.has(s.key)).sort((a,b) => a.start - b.start || a.end - b.end);
-  if (!favs.length) { el.innerHTML = emptyHTML(`No favourites on ${dayOf(state.day).short}`, "Tap the heart on any set and it lands here in order, with clashes flagged.", true); return; }
+  if (!favs.length) { el.innerHTML = emptyHTML(`No favourites on ${dayOf(state.day).short}`, "Tap the heart on a set to book it. You can be at one stage per time slot.", true); return; }
   let clashes = 0, html = "", maxEnd = null;
   favs.forEach((s, i) => {
     const clash = maxEnd != null && s.start < maxEnd;
@@ -848,6 +1007,9 @@ function sheetHTML(A) {
     </div>
     <div class="sheet-body">
       <button class="btn fav-all" data-fav-artist="${esc(A.slug)}" aria-pressed="${on}">${ICON.heart}${on ? "In your favourites" : `Add ${A.sets.length > 1 ? "all sets" : "to favourites"}`}</button>
+      <a class="btn" style="margin-top:10px;width:100%" href="#chat" data-room="artist-${esc(A.slug)}">Chat with ${esc(A.name)} fans</a>
+      <h4>Who's going</h4>
+      <div id="goingBox" class="note">${state.api ? "Loading…" : "See who's going on the live site."}</div>
       <h4>When &amp; where</h4>
       <div class="sheet-sets">${sets.map(s => setRow(s, { dayLabel: true })).join("")}</div>
       <h4>Watch</h4>
@@ -856,11 +1018,21 @@ function sheetHTML(A) {
       </div>
     </div>`;
 }
+async function loadGoing(slug) {
+  if (!state.api) return;
+  const A = ARTISTS.get(slug);
+  try {
+    const all = await Promise.all(A.sets.map(s => api("/api/going?set=" + encodeURIComponent(s.key)).then(r => ({ s, r }))));
+    const box = $("#goingBox"); if (!box || state.sheet !== slug) return;
+    box.innerHTML = all.map(({ s, r }) => `<div style="margin-bottom:10px"><div style="font-weight:700;color:var(--fg);margin-bottom:6px">${dayOf(s.day).short} ${range(s.start, s.end)} · ${r.n} going</div>${r.n ? `<div class="going">${r.people.slice(0, 40).map(u => `<span>${avatar(u.name, u.color)}${esc(u.name)}</span>`).join("")}${r.n > 40 ? `<span>+${r.n - 40} more</span>` : ""}</div>` : `<span>Nobody yet. Be the first!</span>`}</div>`).join("");
+  } catch {}
+}
 function openArtist(slug) {
   const A = ARTISTS.get(slug); if (!A) return;
   if ($("#sheet").hidden) lastFocus = document.activeElement;
   state.sheet = slug;
   $("#sheet").innerHTML = sheetHTML(A);
+  loadGoing(slug);
   $("#sheet").scrollTop = 0;
   const sheet = $("#sheet"), scrim = $("#scrim");
   sheet.hidden = scrim.hidden = false;
@@ -937,7 +1109,7 @@ function play(slug) {
 }
 
 // ---------- Favourites ----------
-function saveFavs() { store.set("favs", [...state.favs]); updateBadge(); }
+function saveFavs() { if (!state.api) store.set("favs", [...state.favs]); updateBadge(); }
 function refreshFavUI() {
   document.querySelectorAll("[data-fav]").forEach(b => {
     const on = state.favs.has(b.dataset.fav), s = SETMAP.get(b.dataset.fav);
@@ -953,7 +1125,9 @@ function refreshFavUI() {
   if (state.view === "timeline" || (state.view === "lineup" && state.favOnly)) rerenderKeepScroll();
 }
 function rerenderKeepScroll() {
-  const y = scrollY; ({ lineup: renderLineup, timeline: renderTimeline, explore: renderExplore, now: renderNow, chat: () => {} })[state.view](); scrollTo(0, y);
+  const y = scrollY, g = $("#gridScroll"), gx = g ? [g.scrollLeft, g.scrollTop] : null, rail = $(".rail"), rx = rail?.scrollLeft;
+  ({ lineup: renderLineup, timeline: renderTimeline, explore: renderExplore, now: renderNow, chat: () => {} })[state.view]();
+  scrollTo(0, y); const g2 = $("#gridScroll"); if (g2 && gx) [g2.scrollLeft, g2.scrollTop] = gx; const r2 = $(".rail"); if (r2 && rx != null) r2.scrollLeft = rx;
 }
 
 // ---------- Routing ----------
@@ -977,19 +1151,27 @@ function route() { const h = location.hash.slice(1); state.view = TITLES[h] ? h 
 // ---------- Events ----------
 document.addEventListener("click", e => {
   const t = e.target.closest("button, a"); if (!t) return;
-  if (t.dataset.fav) {
-    const k = t.dataset.fav, s = SETMAP.get(k);
-    if (state.favs.has(k)) { state.favs.delete(k); toast("Removed from favourites"); } else { state.favs.add(k); toast(`Saved ${nameText(s)} · ${dayOf(s.day).short} ${fmt(s.start)}`); }
-    saveFavs(); refreshFavUI(); return;
+  if (t.dataset.fav) return toggleFav(t.dataset.fav);
+  if (t.dataset.swap) { const s = SETMAP.get(t.dataset.swap); const clash = conflictsOf(s).map(c => c.key); closeSheet(); persistFavs([s.key], clash); toast(`Swapped to ${nameText(s)}`); return; }
+  if (t.dataset.auth) {
+    const a = t.dataset.auth;
+    if (a === "signup" || a === "login") return openAuth(a);
+    if (a === "account") return openAccount();
+    if (a === "logout") return logout();
+    if (a === "close") { closeSheet(); return; }
   }
   if (t.dataset.favArtist) {
     const A = ARTISTS.get(t.dataset.favArtist), on = artistFav(A);
-    A.sets.forEach(s => on ? state.favs.delete(s.key) : state.favs.add(s.key));
-    toast(on ? `Removed ${A.name}` : `Saved ${A.sets.length} set${A.sets.length > 1 ? "s" : ""} by ${A.name}`);
-    saveFavs(); refreshFavUI(); return;
+    if (state.api && !state.user) return openAuth("signup", `Sign up to save ${A.name}'s sets.`);
+    if (on) { persistFavs([], A.sets.map(s => s.key)); toast(`Removed ${A.name}`); return; }
+    const free = A.sets.filter(s => !state.favs.has(s.key) && !conflictsOf(s).length), busy = A.sets.filter(s => !state.favs.has(s.key) && conflictsOf(s).length);
+    if (!free.length && busy.length) return toggleFav(busy[0].key);
+    persistFavs(free.map(s => s.key), []);
+    toast(`Booked ${free.length} set${free.length === 1 ? "" : "s"}${busy.length ? ` · ${busy.length} clash${busy.length > 1 ? "es" : ""} skipped` : ""}`);
+    return;
   }
   if (t.dataset.play) { e.stopPropagation(); return play(t.dataset.play); }
-  if (t.dataset.room) { chat.room = t.dataset.room; store.set("room", chat.room); if (state.view === "chat") { e.preventDefault(); renderChat(); } return; }
+  if (t.dataset.room) { if (!$("#sheet").hidden) closeSheet(); chat.room = t.dataset.room; store.set("room", chat.room); if (state.view === "chat") { e.preventDefault(); renderChat(); } return; }
   if (t.dataset.chat) return chatAction(t.dataset.chat, t);
   if (t.dataset.open) return openArtist(t.dataset.open);
   if (t.dataset.day) { state.day = t.dataset.day; store.set("day", state.day); render(); return; }
@@ -1025,21 +1207,21 @@ const savedTheme = store.get("theme", null); if (savedTheme) document.documentEl
 // ---------- Chat ----------
 // Live rooms run on the site's own server (/api/rooms/<room>/ws). One room per stage, a general room, and private crew rooms.
 const chat = {
-  room: store.get("room", "general"),
+  room: /^(general|artist-|crew-)/.test(store.get("room", "")) ? store.get("room", "general") : "general",
   name: store.get("nick", ""),
   uid: store.get("uid", null) || (() => { const u = Math.random().toString(36).slice(2, 12) + Date.now().toString(36); store.set("uid", u); return u; })(),
   crew: store.get("crew", ""),
   muted: new Set(store.get("muted", [])),
   ws: null, wsRoom: null, online: 0, status: "idle", msgs: [], retry: 0, timer: null, draft: ""
 };
-const roomName = r => r === "general" ? "Everyone" : r.startsWith("crew-") ? "My crew" : STAGE[r]?.name || r;
+const roomName = r => r === "general" ? "Everyone" : r.startsWith("crew-") ? "My crew" : r.startsWith("artist-") ? (ARTISTS.get(r.slice(7))?.name || "Artist") : r;
 const nameHue = uid => `hsl(${hash(uid) % 360} 70% ${document.documentElement.dataset.theme === "light" || (!document.documentElement.dataset.theme && !matchMedia("(prefers-color-scheme: dark)").matches) ? 38 : 70}%)`;
 const SEND = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>`;
-const chatSupported = () => /^https?:$/.test(location.protocol) && "WebSocket" in window;
+const chatSupported = () => state.api && "WebSocket" in window;
 const clock = ts => new Date(ts).toLocaleTimeString([], { hour: "numeric", minute: "2-digit", hour12: true });
 
 function chatConnect() {
-  if (!chatSupported() || !chat.name) return;
+  if (!chatSupported() || !state.user) return;
   if (chat.ws && chat.wsRoom === chat.room && chat.ws.readyState <= 1) return;
   chatDisconnect();
   chat.status = "connecting"; chat.msgs = []; chat.wsRoom = chat.room;
@@ -1070,8 +1252,8 @@ function chatDisconnect() {
 }
 function msgHTML(m, prev) {
   if (chat.muted.has(m.uid)) return "";
-  const me = m.uid === chat.uid, same = prev && prev.uid === m.uid && m.ts - prev.ts < 120000;
-  return `<div class="msg${me ? " me" : ""}${same ? " same" : ""}" data-id="${m.id}"><span class="by">${me ? "You" : `<button data-chat="mute" data-uid="${esc(m.uid)}" data-name="${esc(m.name)}" style="--hue:${nameHue(m.uid)}" title="Hide messages from ${esc(m.name)}">${esc(m.name)}</button>`}<span class="tnum">${clock(m.ts)}</span></span><span class="bubble">${esc(m.text)}</span></div>`;
+  const me = state.user && m.uid === String(state.user.id), same = prev && prev.uid === m.uid && m.ts - prev.ts < 120000;
+  return `<div class="msg${me ? " me" : ""}${same ? " same" : ""}" data-id="${m.id}"><span class="by">${me ? "You" : `<button data-chat="mute" data-uid="${esc(m.uid)}" data-name="${esc(m.name)}" title="Hide messages from ${esc(m.name)}">${avatar(m.name, m.color)}${esc(m.name)}</button>`}<span class="tnum">${clock(m.ts)}</span></span><span class="bubble">${esc(m.text)}</span></div>`;
 }
 function renderChatStatus() {
   const el = $("#chatOnline"); if (!el) return;
@@ -1092,30 +1274,32 @@ function appendMsg(m) {
   const nearBottom = innerHeight + scrollY > document.body.scrollHeight - 220;
   if (chat.msgs.length === 1) box.innerHTML = "";
   box.insertAdjacentHTML("beforeend", msgHTML(m, chat.msgs[chat.msgs.length - 2]));
-  if (nearBottom || m.uid === chat.uid) window.scrollTo(0, document.body.scrollHeight);
+  if (nearBottom || (state.user && m.uid === String(state.user.id))) window.scrollTo(0, document.body.scrollHeight);
 }
 function renderChat() {
   const el = $("#v-chat");
   if (!chatSupported()) {
-    el.innerHTML = `<div class="card"><h3>Chat lives on the website</h3><p>Open the tmlunofficial site to chat with other ravers by stage or with your crew.</p></div>`;
+    el.innerHTML = `<div class="card"><h3>Chat lives on the website</h3><p>Open the tmlunofficial site to chat with everyone and with fans of each artist.</p></div>`;
     return;
   }
-  if (!chat.name) {
-    el.innerHTML = `<form class="card" id="nickForm"><h3>Pick a nickname</h3><p>Shown next to your messages. No account needed.</p>
-      <input class="field" id="nick" maxlength="24" autocomplete="nickname" placeholder="e.g. Raver Rahul" required>
-      <button class="btn primary" type="submit">Start chatting</button></form>`;
+  if (!state.user) {
+    el.innerHTML = `<div class="card"><h3>Sign up to chat</h3><p>Talk with everyone at the festival, or join the room for each artist you're seeing. Browsing the line-up stays free without an account.</p><button class="btn primary" data-auth="signup">Create an account</button><button class="btn" data-auth="login">Log in</button></div>`;
     return;
   }
   if (chat.room.startsWith("crew-") && chat.room !== "crew-" + chat.crew) chat.room = "general";
-  const rooms = ["general", ...STAGES.map(s => s[0])];
-  const crewChip = chat.crew ? `<button class="chip" data-room="crew-${chat.crew}" aria-pressed="${chat.room === "crew-" + chat.crew}" style="--c:var(--heart)"><span class="dot"></span>My crew</button>` : "";
+  // Rooms: Everyone, your crew, and one room per artist you've booked (plus the one you opened).
+  const mine = [...new Set([...state.favs].map(k => SETMAP.get(k)).filter(Boolean).sort((a, b) => a.day.localeCompare(b.day) || a.start - b.start).flatMap(s => s.artists.map(x => x.slug)))];
+  const cur = chat.room.startsWith("artist-") ? chat.room.slice(7) : null;
+  if (cur && !mine.includes(cur)) mine.unshift(cur);
+  const chip = (room, label, color) => `<button class="chip" data-room="${room}" aria-pressed="${chat.room === room}" ${color ? `style="--c:${color}"` : ""}>${color ? `<span class="dot"></span>` : ""}${esc(label)}</button>`;
   el.innerHTML = `<div class="chat">
-    <div class="chips" role="group" aria-label="Chat rooms">${crewChip}${rooms.map(r => `<button class="chip" data-room="${r}" aria-pressed="${chat.room === r}" ${STAGE[r] ? `style="--c:var(${STAGE[r].c})"` : ""}>${STAGE[r] ? `<span class="dot"></span>` : ""}${esc(roomName(r))}</button>`).join("")}<button class="chip" data-chat="crew-panel">${chat.crew ? "Crew code" : "+ Crew room"}</button></div>
+    <div class="chips" role="group" aria-label="Chat rooms">${chip("general", "Everyone", "var(--accent)")}${chat.crew ? chip("crew-" + chat.crew, "My crew", "var(--heart)") : ""}${mine.map(sl => chip("artist-" + sl, ARTISTS.get(sl)?.name || sl)).join("")}<button class="chip" data-chat="crew-panel">${chat.crew ? "Crew code" : "+ Crew room"}</button></div>
+    ${mine.length ? "" : `<p class="note">Book artists in the line-up and their fan rooms show up here.</p>`}
     <div id="crewPanel" hidden></div>
-    <div class="chat-head"><h2>${chat.room.startsWith("crew-") ? "My crew" : esc(roomName(chat.room))}</h2><span class="online off" id="chatOnline"></span></div>
+    <div class="chat-head"><h2>${chat.room === "general" ? "Everyone" : chat.room.startsWith("crew-") ? "My crew" : esc(roomName(chat.room)) + " fans"}</h2><span class="online off" id="chatOnline"></span></div>
     <div class="msgs" id="chatMsgs" aria-live="polite"></div>
-    <form class="composer" id="composer"><label for="chatText" class="sr">Message</label><textarea id="chatText" rows="1" maxlength="500" placeholder="Message as ${esc(chat.name)}">${esc(chat.draft)}</textarea><button id="chatSend" type="submit" aria-label="Send" disabled>${SEND}</button></form>
-    <p class="note">Be kind. Tap a name to hide that person's messages. <button class="toggle" style="display:inline;min-height:0;padding:0;text-decoration:underline" data-chat="rename">Change nickname</button></p>
+    <form class="composer" id="composer"><label for="chatText" class="sr">Message</label><textarea id="chatText" rows="1" maxlength="500" placeholder="Message as ${esc(state.user.display)}">${esc(chat.draft)}</textarea><button id="chatSend" type="submit" aria-label="Send" disabled>${SEND}</button></form>
+    <p class="note">Be kind. Tap a name to hide that person's messages.</p>
   </div>`;
   if (chat.wsRoom === chat.room && chat.ws) renderChatBody(true); else renderChatBody();
   chatConnect();
@@ -1139,17 +1323,16 @@ function chatAction(a, t) {
   if (a === "create") { const abc = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; let c = ""; const r = crypto.getRandomValues(new Uint8Array(6)); r.forEach(x => c += abc[x % abc.length]); setCrew(c); toast("Crew room created. Share the code!"); return; }
   if (a === "leave") { setCrew(""); toast("Left the crew room"); return; }
   if (a === "copy") { navigator.clipboard?.writeText(chat.crew).then(() => toast("Code copied"), () => toast(`Your code is ${chat.crew}`)); return; }
-  if (a === "rename") { chat.name = ""; store.set("nick", ""); chatDisconnect(); renderChat(); return; }
   if (a === "mute") { chat.muted.add(t.dataset.uid); store.set("muted", [...chat.muted]); toast(`Hidden messages from ${t.dataset.name}`); renderChatBody(); return; }
 }
 document.addEventListener("submit", e => {
-  if (e.target.id === "nickForm") { e.preventDefault(); const n = $("#nick").value.replace(/\s+/g, " ").trim().slice(0, 24); if (!n) return; chat.name = n; store.set("nick", n); renderChat(); }
+  if (e.target.id === "authForm") { e.preventDefault(); submitAuth(e.target); return; }
   if (e.target.id === "joinForm") { e.preventDefault(); const c = $("#crewCode").value.toUpperCase().replace(/[^A-Z0-9]/g, ""); if (c.length !== 6) return toast("Crew codes have 6 letters or numbers"); setCrew(c); toast("Joined crew " + c); }
   if (e.target.id === "composer") {
     e.preventDefault();
     const ta = $("#chatText"), text = ta.value.trim();
     if (!text || !chat.ws || chat.ws.readyState !== 1) return;
-    chat.ws.send(JSON.stringify({ type: "msg", name: chat.name, uid: chat.uid, text }));
+    chat.ws.send(JSON.stringify({ type: "msg", text }));
     ta.value = ""; chat.draft = ""; ta.style.height = "";
   }
 });
@@ -1158,7 +1341,7 @@ document.addEventListener("keydown", e => { if (e.target.id === "chatText" && e.
 setInterval(() => { if (chat.ws?.readyState === 1) chat.ws.send('{"type":"ping"}'); }, 30000);
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && state.view === "chat") chatConnect(); });
 
-renderGenreChips(); updateBadge(); route();
+renderGenreChips(); updateBadge(); route(); boot();
 
 // ---------- Live photos & players from the original site ----------
 async function loadRemote() {
