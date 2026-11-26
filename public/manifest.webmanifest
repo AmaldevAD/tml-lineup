@@ -1,0 +1,21 @@
+{
+  "id": "/",
+  "name": "TML Unofficial · Thailand 2026 Line-up",
+  "short_name": "TML",
+  "description": "Unofficial Tomorrowland Thailand 2026 line-up: timetable, your booked sets and what's on now. Works offline.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0D0B14",
+  "theme_color": "#0D0B14",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Now & next", "url": "/#now" },
+    { "name": "My timeline", "url": "/#timeline" }
+  ]
+}
