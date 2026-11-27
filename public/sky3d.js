@@ -11,8 +11,17 @@ const hero = document.querySelector(".hero3d");
 const lite = root.classList.contains("lite");
 const isDark = () => root.dataset.theme === "dark" || (!root.dataset.theme && matchMedia("(prefers-color-scheme: dark)").matches);
 
+// Phones: the canvas lives inside the hero and scrolls with the page like any other element, so nothing has to chase
+// the scroll position per frame, and drawing pauses while a finger is moving the page. The canvas is also only hero-sized.
+const phone = matchMedia("(max-width: 719px), (max-height: 500px) and (pointer: coarse)");
+const lineup = document.getElementById("v-lineup");
+let lastScroll = -1e9, heroOn = true, small = phone.matches;
+phone.addEventListener?.("change", () => { small = phone.matches; });
+addEventListener("scroll", () => { lastScroll = performance.now(); }, { passive: true });
+if (hero && "IntersectionObserver" in window) new IntersectionObserver(es => { heroOn = es[es.length - 1].isIntersecting; }, { rootMargin: "40px" }).observe(hero);
+
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-let pr = Math.min(devicePixelRatio || 1, lite ? 1.25 : 1.75);
+let pr = Math.min(devicePixelRatio || 1, lite ? 1.25 : phone.matches ? 1.5 : 1.75);
 renderer.setPixelRatio(pr);
 renderer.setClearColor(0x000000, 0);
 const cv = renderer.domElement; cv.className = "sky3d"; cv.setAttribute("aria-hidden", "true");
@@ -155,12 +164,21 @@ addEventListener("deviceorientation", e => { if (usedPointer || e.gamma == null)
   tx = Math.max(-1, Math.min(1, e.gamma / 25)); ty = Math.max(-1, Math.min(1, (e.beta - 45) / 25)); }, { passive: true });
 document.addEventListener("click", e => { if (e.target.closest("#days button, nav.tabs a, .fav, .play, .support")) pulse = 1; }, true);
 
+let cw = innerWidth, ch = innerHeight, heroH = 300;
 function resize() {
-  const w = innerWidth, h = innerHeight;
-  renderer.setSize(w, h, false); camera.aspect = w / h;
-  camera.fov = w / h < 0.8 ? 62 : 50; camera.updateProjectionMatrix();
+  const emb = cv.parentNode === hero;
+  const w = emb ? cv.clientWidth || innerWidth : innerWidth, h = emb ? cv.clientHeight || 300 : innerHeight;
+  const vfov = innerWidth / innerHeight < 0.8 ? 62 : 50;
+  renderer.setSize(w, h, false); camera.aspect = w / h; cw = w; ch = h;
+  if (emb) { // keep the face the same size on screen as it was with a full-screen canvas
+    heroH = hero.offsetHeight;
+    const ppu = innerHeight / (2 * Math.tan(vfov * Math.PI / 360) * camera.position.z);
+    camera.fov = 2 * Math.atan(h / 2 / ppu / camera.position.z) * 180 / Math.PI;
+  } else camera.fov = vfov;
+  camera.updateProjectionMatrix();
 }
 addEventListener("resize", resize); resize();
+if (hero && "ResizeObserver" in window) new ResizeObserver(() => { if (cv.parentNode === hero) resize(); }).observe(hero);
 
 function syncTheme() {
   const d = isDark(), ink = d ? "#F3E6D0" : "#2B1D14";
@@ -201,6 +219,13 @@ function frame() {
     if (ms > 26 && !slowed) { slowed = true; pr = Math.max(0.85, pr * 0.7); renderer.setPixelRatio(pr); resize(); }
     else if (ms > 26 && every === 1) every = 2; }
 
+  // Where the canvas should live: inside the hero on phones while the line-up is showing, else the fixed background layer
+  const shown = !!hero && hero.isConnected && lineup && !lineup.hidden;
+  const embed = shown && small, want = embed ? hero : host;
+  if (cv.parentNode !== want) { want.appendChild(cv); resize(); snap = false; }
+  if (small && performance.now() - lastScroll < 180) return; // finger on the page: leave the frame as it is
+  if (embed && !heroOn) { if (!idle) { renderer.clear(); idle = true; } return; }
+
   px += (tx - px) * 0.05; py += (ty - py) * 0.05;
   pulse *= 0.94;
 
@@ -210,18 +235,20 @@ function frame() {
   camera.lookAt(camera.position.x, camera.position.y, 0);
 
   // Sit in the hero on the line-up page; elsewhere drift faintly in the background
-  const vis = hero && hero.isConnected && hero.offsetParent !== null;
+  const vis = shown;
   const halfH = Math.tan(camera.fov * Math.PI / 360) * camera.position.z, halfW = halfH * camera.aspect;
-  let sx = innerWidth * 0.5, sy = innerHeight * 0.5, ts = 0.38, to = 0.14, off = false;
-  if (vis) { const r = hero.getBoundingClientRect(), phone = innerWidth < 720;
+  let sx = cw * 0.5, sy = ch * 0.5, ts = 0.38, to = 0.14, off = false;
+  if (embed) { sx = cw * 0.68; sy = 24 + heroH * 0.34; ts = Math.min(heroH / 520, 0.9) * 0.92; to = 1;
+    if (wakeAt < 0) wakeAt = t + 0.9; }
+  else if (vis) { const r = hero.getBoundingClientRect(), phone = innerWidth < 720;
     sy = r.top + r.height * (phone ? 0.34 : 0.42); sx = phone ? innerWidth * 0.68 : Math.min(innerWidth * 0.72, r.right - r.height * 0.42);
     ts = Math.min(r.height / 520, 0.9) * (phone ? 0.92 : 1); to = 1; off = r.bottom < -40;
     if (wakeAt < 0 && !off) wakeAt = t + 0.9; }
-  goal.set((sx / innerWidth - 0.5) * 2 * halfW, (0.5 - sy / innerHeight) * 2 * halfH, vis ? 0 : -2);
+  goal.set((sx / cw - 0.5) * 2 * halfW, (0.5 - sy / ch) * 2 * halfH, vis ? 0 : -2);
   heart.position.lerp(goal, snap ? 0.25 : 1); snap = true;
   heart.position.y += Math.sin(t * 0.8) * 0.05;
   sc += (ts - sc) * 0.08; heart.scale.setScalar(sc);
-  op += (to - op) * 0.06; cv.style.opacity = op.toFixed(3);
+  const op0 = op.toFixed(2); op += (to - op) * 0.06; if (op.toFixed(2) !== op0) cv.style.opacity = op.toFixed(2); // no style write once settled
 
   // The head turns toward you; a slow breathing sway when nothing moves; a tap makes it shudder
   const shake = pulse * Math.sin(t * 55) * 0.05;
