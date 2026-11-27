@@ -15,7 +15,7 @@
     { "src": "/icons/maskable-512.png?v=2", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ],
   "shortcuts": [
-    { "name": "Now & next", "url": "/#now" },
-    { "name": "My timeline", "url": "/#timeline" }
+    { "name": "On air", "url": "/#now" },
+    { "name": "My plan", "url": "/#timeline" }
   ]
 }
