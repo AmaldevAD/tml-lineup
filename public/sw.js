@@ -4,11 +4,11 @@
 // - Artist photos, fonts and the source line-up pages are cached as they load, and the page asks us to fetch any photo
 //   it hasn't shown yet, so the whole line-up has artwork offline.
 // - /api (accounts, chat, crowd counts) always goes to the network; the page keeps its own copy of your bookings.
-const VERSION = "v2"; // bump to refresh the cached app shell (v2: new site icon)
+const VERSION = "v3"; // bump to refresh the cached app shell (v2: new site icon, v3: stone-face hero)
 const SHELL = "tml-shell-" + VERSION;
 const MEDIA = "tml-media";      // photos + fonts: kept across versions, they rarely change
 const SOURCE = "tml-source";    // line-up pages from the original site (photo + YouTube lists)
-const SHELL_FILES = ["/", "/manifest.webmanifest", "/icons/icon-192.png", "/icons/icon-512.png", "/icons/apple-touch-icon.png", "/icons/favicon-32.png", "/icons/favicon-16.png", "/icons/maskable-512.png", "/favicon.ico", "/privacy.html"];
+const SHELL_FILES = ["/", "/manifest.webmanifest", "/icons/icon-192.png", "/icons/icon-512.png", "/icons/apple-touch-icon.png", "/icons/favicon-32.png", "/icons/favicon-16.png", "/icons/maskable-512.png", "/favicon.ico", "/privacy.html", "/sky3d.js", "/hero/face.webp", "/hero/face-depth.png"];
 const PHOTO_HOST = "tomorrowland.aiko.dev";
 const FONT_HOSTS = ["fonts.googleapis.com", "fonts.gstatic.com"];
 const NAV_TIMEOUT = 4000;
