@@ -715,6 +715,28 @@ body::before { background: var(--bg); }
 .av { box-shadow: 0 0 0 2px var(--surface), 0 0 0 3.5px var(--ink); }
 :focus-visible { outline: 2.5px dashed var(--accent); }
 
+/* Admin halo: a floating gold hoop plus a slowly turning clay-colour ring. Transform-only animations on pseudo-elements,
+   static inside the busy timetable/crowd stacks, paused while scrolling, and still for reduced motion. */
+.av.halo { position: relative; box-shadow: 0 0 0 2px var(--surface), 0 0 10px 3px rgb(235 194 102 / .55); }
+.av.halo.ph { overflow: visible; }
+.av.halo.ph img { border-radius: 50%; }
+.av.halo::after { content: ""; position: absolute; inset: -4px; border-radius: 50%; pointer-events: none;
+  background: conic-gradient(#EBC266, #E7A07F, #B7A2E6, #9DB8DB, #A9C095, #EBC266);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 2.5px), #000 calc(100% - 2px)); mask: radial-gradient(farthest-side, transparent calc(100% - 2.5px), #000 calc(100% - 2px));
+  animation: halo-spin 7s linear infinite; }
+.av.halo::before { content: ""; position: absolute; left: 16%; right: 16%; top: -30%; height: 24%; min-height: 5px; border-radius: 50%; pointer-events: none; z-index: 1;
+  border: max(1.5px, .07em) solid #F2CE6E; box-shadow: 0 0 6px 1px rgb(242 206 110 / .85), inset 0 0 3px rgb(242 206 110 / .7);
+  animation: halo-bob 2.6s ease-in-out infinite alternate; }
+.av.halo.xl::before { border-width: 3px; top: -13%; height: 15%; left: 20%; right: 20%; box-shadow: 0 0 12px 2px rgb(242 206 110 / .85), inset 0 0 5px rgb(242 206 110 / .7); }
+.av.halo.xl::after { inset: -8px; -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 4.5px), #000 calc(100% - 4px)); mask: radial-gradient(farthest-side, transparent calc(100% - 4.5px), #000 calc(100% - 4px)); }
+.av.halo.xl { box-shadow: 0 0 0 4px var(--surface), 0 0 26px 8px rgb(235 194 102 / .45); }
+.crowd .av.halo { z-index: 1; }
+.crowd .av.halo::before, .crowd .av.halo::after, .acct .av.halo::after { animation: none; }
+:root.scrolling .av.halo::before, :root.scrolling .av.halo::after, :root.paused .av.halo::before, :root.paused .av.halo::after { animation-play-state: paused; }
+@keyframes halo-spin { to { transform: rotate(1turn); } }
+@keyframes halo-bob { from { transform: translateY(0); } to { transform: translateY(-40%); } }
+@media (prefers-reduced-motion: reduce) { .av.halo::before, .av.halo::after { animation: none; } }
+
 /* Generated artwork (no photo): flat marker colour with pencil hatching instead of random gradients */
 .art:not(.has-img) { background: repeating-linear-gradient(-35deg, rgb(0 0 0 / .14) 0 2px, transparent 2px 7px), var(--mk, var(--pink)) !important; }
 .set:nth-child(4n+1) .art, .acard:nth-child(4n+1) .art, .poster:nth-child(4n+1) .art { --mk: var(--sky); }
@@ -1310,7 +1332,10 @@ async function api(path, opts = {}) {
 }
 // Avatar: uploaded photo ("p:<version>"), emoji ("e:<emoji>") or initials, on the person's colour.
 const COLORS = ["#F5A524", "#FF6370", "#4CC9DE", "#9D83FF", "#5BC26E", "#FF5F9E", "#C49A86", "#3B82F6", "#14B8A6", "#EAB308"];
+// Admins (decided by the server, see social()) get a halo wherever their avatar shows. "plain" turns it off (avatar picker).
+const isAdminId = uid => !!uid && (state.social?.admins?.includes(String(uid)) || (state.user?.admin && String(state.user.id) === String(uid)));
 function avatar(name, color, cls = "", av = "", uid = "") {
+  if (!/\bplain\b/.test(cls) && isAdminId(uid)) cls += " halo";
   const base = `style="--c:${esc(color || "#F5A524")}" title="${esc(name || "")}"`;
   if (av && av.startsWith("p:") && uid && state.api) return `<span class="av ph ${cls}" ${base}><img src="/api/avatar/${encodeURIComponent(uid)}?v=${encodeURIComponent(av.slice(2))}" alt="" loading="lazy" decoding="async"></span>`;
   if (av && av.startsWith("e:")) return `<span class="av em ${cls}" ${base}>${esc(av.slice(2))}</span>`;
@@ -1324,7 +1349,13 @@ function crowdHTML(key) {
 }
 async function loadSocial() {
   if (!state.api) return;
-  try { state.social = await api("/api/social"); if (["lineup", "timeline"].includes(state.view)) rerenderKeepScroll(); } catch {}
+  try {
+    const was = String(state.social?.admins || "");
+    state.social = await api("/api/social");
+    if (["lineup", "timeline"].includes(state.view)) rerenderKeepScroll();
+    // The chat can arrive before this: redraw it once so admin halos show (keeping the scroll position).
+    else if (state.view === "chat" && chat.msgs.length && String(state.social.admins || "") !== was) { const box = $("#chatMsgs"), top = box?.scrollTop; renderChatBody(); if (box) box.scrollTop = top; }
+  } catch {}
 }
 // Last known account + bookings, so the home-screen app still shows your sets with no network.
 function saveMe() {
@@ -1432,7 +1463,7 @@ function openAuth(mode = "signup", reason = "") {
 function openAccount() {
   const n = state.favs.size;
   openSheetHTML(`<div class="auth" style="position:relative">${closeBtnHTML}
-    <div style="display:flex;align-items:center;gap:12px">${avatar(state.user.display, state.user.color, "lg")}<div><h2>${esc(state.user.display)}</h2><p>@${esc(state.user.username)}</p></div></div>
+    <div style="display:flex;align-items:center;gap:12px">${meAvatar("lg")}<div><h2>${esc(state.user.display)}</h2><p>@${esc(state.user.username)}</p></div></div>
     <p>${n} saved set${n === 1 ? "" : "s"} across the weekend.</p>
     <a class="btn" href="#timeline" data-auth="close">See my timeline</a>
     <button class="btn" data-auth="logout">Log out</button>
@@ -2493,7 +2524,7 @@ function renderProfile() {
       <h3>Avatar</h3>
       <div class="av-grid">
         <label class="av-opt up" for="photoIn" title="Upload a photo">${CAM}<span>Photo</span></label>
-        ${av.startsWith("p:") ? opt("photo", meAvatar(), "Your photo") : ""}
+        ${av.startsWith("p:") ? opt("photo", meAvatar("plain"), "Your photo") : ""}
         ${opt("", avatar(u.display, u.color), "Initials")}
         ${AV_EMOJI.map(e => opt("e:" + e, e, e)).join("")}
       </div>
