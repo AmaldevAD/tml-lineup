@@ -866,30 +866,9 @@ footer.foot { font-family: var(--font-hand); font-size: 15px; }
 .g-wrap.my-plan .g-set:not(.is-fav) { opacity: .3; filter: grayscale(1); }
 .g-wrap.my-plan .g-set:not(.is-fav):hover, .g-wrap.my-plan .g-set:not(.is-fav):focus-within { opacity: .8; filter: none; }
 
-/* Timetable, every stage: paper notes in the stage's colour, a round photo sticker, a doodled heart */
+/* Timetable, every stage: full photo cards as before; only the stage names are hand-lettered */
 .g-head { font-family: var(--font-display); font-size: 19px; font-weight: 700; letter-spacing: 0; text-transform: none; line-height: 1; }
 .g-head .dot { width: 10px; height: 10px; box-shadow: 0 0 0 1.5px var(--ink); }
-.grid:not(.solo) .g-set { color: var(--fg); background: color-mix(in srgb, var(--sc, var(--hi)) 18%, var(--surface));
-  border: 2px solid var(--ink); border-radius: 12px 5px 11px 6px / 6px 11px 5px 12px; box-shadow: 2px 3px 0 var(--ink); overflow: visible; }
-.grid:not(.solo) .g-set::before { content: ""; position: absolute; left: -2px; top: -2px; bottom: -2px; width: 7px; border-radius: 6px 0 0 6px; background: var(--sc, var(--hi)); border: 2px solid var(--ink); border-right: 0; pointer-events: none; }
-.grid:not(.solo) .g-set .shade { display: none; }
-.grid:not(.solo) .g-set .art { inset: auto; left: 12px; bottom: 8px; width: 46px; height: 46px; border-radius: 50%; border: 2px solid var(--ink); z-index: 1; transform: rotate(-4deg); }
-.grid:not(.solo) .g-set .art .ini { font-size: 16px; opacity: 1; }
-.grid:not(.solo) .g-set .g-open { padding: 7px 38px 8px 14px; }
-.grid:not(.solo) .g-set b { font-family: var(--font-display); font-size: 18px; font-weight: 700; line-height: 1; text-shadow: none; }
-.grid:not(.solo) .g-set small { font-family: var(--font-hand); font-size: 14px; opacity: 1; color: var(--muted); line-height: 1.15; }
-.grid:not(.solo) .g-set small.tnum { color: var(--fg); }
-.grid:not(.solo) .g-set .fav { color: var(--muted); }
-.grid:not(.solo) .g-set.is-fav .fav { color: var(--heart); }
-.grid:not(.solo) .g-set .fav svg { stroke-width: 2.2; }
-.grid:not(.solo) .g-set .play { right: auto; left: 44px; bottom: 6px; width: 24px; height: 24px; z-index: 3; box-shadow: 1.5px 1.5px 0 #2B1D14; }
-.grid:not(.solo) .g-set .crowd { color: var(--muted); }
-.grid:not(.solo) .g-set .crowd .av { box-shadow: 0 0 0 2px var(--surface), 0 0 0 3.5px var(--ink); }
-/* Tall notes keep the photo sticker; short ones are text only */
-.grid:not(.solo) .g-set.short .art, .grid:not(.solo) .g-set.short .play { display: none; }
-.grid:not(.solo) .g-set:not(.short) .g-open { padding-bottom: 60px; }
-.grid:not(.solo) .g-set.is-fav { box-shadow: 0 0 0 3px var(--heart), 2px 3px 0 3px var(--ink); }
-.grid:not(.solo) .g-set.blocked { filter: grayscale(.85) opacity(.7); }
 
 /* On air: each stage is a station on a dial; the photo ring fills as the set plays */
 .now-grid.stations { gap: 14px; }
