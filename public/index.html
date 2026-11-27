@@ -141,11 +141,16 @@ main { padding-block: 6px calc(var(--tab-h) + var(--player-h) + env(safe-area-in
 .set.is-fav { border-color: color-mix(in srgb, var(--heart) 45%, var(--line)); }
 
 /* Timetable grid */
-.grid-scroll { overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; border: 1px solid var(--line); border-radius: var(--r); background: var(--surface); position: relative; margin-top: 4px; }
+/* The bordered box clips (overflow: clip is not a scroll container), so the stage row can be position: sticky against the page
+   and the browser keeps it pinned on its own scroll thread: no per-frame JavaScript, no lag behind the finger. */
+.g-wrap { position: relative; margin-top: 4px; border: 1px solid var(--line); border-radius: var(--r); background: var(--surface); overflow: clip; }
+.g-headbar { position: sticky; z-index: 8; top: calc(env(safe-area-inset-top, 0px) + var(--hdr, 0px) - var(--hcut, 0px)); display: flex; background: var(--surface); border-bottom: 1px solid var(--line); }
+.g-headbar .g-heads { flex: 1; min-width: 0; overflow: hidden; }
+.g-heads .grid { grid-template-columns: repeat(var(--cols), minmax(158px, 1fr)); will-change: transform; }
+.grid-scroll { overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; position: relative; }
 .grid { display: grid; grid-template-columns: 58px repeat(var(--cols), minmax(158px, 1fr)); min-width: min-content; position: relative; }
-.g-head { position: relative; z-index: 8; will-change: transform; background: var(--surface); border-bottom: 1px solid var(--line); padding: 10px 8px; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; display: flex; gap: 6px; align-items: center; min-height: 46px; }
-.g-head.corner { position: sticky; left: 0; z-index: 9; }
-.grid-scroll .g-head { transform: translateY(var(--hy, 0px)); box-shadow: 0 -24px 0 var(--surface); }
+.g-head { position: relative; background: var(--surface); padding: 10px 8px; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; display: flex; gap: 6px; align-items: center; min-height: 46px; }
+.g-head.corner { flex: none; width: 58px; padding: 0; border-right: 1px solid var(--line); }
 .g-times { position: sticky; left: 0; z-index: 7; background: var(--surface); border-right: 1px solid var(--line); }
 .g-times span { position: absolute; left: 0; right: 0; text-align: center; font-size: 11px; font-weight: 600; color: var(--muted); transform: translateY(-50%); }
 .g-col { position: relative; border-right: 1px solid var(--line); background-image: repeating-linear-gradient(to bottom, var(--line) 0 1px, transparent 1px calc(var(--ppm) * 60px)); background-position: 0 8px; }
@@ -627,7 +632,7 @@ body { background: var(--bg); }
 .magic .dd svg * { fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
 .magic .dd .f { fill: var(--c, transparent); stroke: none; opacity: .9; }
 @keyframes bob { from { transform: translateY(-6px) rotate(-6deg); } to { transform: translateY(6px) rotate(6deg); } }
-:root.paused .magic * { animation-play-state: paused !important; }
+:root.paused .magic *, :root.scrolling .magic * { animation-play-state: paused !important; } /* doodles hold still while the page moves */
 @media (prefers-reduced-motion: reduce) { .magic * { animation: none !important; } }
 
 /* Type */
@@ -661,9 +666,9 @@ h1 { font-family: var(--font-display); font-weight: 700; font-size: 38px; letter
   .hdr-mini .m-fav svg { width: 16px; height: 16px; fill: currentColor; }
   .hdr-mini .m-more { margin-left: auto; flex: none; display: inline-flex; align-items: center; gap: 4px; font-size: 12.5px; font-weight: 700; color: var(--muted); }
   .hdr-mini .m-more svg { width: 18px; height: 18px; }
-  .hour-label { top: calc(env(safe-area-inset-top, 0px) + var(--hdr, 180px) - var(--hcut, 0px)); transition: top .3s cubic-bezier(.2,.8,.2,1); }
+  .hour-label { top: calc(env(safe-area-inset-top, 0px) + var(--hdr, 180px) - var(--hcut, 0px)); } /* no transition: animating top on every label re-lays out the page each frame */
 }
-@media (prefers-reduced-motion: reduce) { header.top, .hdr-mini, .top-inner, .hour-label { transition: none !important; } }
+@media (prefers-reduced-motion: reduce) { header.top, .hdr-mini, .top-inner { transition: none !important; } }
 
 /* Header on paper */
 header.top { background: var(--bg); backdrop-filter: none; -webkit-backdrop-filter: none; box-shadow: none;
@@ -671,11 +676,9 @@ header.top { background: var(--bg); backdrop-filter: none; -webkit-backdrop-filt
 body::before { background: var(--bg); }
 
 /* Hand-drawn outlines */
-.set, .now-card, .card, .acard, .banner, .grid-scroll, .search input, .composer, .sheet {
+.set, .now-card, .card, .acard, .banner, .g-wrap, .search input, .composer, .sheet {
   background: var(--surface); border: 2px solid var(--ink); border-radius: var(--wob); box-shadow: var(--pop); }
 .set:nth-child(odd), .acard:nth-child(odd), .now-card:nth-child(odd) { border-radius: var(--wob2); }
-/* Smooth scrolling: let the browser skip work for cards far off screen */
-.rows > .set { content-visibility: auto; contain-intrinsic-size: auto 104px; }
 .set .art, .now-act .art { border: 2px solid var(--ink); border-radius: 14px 6px 12px 5px / 5px 12px 6px 14px; }
 .days button, .chip, .icon-btn, .acct, .seg, .btn, .field { border: 2px solid var(--ink); border-radius: var(--wob2); background: var(--surface); font-family: var(--font-hand); }
 .days b { font-family: var(--font-display); font-size: 22px; font-weight: 700; letter-spacing: 0; }
@@ -723,6 +726,7 @@ body::before { background: var(--bg); }
 /* Hero (line-up page): the sketched 3D crystal is anchored here */
 .hero3d { display: none; position: relative; min-height: clamp(250px, 40vh, 380px); margin: 0 0 6px; padding: 18px 0 14px; align-items: flex-end; pointer-events: none; }
 main:has(#v-lineup:not([hidden])) .hero3d { display: flex; }
+.hero3d > .sky3d { position: absolute; z-index: -1; left: calc(-1 * max(16px, env(safe-area-inset-left, 0px))); top: -24px; width: calc(100% + 2 * max(16px, env(safe-area-inset-left, 0px))); height: calc(100% + 48px); pointer-events: none; }
 .hero3d .ht { position: relative; z-index: 1; max-width: 64%; display: flex; flex-direction: column; gap: 10px; }
 .hero3d::before { content: ""; position: absolute; z-index: 0; right: -10%; top: -6%; width: 78%; aspect-ratio: 1; border-radius: 50%;
   background: repeating-conic-gradient(from 6deg, color-mix(in srgb, var(--hi) 30%, transparent) 0 4deg, transparent 4deg 22.5deg);
@@ -762,7 +766,9 @@ main:has(#v-lineup:not([hidden])) .hero3d { display: flex; }
 .support::before { content: ""; position: absolute; top: -12px; left: 50%; width: 90px; height: 24px; margin-left: -45px; background: color-mix(in srgb, var(--hi) 75%, transparent); transform: rotate(-3deg); border-left: 2px dashed rgb(0 0 0 / .12); border-right: 2px dashed rgb(0 0 0 / .12); }
 .support .cup { width: 58px; height: 58px; border-radius: var(--wob2); display: grid; place-items: center; background: var(--pink); color: var(--ink); border: 2px solid var(--ink); }
 .support .cup svg { width: 32px; height: 32px; }
-.support .cup .steam { animation: steam 2.6s ease-in-out infinite; }
+.support .cup .steam { animation: steam 2.6s ease-in-out infinite; animation-play-state: paused; }
+.support.on .cup .steam { animation-play-state: running; }
+:root.scrolling .support .cup .steam { animation-play-state: paused; } /* only while the card is on screen: SVG path animation re-lays out every frame */
 .support .cup .steam:nth-child(2) { animation-delay: -1.3s; }
 @keyframes steam { 0%,100% { opacity: .25; transform: translateY(1px); } 50% { opacity: 1; transform: translateY(-1.5px); } }
 .support .t { display: block; font-family: var(--font-display); font-size: 28px; font-weight: 700; line-height: 1; }
@@ -1421,8 +1427,12 @@ function renderGrid(el, sets) {
         `<div class="busy plan" style="top:${(a - FIRST) * ppm + 10}px;height:${Math.max(18, (b - a) * ppm - 4)}px" ${ci ? 'aria-hidden="true"' : `role="note" aria-label="${esc(p.label)}, ${range(p.start, p.end)}"`}>${ci ? "" : `<span>${PLAN_ICON[p.kind] || ""} ${esc(p.label)}</span>`}</div>`; }).join("");
     return `<div class="g-col" style="height:${h}px;--ppm:${ppm}">${bands}${items}</div>`;
   }).join("");
-  const heads = `<div class="g-head corner"></div>` + stages.map(id => `<div class="g-head"><span class="dot" style="--c:var(${STAGE[id].c})"></span>${esc(STAGE[id].name)}</div>`).join("");
-  el.innerHTML = `<div class="grid-scroll" id="gridScroll"><div class="grid" style="--cols:${stages.length}">${heads}<div class="g-times" style="height:${h}px">${times}</div>${cols}</div></div>`;
+  const heads = stages.map(id => `<div class="g-head"><span class="dot" style="--c:var(${STAGE[id].c})"></span>${esc(STAGE[id].name)}</div>`).join("");
+  el.innerHTML = `<div class="g-wrap"><div class="g-headbar"><div class="g-head corner"></div><div class="g-heads"><div class="grid" id="gridHeads" style="--cols:${stages.length}">${heads}</div></div></div>` +
+    `<div class="grid-scroll" id="gridScroll"><div class="grid" style="--cols:${stages.length}"><div class="g-times" style="height:${h}px">${times}</div>${cols}</div></div></div>`;
+  // Sideways swipes move the stage names with the columns (one transform write, straight from the scroll event).
+  const gs = $("#gridScroll"), gh = $("#gridHeads");
+  gs.addEventListener("scroll", () => { gh.style.transform = `translateX(${-gs.scrollLeft}px)`; }, { passive: true });
 }
 
 // ---------- Now & next ----------
@@ -1836,17 +1846,27 @@ function rerenderKeepScroll() {
 
 // ---------- Routing ----------
 const TITLES = { lineup: "Line-up", now: "Now & next", chat: "Chats", timeline: "My timeline", explore: "Explore artists", profile: "Profile", shared: "Shared plan", admin: "Admin" };
-// Phones only: hide the line-up controls while scrolling down, show them again on any scroll up (or at the top).
+// While the page is moving, pause decorative animations so every frame goes to scrolling.
+{ let t = 0; const r = document.documentElement;
+  addEventListener("scroll", () => { if (!t) r.classList.add("scrolling"); clearTimeout(t); t = setTimeout(() => { t = 0; r.classList.remove("scrolling"); }, 200); }, { passive: true });
+  const k = document.querySelector(".support");
+  if (k && "IntersectionObserver" in window) new IntersectionObserver(es => k.classList.toggle("on", es[es.length - 1].isIntersecting)).observe(k); }
+// Phones only: hide the line-up controls once you scroll down the line-up; they return at the top or when the bar is tapped.
 const hdrCompact = (() => {
-  const hdr = $("#hdr"), mini = $("#hdrMini"), root = document.documentElement;
+  const hdr = $("#hdr"), mini = $("#hdrMini"), root = document.documentElement, sheetEl = $("#sheet");
   const mq = matchMedia("(max-width: 719px), (max-height: 500px) and (pointer: coarse)");
-  let on = false, lastY = scrollY, acc = 0, queued = false;
-  const shift = () => Math.max(0, hdr.offsetHeight - mini.offsetHeight);
+  let on = false, lastY = scrollY, acc = 0, queued = false, hdrH = hdr.offsetHeight, maxY = 1e9;
+  // Sizes are cached (and refreshed when they change) so the scroll handler never forces a layout mid-scroll.
+  const measure = () => {
+    const h = hdr.offsetHeight; maxY = root.scrollHeight - innerHeight;
+    if (h !== hdrH) { hdrH = h; root.style.setProperty("--hdr", h + "px"); if (on) apply(); } // e.g. once web fonts land
+  };
+  if ("ResizeObserver" in window) { const ro = new ResizeObserver(measure); ro.observe(document.body); ro.observe(hdr); } addEventListener("resize", measure);
+  const shift = () => Math.max(0, hdrH - 52);
   const apply = () => { const px = on ? shift() : 0; hdr.style.setProperty("--hshift", px + "px"); root.style.setProperty("--hcut", px + "px"); };
   const set = v => {
     if (v === on) return;
     on = v; acc = 0; apply(); hdr.classList.toggle("compact", v);
-    window.__pinGrid?.(400); // keep the timetable's stage row glued to the header while it slides
   };
   const paint = () => {
     const d = DAYS.find(x => x.id === state.day) || DAYS[0], st = state.stage !== "all" && STAGE[state.stage];
@@ -1857,18 +1877,19 @@ const hdrCompact = (() => {
   };
   const tick = () => {
     queued = false;
-    const max = root.scrollHeight - innerHeight, y = Math.min(Math.max(0, scrollY), max), dy = y - lastY; lastY = y; // clamp: ignore iOS rubber-band bounce
-    if (!mq.matches || state.view !== "lineup" || !$("#sheet").hidden) return set(false);
+    const y = Math.min(Math.max(0, scrollY), maxY), dy = y - lastY; lastY = y; // clamp: ignore iOS rubber-band bounce
+    if (!small || state.view !== "lineup" || sheetEl.hidden === false) return set(false);
     if (y < 24) return set(false);
-    acc = (dy > 0) === (acc > 0) ? acc + dy : dy; // distance travelled in the current direction
-    if (acc > 10 && y > hdr.offsetHeight * 0.6) set(true);
-    else if (acc < -28) set(false);
+    // Full controls come back only at the top (or by tapping the bar), never mid-list: scrolling up a little stays compact.
+    acc = dy > 0 ? acc + dy : 0;
+    if (acc > 10 && y > hdrH * 0.6) set(true);
   };
   addEventListener("scroll", () => { if (!queued) { queued = true; requestAnimationFrame(tick); } }, { passive: true });
-  mq.addEventListener?.("change", () => set(false));
+  let small = mq.matches; // cached: reading .matches can force a style pass
+  mq.addEventListener?.("change", () => { small = mq.matches; set(false); });
   mini.addEventListener("click", () => set(false));
   hdr.addEventListener("focusin", e => { if (e.target !== mini) set(false); }); // keyboard users never land on hidden controls
-  return { refresh() { paint(); if (on) { if (state.view !== "lineup") set(false); else apply(); } } };
+  return { refresh() { paint(); measure(); if (on) { if (state.view !== "lineup") set(false); else apply(); } } };
 })();
 function render() {
   for (const v of Object.keys(TITLES)) $("#v-" + v).hidden = v !== state.view;
@@ -2807,26 +2828,6 @@ setInterval(() => { if (state.view === "now" && festivalMoment()?.live) renderNo
     if (el.getBoundingClientRect().top < innerHeight) el.classList.add("in"); else io.observe(el); }); ask(); };
   new MutationObserver(scan).observe(document.querySelector("main"), { childList: true, subtree: true });
   scan();
-})();
-</script>
-<script>
-// Timetable: the page scrolls up and down, the grid only scrolls sideways. Keep the stage names pinned under the header
-// by sliding the header row down as the grid passes under it (one CSS variable write per frame, only on the timetable).
-(() => {
-  let queued = false, until = 0;
-  const pin = () => {
-    queued = false;
-    if (performance.now() < until) q(); // follow the header while it slides in or out
-    const g = document.getElementById("gridScroll"); if (!g || !g.offsetParent) return;
-    const hdr = document.querySelector("header.top"), top = hdr ? hdr.getBoundingClientRect().bottom : 0;
-    const r = g.getBoundingClientRect(), head = g.querySelector(".g-head"), hh = head ? head.offsetHeight : 46;
-    const y = Math.max(0, Math.min(top - r.top, r.height - hh - 60));
-    g.style.setProperty("--hy", y + "px");
-  };
-  const q = () => { if (!queued) { queued = true; requestAnimationFrame(pin); } };
-  addEventListener("scroll", q, { passive: true }); addEventListener("resize", q);
-  window.__pinGrid = ms => { until = performance.now() + ms; q(); };
-  new MutationObserver(q).observe(document.body, { childList: true, subtree: true });
 })();
 </script>
 </body>
