@@ -518,7 +518,10 @@ export class Hub extends DurableObject {
         FROM favs f JOIN users u ON u.id = f.user_id) WHERE rn <= 4`).toArray()) {
       if (sets[r.set_key] && sets[r.set_key].top.length < 4) sets[r.set_key].top.push({ id: r.id, name: r.display, color: r.color, av: r.avatar });
     }
-    const data = { sets, users: this.sql.exec("SELECT COUNT(*) AS n FROM users").one().n };
+    // Ids of admin accounts, so every avatar of theirs can wear the halo. Decided here from users.admin (set at Google
+    // sign-in from the ADMIN_EMAIL secret), never from anything a client sends, so nobody else can claim it.
+    const admins = this.sql.exec("SELECT id FROM users WHERE admin = 1 LIMIT 10").toArray().map(r => String(r.id));
+    const data = { sets, admins, users: this.sql.exec("SELECT COUNT(*) AS n FROM users").one().n };
     this.socialCache = { at: Date.now(), data };
     return data;
   }
