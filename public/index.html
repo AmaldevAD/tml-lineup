@@ -720,6 +720,25 @@ body::before { background: var(--bg); }
 .art .ini { font-family: var(--font-display); color: var(--hi-text); text-shadow: none; font-weight: 700; }
 .poster .art .ini { color: var(--hi-text); }
 
+/* One stage picked: the column is wide, so each set reads like a music-player row.
+   Square cover on the left (whole face in view) with play on its corner, details on the right, heart at the end. */
+.grid.solo .g-set { --sq: min(var(--h), 36%); background: var(--surface); color: var(--fg); border: 2px solid var(--ink); border-radius: 14px 8px 13px 9px / 9px 13px 8px 14px; box-shadow: 2px 3px 0 var(--ink); }
+.grid.solo .g-set .art { right: auto; width: var(--sq); border-right: 2px solid var(--ink); }
+.grid.solo .g-set .art img { object-position: 50% 30%; }
+.grid.solo .g-set .shade { display: none; }
+.grid.solo .g-set .g-open { padding: 6px 48px 6px calc(var(--sq) + 12px); justify-content: center; gap: 2px; }
+.grid.solo .g-set .g-open:focus-visible { outline-color: var(--accent); }
+.grid.solo .g-set b { font-family: var(--font-display); font-size: 16px; font-weight: 700; text-shadow: none; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: normal; }
+.grid.solo .g-set small { opacity: 1; font-family: var(--font-hand); font-size: 15px; color: var(--muted); line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.grid.solo .g-set small.tnum { color: var(--fg); }
+.grid.solo .g-set .crowd { color: var(--muted); margin-top: 2px; }
+.grid.solo .g-set .crowd .av { box-shadow: 0 0 0 2px var(--surface), 0 0 0 3.5px var(--ink); }
+.grid.solo .g-set .fav { top: 50%; transform: translateY(-50%); right: 2px; width: 44px; height: 44px; color: var(--muted); }
+.grid.solo .g-set.is-fav .fav { color: var(--heart); }
+.grid.solo .g-set .play, .grid.solo .g-set.short .play { display: grid; right: auto; left: calc(var(--sq) - 34px); bottom: 5px; width: 30px; height: 30px; box-shadow: 1.5px 1.5px 0 #2B1D14; }
+.grid.solo .g-set.blocked { filter: grayscale(.85) opacity(.7); }
+.grid.solo .g-set.is-fav { box-shadow: 0 0 0 3px var(--heart), 2px 3px 0 3px var(--ink); }
+
 /* Hero (line-up page): the sketched 3D crystal is anchored here */
 .hero3d { display: none; position: relative; min-height: clamp(250px, 40vh, 380px); margin: 0 0 6px; padding: 18px 0 14px; align-items: flex-end; pointer-events: none; }
 main:has(#v-lineup:not([hidden])) .hero3d { display: flex; }
@@ -1404,15 +1423,16 @@ function renderLineup() {
 function renderGrid(el, sets) {
   const ppm = 1.6;
   const stages = state.stage === "all" ? STAGES.map(s=>s[0]) : [state.stage];
+  const solo = stages.length === 1; // one stage: music-player rows (cover left, details right)
   const h = (LAST - FIRST) * ppm + 16;
   let times = "";
   for (let m = FIRST; m <= LAST; m += 60) times += `<span class="tnum" style="top:${(m-FIRST)*ppm + 8}px">${fmtHour(m)}</span>`;
   const cols = stages.map((id, ci) => {
     const items = sets.filter(s => s.stage === id).map(s => {
       const top = (s.start - FIRST) * ppm + 10, height = Math.max(30, (s.end - s.start) * ppm - 4), lead = s.artists[0];
-      return `<div class="g-set${state.favs.has(s.key) ? " is-fav" : ""}${blockerOf(s) ? " blocked" : ""}${height < 90 ? " short" : ""}" style="top:${top}px;height:${height}px">
+      return `<div class="g-set${state.favs.has(s.key) ? " is-fav" : ""}${blockerOf(s) ? " blocked" : ""}${height < 90 ? " short" : ""}" style="top:${top}px;height:${height}px;--h:${height - 4}px">
         ${art(lead.slug, lead.name, { play: false })}<span class="shade"></span>
-        <button class="g-open" data-open="${esc(lead.slug)}"><b>${s.artists.map(a => esc(a.name)).join(" b2b ")}</b><small class="tnum">${range(s.start, s.end)}</small>${height > 110 && s.genres.length ? `<small>${esc(s.genres.slice(0,2).join(", "))}</small>` : ""}${height >= 76 ? crowdHTML(s.key) : ""}</button>
+        <button class="g-open" data-open="${esc(lead.slug)}"><b>${s.artists.map(a => esc(a.name)).join(" b2b ")}</b><small class="tnum">${range(s.start, s.end)}</small>${height > (solo ? 62 : 110) && s.genres.length ? `<small>${esc(s.genres.slice(0,2).join(", "))}</small>` : ""}${height >= (solo ? 90 : 76) ? crowdHTML(s.key) : ""}</button>
         ${favBtn(s)}${playBtn(lead.slug, nameText(s))}</div>`;
     }).join("");
     // Booked sets block the whole row: a hatched band across every stage, like a busy slot in a calendar.
@@ -1422,7 +1442,7 @@ function renderGrid(el, sets) {
     return `<div class="g-col" style="height:${h}px;--ppm:${ppm}">${bands}${items}</div>`;
   }).join("");
   const heads = `<div class="g-head corner"></div>` + stages.map(id => `<div class="g-head"><span class="dot" style="--c:var(${STAGE[id].c})"></span>${esc(STAGE[id].name)}</div>`).join("");
-  el.innerHTML = `<div class="grid-scroll" id="gridScroll"><div class="grid" style="--cols:${stages.length}">${heads}<div class="g-times" style="height:${h}px">${times}</div>${cols}</div></div>`;
+  el.innerHTML = `<div class="grid-scroll" id="gridScroll"><div class="grid${solo ? " solo" : ""}" style="--cols:${stages.length}">${heads}<div class="g-times" style="height:${h}px">${times}</div>${cols}</div></div>`;
 }
 
 // ---------- Now & next ----------
