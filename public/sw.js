@@ -4,7 +4,7 @@
 // - Artist photos, fonts and the source line-up pages are cached as they load, and the page asks us to fetch any photo
 //   it hasn't shown yet, so the whole line-up has artwork offline.
 // - /api (accounts, chat, crowd counts) always goes to the network; the page keeps its own copy of your bookings.
-const VERSION = "v6"; // bump to refresh the cached app shell (v2: new site icon, v3: stone-face hero, v4: own look, v5: photo cards back, v6: stage-time ring)
+const VERSION = "v7"; // bump to refresh the cached app shell (v2: new site icon, v3: stone-face hero, v4: own look, v5: photo cards back, v6: stage-time ring, v7: butterflies)
 const SHELL = "tml-shell-" + VERSION;
 const MEDIA = "tml-media";      // photos + fonts: kept across versions, they rarely change
 const SOURCE = "tml-source";    // line-up pages from the original site (photo + YouTube lists)

@@ -1,6 +1,6 @@
 // Hero 3D: the cracked stone face. A depth-displaced relief that turns with the pointer (or the phone's tilt),
 // whose closed eyelid slowly opens on a glowing blue eye, while blue light starts leaking through the gold cracks.
-// Doodle stars and pencil orbits keep circling it, in the site's sketch style.
+// Crest-style butterflies flutter around it and pencil orbits circle it, in the site's sketch style.
 // Loaded lazily after the page is interactive; never with reduced motion or without WebGL2 (the page shows a still face then).
 // Perf: one textured mesh + a glow sprite, capped pixel ratio, pauses when hidden or scrolled away, adapts to slow frames.
 import * as THREE from "./vendor/three-0.160.0.module.min.js";
@@ -136,24 +136,39 @@ const orbits = [[2.1, 0.9, 0.35], [1.85, 0.8, -0.5]].map(([rx, rz, tilt]) => {
   const l = new THREE.LineSegments(g, orbitMat); l.computeLineDistances(); l.rotation.set(tilt, 0, tilt * 0.6); heart.add(l); return l;
 });
 
-// ---------- Doodle stars orbiting (sprites drawn on a canvas: marker fill + ink outline) ----------
-function starTex(fill, ink) {
-  const c = document.createElement("canvas"); c.width = c.height = 128; const x = c.getContext("2d");
-  const pts = []; for (let i = 0; i < 10; i++) { const r = i % 2 ? 24 : 54, a = -Math.PI / 2 + i * Math.PI / 5; pts.push([64 + Math.cos(a) * r, 66 + Math.sin(a) * r]); }
+// ---------- Butterflies fluttering around the face ----------
+// Drawn like the old festival crest: clay marker fills, a gold vein, a little gem, an ink outline. One wing texture per colour;
+// the left wing is the right one mirrored. Wings hinge on the body and flap; each butterfly wanders on its own loop.
+function wingTex(fill, ink) {
+  const c = document.createElement("canvas"); c.width = 128; c.height = 160; const x = c.getContext("2d");
   x.lineJoin = "round"; x.lineCap = "round";
-  x.beginPath(); pts.forEach(([px, py], i) => i ? x.lineTo(px, py) : x.moveTo(px, py)); x.closePath();
-  x.fillStyle = fill; x.fill(); x.lineWidth = 7; x.strokeStyle = ink; x.stroke();
-  x.beginPath(); x.moveTo(pts[9][0] + 3, pts[9][1] + 2); x.lineTo(pts[0][0] + 2, pts[0][1] + 3); x.stroke();
-  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+  const up = () => { x.beginPath(); x.moveTo(8, 72); x.bezierCurveTo(20, 20, 70, -4, 112, 14); x.bezierCurveTo(126, 34, 112, 70, 70, 82); x.quadraticCurveTo(36, 88, 8, 80); x.closePath(); };
+  const lo = () => { x.beginPath(); x.moveTo(8, 84); x.bezierCurveTo(44, 84, 92, 96, 92, 124); x.bezierCurveTo(90, 150, 52, 156, 36, 136); x.quadraticCurveTo(14, 112, 8, 90); x.closePath(); };
+  for (const f of [lo, up]) { f(); x.fillStyle = fill; x.fill(); x.lineWidth = 6; x.strokeStyle = ink; x.stroke(); }
+  // gold veins and spots, like the crest's gilded cracks
+  x.strokeStyle = "#E8B84A"; x.lineWidth = 3.5;
+  x.beginPath(); x.moveTo(12, 76); x.quadraticCurveTo(52, 52, 96, 26); x.moveTo(40, 64); x.quadraticCurveTo(66, 66, 92, 56); x.moveTo(14, 88); x.quadraticCurveTo(48, 104, 66, 132); x.stroke();
+  x.fillStyle = "#F3E3C3"; x.strokeStyle = ink; x.lineWidth = 3;
+  x.beginPath(); x.arc(92, 40, 7, 0, 6.283); x.fill(); x.stroke();
+  x.beginPath(); x.arc(60, 128, 5, 0, 6.283); x.fill(); x.stroke();
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t;
 }
-const STAR_FILLS = ["#E8B84A", "#D9825B", "#7E9CC6", "#9DB58A", "#EAD3AE", "#A98BD8"];
-const stars = STAR_FILLS.map((f, k) => {
-  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: starTex(f, "#2B1D14"), transparent: true, depthWrite: false }));
-  s.scale.setScalar(0.42 + (k % 3) * 0.07); s.userData = { k, fill: f }; heart.add(s); return s;
+const WING_FILLS = ["#E8B84A", "#D9825B", "#7E9CC6", "#9DB58A", "#A98BD8", "#D99A8B"];
+const wingGeo = new THREE.PlaneGeometry(0.44, 0.55); wingGeo.translate(0.22, 0, 0); // hinge on the body edge
+const bodyGeo = new THREE.CapsuleGeometry(0.03, 0.3, 2, 6);
+const bodyMat = new THREE.MeshBasicMaterial({ color: 0x2B1D14 });
+const flies = WING_FILLS.map((f, k) => {
+  const m = new THREE.MeshBasicMaterial({ map: wingTex(f, "#2B1D14"), side: THREE.DoubleSide, alphaTest: 0.5 });
+  const g = new THREE.Group(), r = new THREE.Mesh(wingGeo, m), l = new THREE.Mesh(wingGeo, m);
+  l.scale.x = -1; g.add(r, l, new THREE.Mesh(bodyGeo, bodyMat));
+  g.rotation.order = "ZXY"; g.scale.setScalar(0.85 + (k % 3) * 0.12);
+  g.userData = { k, fill: f, r, l, m, heading: 0 }; heart.add(g); return g;
 });
-const orbitPos = (k, t, v) => {
-  const r = 1.9 + (k % 3) * 0.25, a = t * (0.3 + k * 0.045) + k * 1.047, tilt = (k - 2.5) * 0.35;
-  const x = Math.cos(a) * r, z = Math.sin(a) * r * 0.45, y = Math.sin(a * 2 + k) * 0.2;
+// A wandering loop around the head: wide around the sides, rising and dipping, with a slower in-and-out drift
+const flightPos = (k, t, v) => {
+  const a = t * (0.32 + k * 0.04) * (k % 2 ? -1 : 1) + k * 1.047, tilt = (k - 2.5) * 0.3;
+  const r = 1.85 + (k % 3) * 0.22 + Math.sin(t * 0.7 + k * 2) * 0.25;
+  const x = Math.cos(a) * r, z = Math.sin(a) * r * 0.55, y = Math.sin(a * 2 + k) * 0.35 + Math.sin(t * 1.3 + k) * 0.12;
   v.set(x, y * Math.cos(tilt) - z * Math.sin(tilt), y * Math.sin(tilt) + z * Math.cos(tilt));
 };
 
@@ -185,7 +200,8 @@ function syncTheme() {
   FU.uDark.value = d ? 1 : 0;
   glow.material.blending = d ? THREE.AdditiveBlending : THREE.NormalBlending; glow.material.needsUpdate = true;
   orbitMat.color.set(ink);
-  stars.forEach(s => { s.material.map.dispose(); s.material.map = starTex(s.userData.fill, d ? "#16120E" : ink); s.material.needsUpdate = true; });
+  bodyMat.color.set(d ? "#F3E6D0" : "#2B1D14");
+  flies.forEach(b => { const m = b.userData.m; m.map.dispose(); m.map = wingTex(b.userData.fill, d ? "#16120E" : ink); m.needsUpdate = true; });
 }
 new MutationObserver(syncTheme).observe(root, { attributes: true, attributeFilter: ["data-theme"] });
 matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change", syncTheme);
@@ -208,7 +224,7 @@ function eyeOpen(t) {
 }
 
 // ---------- Loop ----------
-const clock = new THREE.Clock(), tmp = new THREE.Vector3(), goal = new THREE.Vector3();
+const clock = new THREE.Clock(), tmp = new THREE.Vector3(), goal = new THREE.Vector3(), goal2 = new THREE.Vector3();
 let idle = false, running = true, raf = 0, frames = 0, acc = 0, every = lite ? 2 : 1, tick = 0, boilT = 0, snap = false, sc = 0.5, slowed = false, op = 0;
 function frame() {
   raf = requestAnimationFrame(frame);
@@ -266,7 +282,14 @@ function frame() {
   glow.scale.setScalar(1.0 + o * 0.5 + pulse * 0.5);
 
   orbits.forEach((l, i) => { l.rotation.y = t * (i ? -0.15 : 0.12); });
-  stars.forEach(s => { orbitPos(s.userData.k, t, tmp); s.position.copy(tmp); s.material.rotation = Math.round(Math.sin(t * 2 + s.userData.k) * 4) / 12; });
+  flies.forEach(b => { const u = b.userData, k = u.k;
+    flightPos(k, t, tmp); flightPos(k, t + 0.05, goal2);
+    const flap = Math.sin(t * (13 + k) + k * 1.7), open = 0.1 + 0.95 * (0.5 + 0.5 * flap); // wings fold up to ~60°
+    u.r.rotation.y = -open; u.l.rotation.y = open;
+    b.position.copy(tmp); b.position.y += flap * 0.025;                      // each beat lifts the body a little
+    const h = Math.atan2(goal2.y - tmp.y, goal2.x - tmp.x) - Math.PI / 2;    // head points where it's flying
+    u.heading += (((h - u.heading + Math.PI) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI) - Math.PI) * 0.15;
+    b.rotation.set(-0.3 + Math.sin(t * 0.9 + k) * 0.2, 0, u.heading); });
 
   // Save work: nothing to draw once the hero has scrolled away; the faint background version only needs ~20 fps
   if (off) { if (!idle) { renderer.clear(); idle = true; } return; }
