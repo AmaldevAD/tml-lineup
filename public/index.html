@@ -1553,7 +1553,7 @@ function renderLineup() {
   for (const s of [...plans, ...sets].sort((a,b) => a.start - b.start)) { const h = Math.floor(s.start/60); if (!groups.has(h)) groups.set(h, []); groups.get(h).push(s); }
   groups = new Map([...groups].sort((a, b) => a[0] - b[0]));
   const heads = state.stage === "all" && !state.favOnly ? headliners(state.day) : [];
-  el.innerHTML = (heads.length ? `<h2 class="section-title">Headliners <small>${esc(dayOf(state.day).long)}</small></h2><div class="rail">${heads.map(posterHTML).join("")}</div><h2 class="section-title">Full line-up <small>${sets.length} sets</small></h2>` : "") +
+  el.innerHTML = (state.favOnly && stageRingMini(state.day) ? `<div class="day-summary">${stageRingMini(state.day)}</div>` : "") + (heads.length ? `<h2 class="section-title">Headliners <small>${esc(dayOf(state.day).long)}</small></h2><div class="rail">${heads.map(posterHTML).join("")}</div><h2 class="section-title">Full line-up <small>${sets.length} sets</small></h2>` : "") +
     [...groups].map(([h, list]) => `<div class="hour"><div class="hour-label tnum">${fmtHour(h*60)}</div><div class="rows">${list.map(s => s.artists ? setRow(s, {hideStage: state.stage !== "all"}) : planRow(s)).join("")}</div></div>`).join("");
 }
 function renderGrid(el, sets) {
@@ -1579,7 +1579,7 @@ function renderGrid(el, sets) {
   }).join("");
   const heads = stages.map(id => `<div class="g-head"><span class="dot" style="--c:var(${STAGE[id].c})"></span>${esc(STAGE[id].name)}</div>`).join("");
   const picked = sets.some(s => state.favs.has(s.key)) || state.plans.some(p => p.day === state.day);
-  const hint = state.favOnly ? `<p class="plan-hint">${picked ? "<b>My plan</b> is on: your picks stay bright, everything else fades." : `Nothing in your plan for ${esc(dayOf(state.day).short)} yet. Tap a heart to add a set.`}</p>` : "";
+  const hint = state.favOnly ? `<p class="plan-hint">${picked ? "<b>My plan</b> is on: your picks stay bright, everything else fades." : `Nothing in your plan for ${esc(dayOf(state.day).short)} yet. Tap a heart to add a set.`}</p>${stageRingMini(state.day) ? `<div class="day-summary" style="margin-top:0">${stageRingMini(state.day)}</div>` : ""}` : "";
   el.innerHTML = hint + `<div class="g-wrap${state.favOnly ? " my-plan" : ""}"><div class="g-headbar"><div class="g-head corner"></div><div class="g-heads"><div class="grid" id="gridHeads" style="--cols:${stages.length}">${heads}</div></div></div>` +
     `<div class="grid-scroll" id="gridScroll"><div class="grid${solo ? " solo" : ""}" style="--cols:${stages.length}"><div class="g-times" style="height:${h}px">${times}</div>${cols}</div></div></div>`;
   // Sideways swipes move the stage names with the columns (one transform write, straight from the scroll event).
