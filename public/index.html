@@ -816,6 +816,110 @@ footer.foot { font-family: var(--font-hand); font-size: 15px; }
   :root:not([data-theme="light"]) .chip[aria-pressed="true"] .dot { background: var(--hi-text); } }
 .hero3d b em { color: var(--hi-ink, inherit); }
 </style>
+<style id="own-look">
+/* ---------- Our own look (Nov 2026): masthead, ticket days, sticker stages, paper-note timetable, My plan, On air ---------- */
+
+/* Masthead: the stone-face badge and a hand-lettered "tml·cult" wordmark above the page name */
+.mast { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.mast-face { flex: none; display: block; width: 44px; height: 44px; border-radius: 50%; overflow: hidden; border: 2px solid var(--ink); background: var(--surface);
+  box-shadow: 2px 3px 0 var(--ink); transform: rotate(-6deg); }
+.mast-face img { width: 100%; height: 100%; display: block; object-fit: cover; }
+.mast-word { font-family: var(--font-display); font-weight: 700; font-size: 19px; line-height: 1; letter-spacing: .01em; white-space: nowrap; }
+.mast-word i { font-style: normal; color: var(--accent); }
+.mast-word small { font-family: var(--font-hand); font-weight: 400; font-size: 13px; color: var(--muted); margin-left: 4px; }
+.mast h1 { margin-top: 0; }
+
+/* Festival days: torn ticket stubs */
+.days { gap: 8px; padding-top: 2px; }
+.days .tix { all: unset; box-sizing: border-box; cursor: pointer; position: relative; display: grid; grid-template-columns: auto 1fr; min-height: 56px;
+  background: var(--surface); color: var(--fg); border: 2px solid var(--ink); border-radius: 7px;
+  -webkit-mask: radial-gradient(circle 7px at 0 50%, #0000 96%, #000) left / 51% 100% no-repeat, radial-gradient(circle 7px at 100% 50%, #0000 96%, #000) right / 51% 100% no-repeat;
+  mask: radial-gradient(circle 7px at 0 50%, #0000 96%, #000) left / 51% 100% no-repeat, radial-gradient(circle 7px at 100% 50%, #0000 96%, #000) right / 51% 100% no-repeat;
+  transition: transform .2s cubic-bezier(.2,.8,.3,1.2); }
+.days .tix:nth-child(2) { transform: rotate(.8deg); } .days .tix:nth-child(3) { transform: rotate(-.6deg); }
+.days .tix .stub { writing-mode: vertical-rl; transform: rotate(180deg); font-family: var(--font-hand); font-size: 12px; letter-spacing: .08em; text-transform: uppercase;
+  padding: 0 4px 0 10px; border-left: 2px dashed var(--ink); color: var(--muted); display: grid; place-items: center; }
+.days .tix .tk { display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1; gap: 1px; padding-right: 8px; }
+.days .tix b { font-family: var(--font-display); font-size: 24px; font-weight: 700; }
+.days .tix .tk span { font-family: var(--font-hand); font-size: 14px; color: var(--muted); }
+.days .tix[aria-selected="true"] { background: var(--hi); color: var(--hi-text); transform: rotate(-2deg) translateY(-1px); }
+.days .tix[aria-selected="true"] .stub, .days .tix[aria-selected="true"] .tk span { color: var(--hi-text); }
+.days .tix:focus-visible { outline: none; background: color-mix(in srgb, var(--accent) 25%, var(--surface)); }
+
+/* Stage filter: tilted stickers, always tinted with the stage colour */
+#stageChips { padding-block: 4px; }
+#stageChips .chip { border-radius: 11px 4px 12px 5px / 5px 12px 4px 11px; background: color-mix(in srgb, var(--c, var(--hi)) 20%, var(--surface)); transform: rotate(var(--tilt, -1deg)); }
+#stageChips .chip:nth-child(3n+2) { --tilt: 1.2deg; } #stageChips .chip:nth-child(3n) { --tilt: -.4deg; }
+#stageChips .chip .dot { width: 9px; height: 9px; box-shadow: 0 0 0 1.5px var(--ink); }
+#stageChips .chip[aria-pressed="true"] { --tilt: -2.5deg; background: var(--c, var(--hi)); color: var(--hi-text); box-shadow: 2px 3px 0 var(--ink); }
+#stageChips .chip[aria-pressed="true"] .dot { background: var(--hi-text); }
+
+/* My plan: a bookmark stamp instead of an on/off switch */
+.plan-btn { display: inline-flex; align-items: center; gap: 7px; min-height: 40px; padding: 0 14px 0 10px; color: var(--fg); background: var(--surface);
+  border: 2px solid var(--ink); border-radius: var(--wob2); font-family: var(--font-hand); font-size: 16px; cursor: pointer; transition: transform .15s; }
+.plan-btn svg { width: 22px; height: 22px; }
+.plan-btn svg .h { fill: none; }
+.plan-btn[aria-pressed="true"] { background: var(--pink); color: var(--hi-text); box-shadow: var(--pop); transform: rotate(-2deg); }
+.plan-btn[aria-pressed="true"] svg .h { fill: currentColor; }
+.plan-hint { margin: 0 0 10px; font-family: var(--font-hand); font-size: 16px; color: var(--muted); }
+.plan-hint b { font-family: var(--font-display); font-size: 20px; color: var(--fg); }
+.g-wrap.my-plan .g-set:not(.is-fav) { opacity: .3; filter: grayscale(1); }
+.g-wrap.my-plan .g-set:not(.is-fav):hover, .g-wrap.my-plan .g-set:not(.is-fav):focus-within { opacity: .8; filter: none; }
+
+/* Timetable, every stage: paper notes in the stage's colour, a round photo sticker, a doodled heart */
+.g-head { font-family: var(--font-display); font-size: 19px; font-weight: 700; letter-spacing: 0; text-transform: none; line-height: 1; }
+.g-head .dot { width: 10px; height: 10px; box-shadow: 0 0 0 1.5px var(--ink); }
+.grid:not(.solo) .g-set { color: var(--fg); background: color-mix(in srgb, var(--sc, var(--hi)) 18%, var(--surface));
+  border: 2px solid var(--ink); border-radius: 12px 5px 11px 6px / 6px 11px 5px 12px; box-shadow: 2px 3px 0 var(--ink); overflow: visible; }
+.grid:not(.solo) .g-set::before { content: ""; position: absolute; left: -2px; top: -2px; bottom: -2px; width: 7px; border-radius: 6px 0 0 6px; background: var(--sc, var(--hi)); border: 2px solid var(--ink); border-right: 0; pointer-events: none; }
+.grid:not(.solo) .g-set .shade { display: none; }
+.grid:not(.solo) .g-set .art { inset: auto; left: 12px; bottom: 8px; width: 46px; height: 46px; border-radius: 50%; border: 2px solid var(--ink); z-index: 1; transform: rotate(-4deg); }
+.grid:not(.solo) .g-set .art .ini { font-size: 16px; opacity: 1; }
+.grid:not(.solo) .g-set .g-open { padding: 7px 38px 8px 14px; }
+.grid:not(.solo) .g-set b { font-family: var(--font-display); font-size: 18px; font-weight: 700; line-height: 1; text-shadow: none; }
+.grid:not(.solo) .g-set small { font-family: var(--font-hand); font-size: 14px; opacity: 1; color: var(--muted); line-height: 1.15; }
+.grid:not(.solo) .g-set small.tnum { color: var(--fg); }
+.grid:not(.solo) .g-set .fav { color: var(--muted); }
+.grid:not(.solo) .g-set.is-fav .fav { color: var(--heart); }
+.grid:not(.solo) .g-set .fav svg { stroke-width: 2.2; }
+.grid:not(.solo) .g-set .play { right: auto; left: 44px; bottom: 6px; width: 24px; height: 24px; z-index: 3; box-shadow: 1.5px 1.5px 0 #2B1D14; }
+.grid:not(.solo) .g-set .crowd { color: var(--muted); }
+.grid:not(.solo) .g-set .crowd .av { box-shadow: 0 0 0 2px var(--surface), 0 0 0 3.5px var(--ink); }
+/* Tall notes keep the photo sticker; short ones are text only */
+.grid:not(.solo) .g-set.short .art, .grid:not(.solo) .g-set.short .play { display: none; }
+.grid:not(.solo) .g-set:not(.short) .g-open { padding-bottom: 60px; }
+.grid:not(.solo) .g-set.is-fav { box-shadow: 0 0 0 3px var(--heart), 2px 3px 0 3px var(--ink); }
+.grid:not(.solo) .g-set.blocked { filter: grayscale(.85) opacity(.7); }
+
+/* On air: each stage is a station on a dial; the photo ring fills as the set plays */
+.now-grid.stations { gap: 14px; }
+.station { display: grid; grid-template-columns: 40px 1fr; gap: 10px; padding: 14px 12px 12px 10px; }
+.station .freq { font-family: var(--font-display); font-size: 28px; font-weight: 700; line-height: 1; text-align: center; padding-top: 2px; color: var(--muted);
+  border-right: 2px dashed color-mix(in srgb, var(--ink) 35%, transparent); padding-right: 8px; }
+.station.on .freq { color: var(--fg); }
+.station .st-body { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.station h3 { font-family: var(--font-display); font-size: 22px; font-weight: 700; letter-spacing: 0; text-transform: none; line-height: 1; }
+.station h3 .dot { background: var(--c); box-shadow: 0 0 0 1.5px var(--ink); width: 10px; height: 10px; }
+.station h3 .chat-link { font-family: var(--font-hand); font-size: 14px; }
+.station .now-act { grid-template-columns: 78px 1fr auto; gap: 12px; }
+.station .ring { position: relative; width: 78px; height: 78px; border-radius: 50%; padding: 5px; box-sizing: border-box; display: grid;
+  background: conic-gradient(var(--c) calc(var(--p) * 1%), color-mix(in srgb, var(--ink) 14%, transparent) 0); border: 2px solid var(--ink); }
+.station .ring .art { width: 100%; height: 100%; border-radius: 50%; border: 2px solid var(--ink); }
+.station .ring .art { overflow: visible; }
+.station .ring .art img { border-radius: 50%; }
+.station .ring .play { width: 28px; height: 28px; right: -8px; bottom: -6px; }
+.station .left { font-family: var(--font-hand); font-size: 15px; color: var(--fg); }
+.station .idle { font-family: var(--font-hand); font-size: 17px; color: var(--muted); }
+.station .next { border-top: 2px dashed color-mix(in srgb, var(--ink) 30%, transparent); }
+.station .next em { font-family: var(--font-hand); font-size: 14px; letter-spacing: 0; text-transform: none; background: color-mix(in srgb, var(--c) 30%, transparent); color: var(--fg); padding: 1px 7px; border-radius: 6px 3px 7px 2px; margin-right: 8px; }
+.station .next b { font-family: var(--font-display); font-size: 19px; }
+.live-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--heart); margin-right: 6px; vertical-align: 1px; animation: onair 1.4s ease-in-out infinite; }
+@keyframes onair { 50% { opacity: .25; } }
+@media (prefers-reduced-motion: reduce) { .live-dot { animation: none; } .days .tix { transition: none; } }
+@media (min-width: 720px) { .days { max-width: 640px; } }
+@media (min-width: 720px) { .now-grid.stations { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1100px) { .now-grid.stations { grid-template-columns: repeat(3, 1fr); } }
+</style>
 </head>
 <body>
 <div class="magic" aria-hidden="true"><i class="dd" style="left:6%;top:16%;--s:40px;--r:-12deg;--d:7s;--dl:0s;--c:var(--hi);--depth:0.2"><svg viewBox="0 0 48 48"><path class="f" d="M24 5l5.6 12.2 13.2 1.4-9.9 8.9 2.8 13-11.7-6.8-11.6 6.8 2.8-13-10-8.9 13.3-1.4z"/><path d="M24 5l5.6 12.2 13.2 1.4-9.9 8.9 2.8 13-11.7-6.8-11.6 6.8 2.8-13-10-8.9 13.3-1.4z"/></svg></i><i class="dd" style="left:80%;top:12%;--s:34px;--r:10deg;--d:8s;--dl:-2s;--c:var(--pink);--depth:0.6000000000000001"><svg viewBox="0 0 48 48"><path class="f" d="M24 40S7 30 7 17.5A8.8 8.8 0 0 1 24 13a8.8 8.8 0 0 1 17 4.5C41 30 24 40 24 40z"/><path d="M24 40S7 30 7 17.5A8.8 8.8 0 0 1 24 13a8.8 8.8 0 0 1 17 4.5C41 30 24 40 24 40z"/></svg></i><i class="dd" style="left:70%;top:38%;--s:46px;--r:-6deg;--d:9s;--dl:-4s;--c:var(--sky);--depth:0.30000000000000004"><svg viewBox="0 0 48 48"><path class="f" d="M14 34a5 4 0 1 0 .1 0zM32 30a5 4 0 1 0 .1 0z"/><path d="M19 37V11l18-5v26M19 17l18-5M14 34a5 4 0 1 0 .1 0M32 30a5 4 0 1 0 .1 0"/></svg></i><i class="dd" style="left:8%;top:48%;--s:58px;--r:4deg;--d:6s;--dl:-1s;--c:var(--mint);--depth:0.5"><svg viewBox="0 0 64 32"><path d="M3 16c5-10 9-10 13 0s9 10 13 0 9-10 13 0 9 10 13 0 5-6 6-4"/></svg></i><i class="dd" style="left:86%;top:62%;--s:38px;--r:14deg;--d:7s;--dl:-3s;--c:var(--hi);--depth:0.5"><svg viewBox="0 0 48 48"><path d="M24 24c0-2 3-2 3 0 0 4-6 4-6 0 0-6 9-6 9 0 0 8-12 8-12 0 0-10 15-10 15 0 0 12-18 12-18 0"/></svg></i><i class="dd" style="left:14%;top:74%;--s:40px;--r:-10deg;--d:8s;--dl:-5s;--c:var(--hi);--depth:0.2"><svg viewBox="0 0 48 48"><circle class="f" cx="24" cy="24" r="9"/><circle cx="24" cy="24" r="9"/><path d="M24 4v7M24 37v7M4 24h7M37 24h7M10 10l5 5M33 33l5 5M38 10l-5 5M15 33l-5 5"/></svg></i><i class="dd" style="left:58%;top:84%;--s:44px;--r:8deg;--d:9s;--dl:-2s;--c:var(--mint);--depth:0.6000000000000001"><svg viewBox="0 0 48 48"><circle class="f" cx="24" cy="24" r="17"/><circle cx="24" cy="24" r="17"/><path d="M17 20v2M31 20v2M16 29c4 5 12 5 16 0"/></svg></i><i class="dd" style="left:38%;top:30%;--s:28px;--r:0deg;--d:6s;--dl:-4s;--c:var(--violet);--depth:0.5"><svg viewBox="0 0 48 48"><path d="M24 6c1 10 4 14 14 18-10 2-13 6-14 18-1-12-4-16-14-18 10-4 13-8 14-18z"/></svg></i><i class="dd" style="left:90%;top:88%;--s:30px;--r:-14deg;--d:7s;--dl:-1s;--c:var(--violet);--depth:0.2"><svg viewBox="0 0 48 48"><path class="f" d="M24 5l5.6 12.2 13.2 1.4-9.9 8.9 2.8 13-11.7-6.8-11.6 6.8 2.8-13-10-8.9 13.3-1.4z"/><path d="M24 5l5.6 12.2 13.2 1.4-9.9 8.9 2.8 13-11.7-6.8-11.6 6.8 2.8-13-10-8.9 13.3-1.4z"/></svg></i><i class="dd" style="left:30%;top:94%;--s:34px;--r:12deg;--d:8s;--dl:-3s;--c:var(--sky);--depth:0.6000000000000001"><svg viewBox="0 0 48 48"><path class="f" d="M24 40S7 30 7 17.5A8.8 8.8 0 0 1 24 13a8.8 8.8 0 0 1 17 4.5C41 30 24 40 24 40z"/><path d="M24 40S7 30 7 17.5A8.8 8.8 0 0 1 24 13a8.8 8.8 0 0 1 17 4.5C41 30 24 40 24 40z"/></svg></i></div>
@@ -824,9 +928,12 @@ footer.foot { font-family: var(--font-hand); font-size: 15px; }
 <header class="top" id="hdr">
   <div class="wrap gutter top-inner">
     <div class="brand-row">
-      <div>
-        <div class="eyebrow">Tomorrowland Thailand · 11–13 Dec</div>
-        <h1><span id="viewTitle">Line-up</span><span class="off-pill" id="offPill" hidden>Offline</span></h1>
+      <div class="mast">
+        <a class="mast-face" href="#lineup" aria-label="TML cult home"><img src="/icons/icon-192.png" alt="" width="40" height="40"></a>
+        <div>
+          <div class="mast-word" aria-hidden="true">tml<i>·</i>cult <small>unofficial · 11–13 Dec</small></div>
+          <h1><span id="viewTitle">Line-up</span><span class="off-pill" id="offPill" hidden>Offline</span></h1>
+        </div>
       </div>
       <div class="hdr-actions">
         <span id="acctSlot"></span>
@@ -845,7 +952,7 @@ footer.foot { font-family: var(--font-hand); font-size: 15px; }
       </div>
       <div class="toolbar-end">
         <button class="btn add-block" data-plan-add="" aria-label="Add dining or a break">+ Dining/break</button>
-        <button class="toggle" id="favOnly" aria-pressed="false"><span>Favourites</span><span class="sw" aria-hidden="true"></span></button>
+        <button class="plan-btn" id="favOnly" aria-pressed="false" title="Show my plan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h14v16l-7-4-7 4z"/><path class="h" d="M12 13.2s-3-1.8-3-4a1.6 1.6 0 0 1 3-.9 1.6 1.6 0 0 1 3 .9c0 2.2-3 4-3 4z"/></svg><span>My plan</span></button>
       </div>
     </div>
   </div>
@@ -855,7 +962,7 @@ footer.foot { font-family: var(--font-hand); font-size: 15px; }
 <main class="wrap gutter">
   <section class="view" id="v-lineup" aria-label="Line-up"></section>
   <section class="view" id="v-now" aria-label="Now and next" hidden></section>
-  <section class="view" id="v-timeline" aria-label="My timeline" hidden></section>
+  <section class="view" id="v-timeline" aria-label="My plan" hidden></section>
   <section class="view" id="v-chat" aria-label="Chat" hidden></section>
   <section class="view" id="v-profile" aria-label="Profile" hidden></section>
   <section class="view" id="v-shared" aria-label="Shared plan" hidden></section>
@@ -888,9 +995,9 @@ footer.foot { font-family: var(--font-hand); font-size: 15px; }
 <nav class="tabs" aria-label="Sections">
   <div class="tabs-inner">
     <a href="#lineup" data-view="lineup"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M3 9h18M8 2v4M16 2v4"/></svg></span>Line-up</a>
-    <a href="#now" data-view="now"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>Now</a>
+    <a href="#now" data-view="now"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>On air</a>
     <a href="#chat" data-view="chat"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.9A8 8 0 1 1 21 12z"/></svg></span>Chats<span class="badge" id="chatBadge" hidden></span></a>
-    <a href="#timeline" data-view="timeline"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 20.5s-8-4.7-8-10.6A4.4 4.4 0 0 1 12 7a4.4 4.4 0 0 1 8 2.9c0 5.9-8 10.6-8 10.6z"/></svg></span>Saved<span class="badge" id="favBadge" hidden></span></a>
+    <a href="#timeline" data-view="timeline"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 20.5s-8-4.7-8-10.6A4.4 4.4 0 0 1 12 7a4.4 4.4 0 0 1 8 2.9c0 5.9-8 10.6-8 10.6z"/></svg></span>Plan<span class="badge" id="favBadge" hidden></span></a>
     <a href="#profile" data-view="profile"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></span>Profile</a>
   </div>
 </nav>
@@ -899,7 +1006,7 @@ footer.foot { font-family: var(--font-hand); font-size: 15px; }
 <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle" hidden></div>
 
 <script>
-// ---------- Data (from tomorrowland.aiko.dev, 26 Nov 2026) ----------
+// ---------- Data (line-up as published 26 Nov 2026) ----------
 const STAGES = [
   ["mainstage","Mainstage","--st-mainstage"],
   ["freedom-by-budweiser","Freedom by Budweiser","--st-freedom"],
@@ -1388,10 +1495,11 @@ function afterFavChange() {
 
 // ---------- Header ----------
 function renderDays() {
-  $("#days").innerHTML = DAYS.map(d => `<button role="tab" aria-selected="${d.id === state.day}" data-day="${d.id}"><b>${d.short.toUpperCase()}</b><span>${d.label}</span></button>`).join("");
+  // Festival days as torn ticket stubs: "Day 1" on the stub, the weekday big, the date small.
+  $("#days").innerHTML = DAYS.map((d, i) => `<button role="tab" class="tix" aria-selected="${d.id === state.day}" data-day="${d.id}" aria-label="Day ${i + 1}, ${esc(d.long || d.short + " " + d.label)}"><span class="stub" aria-hidden="true">Day ${i + 1}</span><span class="tk" aria-hidden="true"><b>${d.short}</b><span>${d.label}</span></span></button>`).join("");
 }
 function renderStageChips() {
-  $("#stageChips").innerHTML = `<button class="chip" data-stage="all" aria-pressed="${state.stage === "all"}">All stages</button>` +
+  $("#stageChips").innerHTML = `<button class="chip" data-stage="all" aria-pressed="${state.stage === "all"}">Every stage</button>` +
     STAGES.map(([id,name,c]) => `<button class="chip" style="--c:var(${c})" data-stage="${id}" aria-pressed="${state.stage === id}"><span class="dot"></span>${esc(name)}</button>`).join("");
 }
 function updateBadge() { const b = $("#favBadge"); b.hidden = !state.favs.size; b.textContent = state.favs.size; saveMe(); }
@@ -1425,10 +1533,14 @@ function posterHTML(s) {
 function renderLineup() {
   const el = $("#v-lineup");
   let sets = setsFor(state.day, state.stage);
-  if (state.favOnly) sets = sets.filter(s => state.favs.has(s.key));
   const plans = state.plans.filter(p => p.day === state.day);
-  if (!sets.length && !(state.favOnly && plans.length)) { el.innerHTML = emptyHTML(state.favOnly ? "No favourites here yet" : "Nothing on this stage", state.favOnly ? "Turn off Favourites and tap the heart on any set." : ""); return; }
-  if (state.mode === "grid") return renderGrid(el, sets);
+  // My plan: the timetable keeps every set but fades the ones you haven't picked; the list shows only your picks.
+  if (state.mode === "grid") {
+    if (!sets.length) { el.innerHTML = emptyHTML("Nothing on this stage", ""); return; }
+    return renderGrid(el, sets);
+  }
+  if (state.favOnly) sets = sets.filter(s => state.favs.has(s.key));
+  if (!sets.length && !(state.favOnly && plans.length)) { el.innerHTML = emptyHTML(state.favOnly ? "Your plan is empty here" : "Nothing on this stage", state.favOnly ? "Turn off My plan and tap the heart on any set." : ""); return; }
   sets.sort((a,b) => a.start - b.start || STAGES.findIndex(x=>x[0]===a.stage) - STAGES.findIndex(x=>x[0]===b.stage));
   let groups = new Map();
   // Your dining sessions and breaks sit in the list with that day's sets.
@@ -1457,10 +1569,12 @@ function renderGrid(el, sets) {
     const bands = SETS.filter(f => f.day === state.day && state.favs.has(f.key)).map(f => `<div class="busy" style="top:${(f.start - FIRST) * ppm + 10}px;height:${(f.end - f.start) * ppm - 4}px" aria-hidden="true"></div>`).join("")
       + state.plans.filter(p => p.day === state.day).map(p => { const a = Math.max(p.start, FIRST), b = Math.min(p.end, LAST); return b <= a ? "" :
         `<div class="busy plan" style="top:${(a - FIRST) * ppm + 10}px;height:${Math.max(18, (b - a) * ppm - 4)}px" ${ci ? 'aria-hidden="true"' : `role="note" aria-label="${esc(p.label)}, ${range(p.start, p.end)}"`}>${ci ? "" : `<span>${PLAN_ICON[p.kind] || ""} ${esc(p.label)}</span>`}</div>`; }).join("");
-    return `<div class="g-col" style="height:${h}px;--ppm:${ppm}">${bands}${items}</div>`;
+    return `<div class="g-col" style="height:${h}px;--ppm:${ppm};--sc:var(${STAGE[id].c})">${bands}${items}</div>`;
   }).join("");
   const heads = stages.map(id => `<div class="g-head"><span class="dot" style="--c:var(${STAGE[id].c})"></span>${esc(STAGE[id].name)}</div>`).join("");
-  el.innerHTML = `<div class="g-wrap"><div class="g-headbar"><div class="g-head corner"></div><div class="g-heads"><div class="grid" id="gridHeads" style="--cols:${stages.length}">${heads}</div></div></div>` +
+  const picked = sets.some(s => state.favs.has(s.key)) || state.plans.some(p => p.day === state.day);
+  const hint = state.favOnly ? `<p class="plan-hint">${picked ? "<b>My plan</b> is on: your picks stay bright, everything else fades." : `Nothing in your plan for ${esc(dayOf(state.day).short)} yet. Tap a heart to add a set.`}</p>` : "";
+  el.innerHTML = hint + `<div class="g-wrap${state.favOnly ? " my-plan" : ""}"><div class="g-headbar"><div class="g-head corner"></div><div class="g-heads"><div class="grid" id="gridHeads" style="--cols:${stages.length}">${heads}</div></div></div>` +
     `<div class="grid-scroll" id="gridScroll"><div class="grid${solo ? " solo" : ""}" style="--cols:${stages.length}"><div class="g-times" style="height:${h}px">${times}</div>${cols}</div></div></div>`;
   // Sideways swipes move the stage names with the columns (one transform write, straight from the scroll event).
   const gs = $("#gridScroll"), gh = $("#gridHeads");
@@ -1480,7 +1594,7 @@ function renderNow() {
   // Not live: the next festival day still to come (its first sets are "next"), or none once it's over.
   const upcoming = live ? null : DAYS.find(d => t < epochOf(d.id, FIRST));
   let banner;
-  if (live) banner = `<div class="banner"><span class="eyebrow">Live now · ${esc(dayOf(live.day).long)}</span><span class="big tnum">${fmt(live.min)}</span><p>What's playing on every stage right now, and who's next.</p></div>`;
+  if (live) banner = `<div class="banner"><span class="eyebrow"><i class="live-dot" aria-hidden="true"></i>On air · ${esc(dayOf(live.day).long)}</span><span class="big tnum">${fmt(live.min)}</span><p>Every stage, tuned in at once, and who takes over next.</p></div>`;
   else {
     const before = t < startT, days = Math.ceil((startT - t) / 864e5);
     banner = `<div class="banner">
@@ -1497,15 +1611,14 @@ function renderNow() {
     const nxt = live ? list.find(s => s.start >= (cur ? cur.end : live.min)) : list[0];
     let body = "";
     if (cur) {
+      // The artist photo sits inside a ring that fills up as the set plays, like a radio dial.
       const p = Math.round((live.min - cur.start) / (cur.end - cur.start) * 100), lead = cur.artists[0];
-      body = `<div class="now-act">${art(lead.slug, lead.name, { label: nameText(cur) })}<button class="set-main" data-open="${esc(lead.slug)}"><span class="set-name">${nameHTML(cur)}</span>${cur.genres.length ? `<span class="genre">${esc(cur.genres.join(" · "))}</span>` : ""}</button>${favBtn(cur)}</div>
-        <div class="bar" style="--c:var(${c})" role="progressbar" aria-valuenow="${p}" aria-valuemin="0" aria-valuemax="100" aria-label="Set progress"><i style="width:${p}%"></i></div>
-        <div class="bar-meta tnum"><span>${fmt(cur.start)}</span><span>${dur(cur.end - live.min)} left</span><span>${fmt(cur.end)}</span></div>`;
-    } else if (live) body = `<div class="idle">${list.length && live.min < list[0].start ? "Not started yet" : "Nothing playing"}</div>`;
-    const next = nxt ? `<button class="next" data-open="${esc(nxt.artists[0].slug)}"><span><em>${live ? "NEXT" : "FIRST UP"}</em><b>${nameHTML(nxt)}</b></span><span class="tnum" style="color:var(--muted)">${live ? "" : esc(dayOf(day).short) + " "}${fmt(nxt.start)}</span></button>` : "";
-    return `<article class="now-card"><h3><span class="dot" style="--c:var(${c})"></span>${esc(name)}${cur ? `<a class="chat-link" href="#chat" data-room="artist-${cur.artists[0].slug}">Chat</a>` : ""}</h3>${body}${next}</article>`;
+      body = `<div class="now-act"><span class="ring" style="--p:${p}" role="progressbar" aria-valuenow="${p}" aria-valuemin="0" aria-valuemax="100" aria-label="Set progress">${art(lead.slug, lead.name, { label: nameText(cur) })}</span><button class="set-main" data-open="${esc(lead.slug)}"><span class="set-name">${nameHTML(cur)}</span><span class="left tnum">${dur(cur.end - live.min)} left</span>${cur.genres.length ? `<span class="genre">${esc(cur.genres.join(" · "))}</span>` : ""}</button>${favBtn(cur)}</div>`;
+    } else if (live) body = `<div class="idle">${list.length && live.min < list[0].start ? "Warming up" : "Off air"}</div>`;
+    const next = nxt ? `<button class="next" data-open="${esc(nxt.artists[0].slug)}"><span><em>${live ? "Then" : "Opens with"}</em><b>${nameHTML(nxt)}</b></span><span class="tnum" style="color:var(--muted)">${live ? "" : esc(dayOf(day).short) + " "}${fmt(nxt.start)}</span></button>` : "";
+    return `<article class="now-card station${cur ? " on" : ""}" style="--c:var(${c})"><span class="freq tnum" aria-hidden="true">${String(STAGES.findIndex(x => x[0] === id) + 1).padStart(2, "0")}</span><div class="st-body"><h3><span class="dot"></span>${esc(name)}${cur ? `<a class="chat-link" href="#chat" data-room="artist-${cur.artists[0].slug}">Chat</a>` : ""}</h3>${body}${next}</div></article>`;
   }).join("");
-  el.innerHTML = banner + `<div class="now-grid">${cards}</div>`;
+  el.innerHTML = banner + `<div class="now-grid stations">${cards}</div>`;
 }
 
 // ---------- My timeline ----------
@@ -1877,7 +1990,7 @@ function rerenderKeepScroll() {
 }
 
 // ---------- Routing ----------
-const TITLES = { lineup: "Line-up", now: "Now & next", chat: "Chats", timeline: "My timeline", explore: "Explore artists", profile: "Profile", shared: "Shared plan", admin: "Admin" };
+const TITLES = { lineup: "Line-up", now: "On air", chat: "Chats", timeline: "My plan", explore: "Explore artists", profile: "Profile", shared: "Shared plan", admin: "Admin" };
 // While the page is moving, pause decorative animations so every frame goes to scrolling.
 { let t = 0; const r = document.documentElement;
   addEventListener("scroll", () => { if (!t) r.classList.add("scrolling"); clearTimeout(t); t = setTimeout(() => { t = 0; r.classList.remove("scrolling"); }, 200); }, { passive: true });
@@ -1903,8 +2016,8 @@ const hdrCompact = (() => {
   const paint = () => {
     const d = DAYS.find(x => x.id === state.day) || DAYS[0], st = state.stage !== "all" && STAGE[state.stage];
     mini.innerHTML = `<span class="m-day">${esc(d.short.toUpperCase())}<small>${esc(d.label)}</small></span>` +
-      `<span class="m-stage"${st ? ` style="--c:var(${st.c})"` : ""}>${st ? '<span class="dot"></span>' : ""}<span class="t">${st ? esc(st.name) : "All stages"}</span></span>` +
-      (state.favOnly ? `<span class="m-fav" title="Favourites only"><svg viewBox="0 0 24 24"><path d="M12 21s-8-5.2-8-11.3A4.6 4.6 0 0 1 12 7a4.6 4.6 0 0 1 8 2.7C20 15.8 12 21 12 21z"/></svg></span>` : "") +
+      `<span class="m-stage"${st ? ` style="--c:var(${st.c})"` : ""}>${st ? '<span class="dot"></span>' : ""}<span class="t">${st ? esc(st.name) : "Every stage"}</span></span>` +
+      (state.favOnly ? `<span class="m-fav" title="My plan"><svg viewBox="0 0 24 24"><path d="M12 21s-8-5.2-8-11.3A4.6 4.6 0 0 1 12 7a4.6 4.6 0 0 1 8 2.7C20 15.8 12 21 12 21z"/></svg></span>` : "") +
       `<span class="m-more">${state.mode === "grid" ? "Timetable" : "List"}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></span>`;
   };
   const tick = () => {
@@ -2270,7 +2383,7 @@ function convoHTML() {
 }
 function renderChat() {
   const el = $("#v-chat");
-  if (state.offline && state.api) { el.innerHTML = `<div class="card"><h3>You're offline</h3><p>Chats come back as soon as you reconnect. Your line-up, saved sets and Now &amp; next all work without a connection.</p></div>`; chatDisconnect(); return; }
+  if (state.offline && state.api) { el.innerHTML = `<div class="card"><h3>You're offline</h3><p>Chats come back as soon as you reconnect. Your line-up, plan and On air all work without a connection.</p></div>`; chatDisconnect(); return; }
   if (!chatSupported()) { el.innerHTML = `<div class="card"><h3>Chat lives on the website</h3><p>Open the tmlunofficial site to chat with everyone and with fans of each artist.</p></div>`; return; }
   if (!state.user) { el.innerHTML = `<div class="card"><h3>Sign up to chat</h3><p>Talk with everyone at the festival, or join the room for each artist you're seeing. Browsing the line-up stays free without an account.</p><button class="btn primary" data-auth="signup">Create an account</button><button class="btn" data-auth="login">Log in</button></div>`; return; }
   if (!chat.room && wide()) chat.room = "general";
@@ -2786,7 +2899,7 @@ function offlineCardHTML() {
     : installEvt ? `<button class="btn" data-install="go" style="margin-top:10px">Install the app</button>` : `<p class="note" style="margin-top:10px">Add this site to your home screen from the browser menu to use it offline.</p>`;
   return `<div class="card"><h3>Works offline</h3>
     <p>Saved on this phone, ready with no signal:</p>
-    <ul class="offline-list"><li>The full line-up and timetable</li><li>${n ? `Your ${n} saved set${n === 1 ? "" : "s"}` : "Your saved sets"}</li><li>Now &amp; next</li><li>Artist photos</li></ul>
+    <ul class="offline-list"><li>The full line-up and timetable</li><li>${n ? `Your ${n} saved set${n === 1 ? "" : "s"}` : "Your saved sets"}</li><li>On air</li><li>Artist photos</li></ul>
     <p class="note" style="margin-top:8px">${when ? `Last updated ${esc(when)}. ` : ""}It refreshes every time you open the app online.${state.persisted ? " Storage is kept on this device." : ""}</p>${how}
   </div>`;
 }
